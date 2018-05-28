@@ -88,14 +88,13 @@ static uint64_t mp_obj_get_uint64(mp_const_obj_t arg) {
         }
     }
 }
-#if 0  // not yet used
+
 STATIC mp_obj_t mp_obj_new_scalar(){
   mp_obj_bignum256modm_t *o = m_new_obj(mp_obj_bignum256modm_t);
   o->base.type = &mod_trezorcrypto_monero_bignum256modm_type;
   set256_modm(o->p, 0);
   return MP_OBJ_FROM_PTR(o);
 }
-#endif
 
 STATIC mp_obj_t mp_obj_new_ge25519(){
   mp_obj_ge25519_t *o = m_new_obj(mp_obj_ge25519_t);
@@ -204,7 +203,109 @@ STATIC mp_obj_t mod_trezorcrypto_monero_bignum256modm_make_new(const mp_obj_type
 }
 
 //
-// Defs
+// Scalar defs
+//
+
+/*
+  add256_modm_r: 1326
+  sub256_modm_r: 207
+  mulsub256_modm_r: 1153
+  expand256_modm_r: 6132
+  contract256_modm_r: 3146
+ */
+
+// init256_modm_r
+STATIC mp_obj_t mod_trezorcrypto_monero_init256_modm(size_t n_args, const mp_obj_t *args){
+    mp_obj_t res = n_args == 2 ? args[0] : mp_obj_new_scalar();
+    const int off = n_args == 2 ? 0 : -1;
+    assert_scalar(res);
+
+    if (n_args == 0) {
+        set256_modm(MP_OBJ_SCALAR(res), 0);
+    } else if (n_args > 0 && MP_OBJ_IS_SCALAR(args[1+off])) {
+        copy256_modm(MP_OBJ_SCALAR(res), MP_OBJ_C_SCALAR(args[1+off]));
+    } else if (n_args > 0 && MP_OBJ_IS_STR_OR_BYTES(args[1+off])) {
+        mp_unpack_scalar(MP_OBJ_SCALAR(res), args[1+off]);
+    } else if (n_args > 0 && mp_obj_is_integer(args[1+off])) {
+        uint64_t v = mp_obj_get_uint64(args[1+off]);
+        set256_modm(MP_OBJ_SCALAR(res), v);
+    } else {
+        mp_raise_ValueError("Invalid scalar def");
+    }
+    return res;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_monero_init256_modm_obj, 0, 2, mod_trezorcrypto_monero_init256_modm);
+
+//int check256_modm
+STATIC mp_obj_t mod_trezorcrypto_monero_check256_modm(const mp_obj_t arg){
+    assert_scalar(arg);
+    if (check256_modm(MP_OBJ_C_SCALAR(arg)) != 1){
+        mp_raise_ValueError("Ed25519 scalar invalid");
+    }
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_monero_check256_modm_obj, mod_trezorcrypto_monero_check256_modm);
+
+//int iszero256_modm
+STATIC mp_obj_t mod_trezorcrypto_monero_iszero256_modm(const mp_obj_t arg){
+    assert_scalar(arg);
+    const int r = iszero256_modm(MP_OBJ_C_SCALAR(arg));
+    return mp_obj_new_int(r);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_monero_iszero256_modm_obj, mod_trezorcrypto_monero_iszero256_modm);
+
+//int eq256_modm
+STATIC mp_obj_t mod_trezorcrypto_monero_eq256_modm(const mp_obj_t a, const mp_obj_t b){
+    assert_scalar(a);
+    assert_scalar(b);
+    int r = eq256_modm(MP_OBJ_C_SCALAR(a), MP_OBJ_C_SCALAR(b));
+    return MP_OBJ_NEW_SMALL_INT(r);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_monero_eq256_modm_obj, mod_trezorcrypto_monero_eq256_modm);
+
+//int get256_modm_r
+STATIC mp_obj_t mod_trezorcrypto_monero_get256_modm(const mp_obj_t arg){
+    assert_scalar(arg);
+    uint64_t v;
+    if (!get256_modm(&v, MP_OBJ_C_SCALAR(arg))){
+        mp_raise_ValueError("Ed25519 scalar too big");
+    }
+    return mp_obj_new_int_from_ull(v);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_monero_get256_modm_obj, mod_trezorcrypto_monero_get256_modm);
+
+// barrett_reduce256_modm_r, 1arg = lo, 2args = hi, lo, 3args = r, hi, lo
+STATIC mp_obj_t mod_trezorcrypto_monero_reduce256_modm(size_t n_args, const mp_obj_t *args){
+    mp_obj_t res = n_args == 3 ? args[0] : mp_obj_new_scalar();
+    const int off = n_args == 3 ? 0 : -1;
+    const bignum256modm hi_z = {0};
+    const bignum256modm *hi = &hi_z;
+    const bignum256modm *lo = NULL;
+
+    assert_scalar(res);
+    if (n_args > 1){
+        assert_scalar(args[2+off]);
+        lo = &MP_OBJ_C_SCALAR(args[2+off]);
+
+        if (args[1+off] == NULL || MP_OBJ_IS_TYPE(args[1+off], &mp_type_NoneType)){
+            ;
+        } else {
+            assert_scalar(args[1+off]);
+            hi = &MP_OBJ_C_SCALAR(args[1+off]);
+        }
+    } else {
+        assert_scalar(args[1+off]);
+        lo = &MP_OBJ_C_SCALAR(args[1+off]);
+    }
+
+    barrett_reduce256_modm(MP_OBJ_SCALAR(res), *hi, *lo);
+    return res;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_monero_reduce256_modm_obj, 1, 3, mod_trezorcrypto_monero_reduce256_modm);
+
+
+//
+// GE25519 Defs
 //
 
 //void ge25519_set_neutral(ge25519 *r);
@@ -249,7 +350,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_monero_ge25519_fromfe_check_ob
 STATIC mp_obj_t mod_trezorcrypto_monero_ge25519_eq(const mp_obj_t a, const mp_obj_t b){
     assert_ge25519(a);
     assert_ge25519(b);
-    int r = ge25519_eq(&MP_OBJ_GE25519(a), &MP_OBJ_GE25519(b));
+    int r = ge25519_eq(&MP_OBJ_C_GE25519(a), &MP_OBJ_C_GE25519(b));
     return MP_OBJ_NEW_SMALL_INT(r);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_monero_ge25519_eq_obj, mod_trezorcrypto_monero_ge25519_eq);
@@ -260,7 +361,7 @@ STATIC mp_obj_t mod_trezorcrypto_monero_ge25519_norm(size_t n_args, const mp_obj
     mp_obj_t src = n_args == 2 ? args[1] : args[0];
     assert_ge25519(res);
     assert_ge25519(src);
-    ge25519_norm(&MP_OBJ_GE25519(res), &MP_OBJ_GE25519(src));
+    ge25519_norm(&MP_OBJ_GE25519(res), &MP_OBJ_C_GE25519(src));
     return res;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_monero_ge25519_norm_obj, 1, 2, mod_trezorcrypto_monero_ge25519_norm);
@@ -443,9 +544,14 @@ STATIC const mp_obj_type_t mod_trezorcrypto_monero_bignum256modm_type = {
 //    .locals_dict = (void*)&mod_trezorcrypto_Sha512_locals_dict,
 };
 
-
 STATIC const mp_rom_map_elem_t mod_trezorcrypto_monero_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_monero) },
+    { MP_ROM_QSTR(MP_QSTR_init256_modm), MP_ROM_PTR(&mod_trezorcrypto_monero_init256_modm_obj) },
+    { MP_ROM_QSTR(MP_QSTR_check256_modm), MP_ROM_PTR(&mod_trezorcrypto_monero_check256_modm_obj) },
+    { MP_ROM_QSTR(MP_QSTR_iszero256_modm), MP_ROM_PTR(&mod_trezorcrypto_monero_iszero256_modm_obj) },
+    { MP_ROM_QSTR(MP_QSTR_eq256_modm), MP_ROM_PTR(&mod_trezorcrypto_monero_eq256_modm_obj) },
+    { MP_ROM_QSTR(MP_QSTR_get256_modm), MP_ROM_PTR(&mod_trezorcrypto_monero_get256_modm_obj) },
+    { MP_ROM_QSTR(MP_QSTR_reduce256_modm), MP_ROM_PTR(&mod_trezorcrypto_monero_reduce256_modm_obj) },
     { MP_ROM_QSTR(MP_QSTR_ge25519_set_neutral), MP_ROM_PTR(&mod_trezorcrypto_monero_ge25519_set_neutral_obj) },
     { MP_ROM_QSTR(MP_QSTR_ge25519_set_h), MP_ROM_PTR(&mod_trezorcrypto_monero_ge25519_set_xmr_h_obj) },
     { MP_ROM_QSTR(MP_QSTR_ge25519_pack), MP_ROM_PTR(&mod_trezorcrypto_monero_ge25519_pack_obj) },
