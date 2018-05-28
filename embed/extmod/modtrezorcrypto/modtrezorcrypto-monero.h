@@ -365,6 +365,39 @@ STATIC mp_obj_t mod_trezorcrypto_monero_ge25519_scalarmult(size_t n_args, const 
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_monero_ge25519_scalarmult_obj, 2, 3, mod_trezorcrypto_monero_ge25519_scalarmult);
 
+//void ge25519_pack(unsigned char r[32], const ge25519 *p)
+STATIC mp_obj_t mod_trezorcrypto_monero_ge25519_pack(const mp_obj_t arg){
+    assert_ge25519(arg);
+    uint8_t buff[32];
+    ge25519_pack(buff, &MP_OBJ_C_GE25519(arg));
+
+    return mp_obj_new_bytes(buff, 32);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_monero_ge25519_pack_obj, mod_trezorcrypto_monero_ge25519_pack);
+
+//int ge25519_unpack_vartime(ge25519 *r, const unsigned char *s)
+STATIC mp_obj_t mod_trezorcrypto_monero_ge25519_unpack_vartime(size_t n_args, const mp_obj_t *args){
+    mp_obj_t res = n_args == 2 ? args[0] : mp_obj_new_ge25519();
+    const int off = n_args == 2 ? 0 : -1;
+    assert_ge25519(res);
+
+    mp_buffer_info_t buff;
+    mp_get_buffer_raise(args[1+off], &buff, MP_BUFFER_READ);
+    if (buff.len != 32) {
+        mp_raise_ValueError("Invalid length of the EC point");
+    }
+
+    int r = ge25519_unpack_vartime(&MP_OBJ_GE25519(res), buff.buf);
+    if (r != 1){
+        mp_raise_ValueError("Point decoding error");
+    }
+
+    return res;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_monero_ge25519_unpack_vartime_obj, 1, 2, mod_trezorcrypto_monero_ge25519_unpack_vartime);
+
+
+
 
 /// def
 STATIC mp_obj_t mod_trezorcrypto_monero_gen_range_proof(size_t n_args, const mp_obj_t *args) {
@@ -372,7 +405,7 @@ STATIC mp_obj_t mod_trezorcrypto_monero_gen_range_proof(size_t n_args, const mp_
     xmr_range_sig_t rsig;
     ge25519 C;
     bignum256modm mask;
-    
+
     const bignum256modm * last_mask = NULL;
     amount = mp_obj_get_uint64(args[0]);
     if (n_args > 1){
@@ -415,6 +448,8 @@ STATIC const mp_rom_map_elem_t mod_trezorcrypto_monero_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_monero) },
     { MP_ROM_QSTR(MP_QSTR_ge25519_set_neutral), MP_ROM_PTR(&mod_trezorcrypto_monero_ge25519_set_neutral_obj) },
     { MP_ROM_QSTR(MP_QSTR_ge25519_set_h), MP_ROM_PTR(&mod_trezorcrypto_monero_ge25519_set_xmr_h_obj) },
+    { MP_ROM_QSTR(MP_QSTR_ge25519_pack), MP_ROM_PTR(&mod_trezorcrypto_monero_ge25519_pack_obj) },
+    { MP_ROM_QSTR(MP_QSTR_ge25519_unpack_vartime), MP_ROM_PTR(&mod_trezorcrypto_monero_ge25519_unpack_vartime_obj) },
     { MP_ROM_QSTR(MP_QSTR_ge25519_check), MP_ROM_PTR(&mod_trezorcrypto_monero_ge25519_check_obj) },
     { MP_ROM_QSTR(MP_QSTR_ge25519_fromfe_check), MP_ROM_PTR(&mod_trezorcrypto_monero_ge25519_fromfe_check_obj) },
     { MP_ROM_QSTR(MP_QSTR_ge25519_eq), MP_ROM_PTR(&mod_trezorcrypto_monero_ge25519_eq_obj) },
