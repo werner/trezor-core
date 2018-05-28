@@ -304,14 +304,14 @@ STATIC mp_obj_t mod_trezorcrypto_monero_gen_range_proof(size_t n_args, const mp_
     xmr_range_sig_t rsig;
     ge25519 C;
     bignum256modm mask;
-    mp_obj_bignum256modm_t * last_mask = NULL;
-
+    
+    const bignum256modm * last_mask = NULL;
     amount = mp_obj_get_uint64(args[0]);
     if (n_args > 1){
-        last_mask = MP_OBJ_TO_PTR(args[1]);
+        last_mask = &MP_OBJ_C_SCALAR(args[1]);
     }
 
-    xmr_gen_range_sig(&rsig, &C, mask, amount, last_mask ? &(last_mask->p) : NULL);
+    xmr_gen_range_sig(&rsig, &C, mask, amount, last_mask);
     rsig_union rsigun = (rsig_union)rsig;
 
     mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(3, NULL));
