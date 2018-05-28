@@ -544,6 +544,61 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_monero_ge25519_unpac
 // XMR defs
 //
 
+//xmr_fast_hash
+STATIC mp_obj_t mod_trezorcrypto_monero_xmr_fast_hash(const mp_obj_t arg){
+    uint8_t buff[32];
+    mp_buffer_info_t data;
+    mp_get_buffer_raise(arg, &data, MP_BUFFER_READ);
+    xmr_fast_hash(buff, data.buf, data.len);
+    return mp_obj_new_bytes(buff, 32);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_monero_xmr_fast_hash_obj, mod_trezorcrypto_monero_xmr_fast_hash);
+
+//xmr_hash_to_ec
+STATIC mp_obj_t mod_trezorcrypto_monero_xmr_hash_to_ec(size_t n_args, const mp_obj_t *args){
+    mp_obj_t res = n_args == 2 ? args[0] : mp_obj_new_ge25519();
+    const int off = n_args == 2 ? 0 : -1;
+    mp_buffer_info_t data;
+    assert_ge25519(res);
+    mp_get_buffer_raise(args[1+off], &data, MP_BUFFER_READ);
+    xmr_hash_to_ec(&MP_OBJ_GE25519(res), data.buf, data.len);
+    return res;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_monero_xmr_hash_to_ec_obj, 1, 2, mod_trezorcrypto_monero_xmr_hash_to_ec);
+
+//xmr_hash_to_scalar
+STATIC mp_obj_t mod_trezorcrypto_monero_xmr_hash_to_scalar(size_t n_args, const mp_obj_t *args){
+    mp_obj_t res = n_args == 2 ? args[0] : mp_obj_new_scalar();
+    const int off = n_args == 2 ? 0 : -1;
+    mp_buffer_info_t data;
+    assert_scalar(res);
+    mp_get_buffer_raise(args[1+off], &data, MP_BUFFER_READ);
+    xmr_hash_to_scalar(MP_OBJ_SCALAR(res), data.buf, data.len);
+    return res;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_monero_xmr_hash_to_scalar_obj, 1, 2, mod_trezorcrypto_monero_xmr_hash_to_scalar);
+
+/**
+  xmr_generate_key_derivation_r: 138
+  xmr_derivation_to_scalar_r: 181
+  xmr_derive_private_key_r: 76
+  xmr_derive_public_key_r: 29
+  xmr_gen_c_r: 128
+
+  xmr_add_keys2_vartime_r: 6357
+  xmr_add_keys3_r: 1
+  xmr_add_keys3_vartime_r: 353
+ */
+
+// xmr_random_scalar
+STATIC mp_obj_t mod_trezorcrypto_monero_xmr_random_scalar(size_t n_args, const mp_obj_t *args){
+    mp_obj_t res = n_args == 1 ? args[0] : mp_obj_new_scalar();
+    assert_scalar(res);
+    xmr_random_scalar(MP_OBJ_SCALAR(res));
+    return res;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_monero_xmr_random_scalar_obj, 0, 1, mod_trezorcrypto_monero_xmr_random_scalar);
+
 /// def
 STATIC mp_obj_t mod_trezorcrypto_monero_gen_range_proof(size_t n_args, const mp_obj_t *args) {
     uint64_t amount;
@@ -615,6 +670,10 @@ STATIC const mp_rom_map_elem_t mod_trezorcrypto_monero_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR_ge25519_double_scalarmult_vartime2), MP_ROM_PTR(&mod_trezorcrypto_monero_ge25519_double_scalarmult_vartime2_obj) },
     { MP_ROM_QSTR(MP_QSTR_ge25519_scalarmult_base), MP_ROM_PTR(&mod_trezorcrypto_monero_ge25519_scalarmult_base_obj) },
     { MP_ROM_QSTR(MP_QSTR_ge25519_scalarmult), MP_ROM_PTR(&mod_trezorcrypto_monero_ge25519_scalarmult_obj) },
+    { MP_ROM_QSTR(MP_QSTR_xmr_random_scalar), MP_ROM_PTR(&mod_trezorcrypto_monero_xmr_random_scalar_obj) },
+    { MP_ROM_QSTR(MP_QSTR_xmr_fast_hash), MP_ROM_PTR(&mod_trezorcrypto_monero_xmr_fast_hash_obj) },
+    { MP_ROM_QSTR(MP_QSTR_xmr_hash_to_ec), MP_ROM_PTR(&mod_trezorcrypto_monero_xmr_hash_to_ec_obj) },
+    { MP_ROM_QSTR(MP_QSTR_xmr_hash_to_scalar), MP_ROM_PTR(&mod_trezorcrypto_monero_xmr_hash_to_scalar_obj) },
     { MP_ROM_QSTR(MP_QSTR_gen_range_proof), MP_ROM_PTR(&mod_trezorcrypto_monero_gen_range_proof_obj) },
 };
 STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_monero_globals, mod_trezorcrypto_monero_globals_table);
