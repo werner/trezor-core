@@ -44,16 +44,6 @@ typedef union {
   unsigned char d[RSIG_SIZE];
 } rsig_union;
 
-typedef struct _mp_obj_xmr_range_sig_t {
-    mp_obj_base_t base;
-    union {
-      xmr_range_sig_t r;
-      unsigned char d[RSIG_SIZE];
-    } rsig;
-    ge25519 C;
-    bignum256modm m;
-} mp_obj_xmr_range_sig_t;
-
 
 //
 // Helpers
@@ -113,9 +103,73 @@ STATIC mp_obj_t mp_obj_from_ge25519(const ge25519 * in){
     return MP_OBJ_FROM_PTR(o);
 }
 
+STATIC void mp_unpack_ge25519(ge25519 * r, const mp_obj_t arg){
+    mp_buffer_info_t buff;
+    mp_get_buffer_raise(arg, &buff, MP_BUFFER_READ);
+    if (buff.len != 32) {
+        mp_raise_ValueError("Invalid length of the EC point key");
+    }
+    ge25519_unpack_vartime(r, buff.buf);
+}
+
+STATIC void mp_unpack_scalar(bignum256modm r, const mp_obj_t arg){
+    mp_buffer_info_t buff;
+    mp_get_buffer_raise(arg, &buff, MP_BUFFER_READ);
+    if (buff.len < 32 || buff.len > 64) {
+        mp_raise_ValueError("Invalid length of secret key");
+    }
+    expand256_modm(r, buff.buff, buff.len);
+}
+
+//
+// Constructors
+//
+
+
+STATIC mp_obj_t mod_trezorcrypto_monero_ge25519_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
+    mp_arg_check_num(n_args, n_kw, 0, 1, false);
+    mp_obj_ge25519_t *o = m_new_obj(mp_obj_ge25519_t);
+    o->base.type = type;
+
+    if (n_args == 0) {
+        ge25519_set_neutral(&o->p);
+    } else if (n_args == 1 && MP_OBJ_IS_TYPE(args[0], &mod_trezorcrypto_monero_ge25519_type)) {
+        ge25519_copy(&o->p, &((mp_obj_ge25519_t) (args[0]))->p);
+    } else if (n_args == 1 && MP_OBJ_IS_STR_OR_BYTES(args[0])) {
+        mp_unpack_ge25519(&o->p, args[0]);
+    } else {
+        mp_raise_ValueError("Invalid ge25519 constructor");
+    }
+
+    return MP_OBJ_FROM_PTR(o);
+}
+
+STATIC mp_obj_t mod_trezorcrypto_monero_bignum256modm_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
+    mp_arg_check_num(n_args, n_kw, 0, 1, false);
+    o->base.type = type;
+
+    if (n_args == 0) {
+        set256_modm(o->p, 0);
+    } else if (n_args == 1 && MP_OBJ_IS_TYPE(args[0], &mod_trezorcrypto_monero_bignum256modm_type)) {
+        copy256_modm(&o->p, &((mp_obj_bignum256modm_t) (args[0]))->p);
+    } else if (n_args == 1 && MP_OBJ_IS_STR_OR_BYTES(args[0])) {
+        mp_unpack_scalar(&o->p, args[0]);
+    } else {
+        mp_raise_ValueError("Invalid scalar constructor");
+    }
+
+    return MP_OBJ_FROM_PTR(o);
+}
+
 //
 // Defs
 //
+
+
+//void ge25519_add(ge25519 *r, const ge25519 *a, const ge25519 *b, unsigned char signbit);
+STATIC mp_obj_t mod_trezorcrypto_monero_ge25519_add(mp_obj_t a, mp_obj_t b, ){
+
+}
 
 /// def
 STATIC mp_obj_t mod_trezorcrypto_monero_gen_range_proof(size_t n_args, const mp_obj_t *args) {
@@ -150,21 +204,21 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_monero_gen_range_pro
 STATIC const mp_obj_type_t mod_trezorcrypto_monero_ge25519_type = {
     { &mp_type_type },
     .name = MP_QSTR_ge25519,
-    //.make_new = mod_trezorcrypto_Sha512_make_new,
+    .make_new = mod_trezorcrypto_monero_ge25519_make_new,
     //.locals_dict = (void*)&mod_trezorcrypto_Sha512_locals_dict,
 };
 
 STATIC const mp_obj_type_t mod_trezorcrypto_monero_bignum256modm_type = {
     { &mp_type_type },
     .name = MP_QSTR_bignum256modm,
-//    .make_new = mod_trezorcrypto_Sha512_make_new,
+    .make_new = mod_trezorcrypto_monero_bignum256modm_make_new,
 //    .locals_dict = (void*)&mod_trezorcrypto_Sha512_locals_dict,
 };
 
 
 STATIC const mp_rom_map_elem_t mod_trezorcrypto_monero_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_monero) },
-    // { MP_ROM_QSTR(MP_QSTR_cosi_sign), MP_ROM_PTR(&mod_trezorcrypto_ed25519_cosi_sign_obj) },
+    { MP_ROM_QSTR(MP_QSTR_gen_range_proof), MP_ROM_PTR(&mod_trezorcrypto_monero_gen_range_proof_obj) },
 };
 STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_monero_globals, mod_trezorcrypto_monero_globals_table);
 
