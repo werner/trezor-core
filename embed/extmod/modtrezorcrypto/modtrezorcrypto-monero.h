@@ -437,15 +437,32 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_monero_ge25519_norm_
 //void ge25519_add(ge25519 *r, const ge25519 *a, const ge25519 *b, unsigned char signbit);
 STATIC mp_obj_t mod_trezorcrypto_monero_ge25519_add(size_t n_args, const mp_obj_t *args){
     mp_int_t s = 0;
-    assert_ge25519(args[0]);
-    assert_ge25519(args[1]);
-    assert_ge25519(args[2]);
-    if (n_args == 4){
+    int off = 0;
+    mp_obj_t res = args[0];
+
+    if (n_args == 2){                       // a, b
+        off = -1;
+    } else if (n_args == 3){                // r, a, b || a, b, s
+        if (mp_obj_is_integer(args[2])){
+            s = mp_obj_get_int(args[2]);
+            off = -1;
+        }
+    } else if (n_args == 4){                // r, a, b, s
         s = mp_obj_get_int(args[3]);
+    } else {
+        mp_raise_ValueError(NULL);
     }
 
-    ge25519_add(&MP_OBJ_GE25519(args[0]), &MP_OBJ_C_GE25519(args[1]), &MP_OBJ_C_GE25519(args[2]), s);
-    return args[0];
+    if (off == -1){
+        res = mp_obj_new_ge25519();
+    }
+
+    assert_ge25519(res);
+    assert_ge25519(args[1+off]);
+    assert_ge25519(args[2+off]);
+
+    ge25519_add(&MP_OBJ_GE25519(res), &MP_OBJ_C_GE25519(args[1+off]), &MP_OBJ_C_GE25519(args[2+off]), s);
+    return res;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_monero_ge25519_add_obj, 3, 4, mod_trezorcrypto_monero_ge25519_add);
 
