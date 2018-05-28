@@ -83,6 +83,19 @@ STATIC mp_obj_t mod_trezorcrypto_Sha3_256_digest(size_t n_args, const mp_obj_t *
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_Sha3_256_digest_obj, 1, 2, mod_trezorcrypto_Sha3_256_digest);
 
+/// def copy(self) -> sha3:
+///     '''
+///     Returns the copy of the digest object with the current state
+///     '''
+STATIC mp_obj_t mod_trezorcrypto_Sha3_256_copy(size_t n_args, const mp_obj_t *args) {
+    mp_obj_Sha3_256_t *o = MP_OBJ_TO_PTR(args[0]);
+    mp_obj_Sha3_256_t *out = m_new_obj(mp_obj_Sha3_256_t);
+    out->base.type = o->base.type;
+    memcpy(&(out->ctx), &(o->ctx), sizeof(SHA3_CTX));
+    return MP_OBJ_FROM_PTR(out);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_Sha3_256_copy_obj, 1, 1, mod_trezorcrypto_Sha3_256_copy);
+
 STATIC mp_obj_t mod_trezorcrypto_Sha3_256___del__(mp_obj_t self) {
     mp_obj_Sha3_256_t *o = MP_OBJ_TO_PTR(self);
     memzero(&(o->ctx), sizeof(SHA3_CTX));
@@ -93,6 +106,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_Sha3_256___del___obj, mod_trez
 STATIC const mp_rom_map_elem_t mod_trezorcrypto_Sha3_256_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_update), MP_ROM_PTR(&mod_trezorcrypto_Sha3_256_update_obj) },
     { MP_ROM_QSTR(MP_QSTR_digest), MP_ROM_PTR(&mod_trezorcrypto_Sha3_256_digest_obj) },
+    { MP_ROM_QSTR(MP_QSTR_copy), MP_ROM_PTR(&mod_trezorcrypto_Sha3_256_copy_obj) },
     { MP_ROM_QSTR(MP_QSTR___del__), MP_ROM_PTR(&mod_trezorcrypto_Sha3_256___del___obj) },
     { MP_ROM_QSTR(MP_QSTR_block_size), MP_OBJ_NEW_SMALL_INT(SHA3_256_BLOCK_LENGTH) },
     { MP_ROM_QSTR(MP_QSTR_digest_size), MP_OBJ_NEW_SMALL_INT(SHA3_256_DIGEST_LENGTH) },
