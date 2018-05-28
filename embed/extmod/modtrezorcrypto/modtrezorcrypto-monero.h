@@ -185,6 +185,13 @@ STATIC mp_obj_t mod_trezorcrypto_monero_ge25519_make_new(const mp_obj_type_t *ty
     return MP_OBJ_FROM_PTR(o);
 }
 
+STATIC mp_obj_t mod_trezorcrypto_monero_ge25519___del__(mp_obj_t self) {
+    mp_obj_ge25519_t *o = MP_OBJ_TO_PTR(self);
+    memzero(&(o->p), sizeof(ge25519));
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_monero_ge25519___del___obj, mod_trezorcrypto_monero_ge25519___del__);
+
 STATIC mp_obj_t mod_trezorcrypto_monero_bignum256modm_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
     mp_arg_check_num(n_args, n_kw, 0, 1, false);
     mp_obj_bignum256modm_t *o = m_new_obj(mp_obj_bignum256modm_t);
@@ -205,6 +212,13 @@ STATIC mp_obj_t mod_trezorcrypto_monero_bignum256modm_make_new(const mp_obj_type
 
     return MP_OBJ_FROM_PTR(o);
 }
+
+STATIC mp_obj_t mod_trezorcrypto_monero_bignum256modm___del__(mp_obj_t self) {
+    mp_obj_bignum256modm_t *o = MP_OBJ_TO_PTR(self);
+    memzero(o->p, sizeof(bignum256modm));
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_monero_bignum256modm___del___obj, mod_trezorcrypto_monero_bignum256modm___del__);
 
 //
 // Scalar defs
@@ -743,19 +757,29 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_monero_gen_range_pro
 // Type defs
 //
 
+STATIC const mp_rom_map_elem_t mod_trezorcrypto_monero_ge25519_locals_dict_table[] = {
+    { MP_ROM_QSTR(MP_QSTR___del__), MP_ROM_PTR(&mod_trezorcrypto_monero_ge25519___del___obj) },
+};
+STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_monero_ge25519_locals_dict, mod_trezorcrypto_monero_ge25519_locals_dict_table);
 
 STATIC const mp_obj_type_t mod_trezorcrypto_monero_ge25519_type = {
     { &mp_type_type },
     .name = MP_QSTR_ge25519,
     .make_new = mod_trezorcrypto_monero_ge25519_make_new,
-    //.locals_dict = (void*)&mod_trezorcrypto_Sha512_locals_dict,
+    .locals_dict = (void*)&mod_trezorcrypto_monero_ge25519_locals_dict,
 };
+
+STATIC const mp_rom_map_elem_t mod_trezorcrypto_monero_bignum256modm_locals_dict_table[] = {
+    { MP_ROM_QSTR(MP_QSTR___del__), MP_ROM_PTR(&mod_trezorcrypto_monero_bignum256modm___del___obj) },
+};
+STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_monero_bignum256modm_locals_dict, mod_trezorcrypto_monero_bignum256modm_locals_dict_table);
+
 
 STATIC const mp_obj_type_t mod_trezorcrypto_monero_bignum256modm_type = {
     { &mp_type_type },
     .name = MP_QSTR_bignum256modm,
     .make_new = mod_trezorcrypto_monero_bignum256modm_make_new,
-//    .locals_dict = (void*)&mod_trezorcrypto_Sha512_locals_dict,
+    .locals_dict = (void*)&mod_trezorcrypto_monero_bignum256modm_locals_dict,
 };
 
 STATIC const mp_rom_map_elem_t mod_trezorcrypto_monero_globals_table[] = {
