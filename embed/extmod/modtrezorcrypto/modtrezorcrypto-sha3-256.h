@@ -29,11 +29,12 @@
 typedef struct _mp_obj_Sha3_256_t {
     mp_obj_base_t base;
     SHA3_CTX ctx;
+    int keccak;
 } mp_obj_Sha3_256_t;
 
 STATIC mp_obj_t mod_trezorcrypto_Sha3_256_update(mp_obj_t self, mp_obj_t data);
 
-/// def __init__(self, data: bytes = None) -> None:
+/// def __init__(self, data: bytes = None, keccak = False) -> None:
 ///     '''
 ///     Creates a hash context object.
 ///     '''
@@ -41,9 +42,21 @@ STATIC mp_obj_t mod_trezorcrypto_Sha3_256_make_new(const mp_obj_type_t *type, si
     mp_arg_check_num(n_args, n_kw, 0, 1, false);
     mp_obj_Sha3_256_t *o = m_new_obj(mp_obj_Sha3_256_t);
     o->base.type = type;
+    o->keccak = 0;
     sha3_256_Init(&(o->ctx));
+
+    // keccak = True / False keyword arg
+    STATIC const mp_arg_t allowed_args[] = {
+        { MP_QSTR_keccak,   MP_ARG_BOOL, {.u_bool = 0} },
+    };
+    mp_arg_val_t vals[MP_ARRAY_SIZE(allowed_args)];
+    mp_arg_parse_all_kw_array(n_args, n_kw, args, MP_ARRAY_SIZE(allowed_args), allowed_args, vals);
+    if (n_kw > 0){
+        o->keccak = vals[0].u_bool ? 1 : -1;
+    }
+
     // constructor called with bytes/str as first parameter
-    if (n_args == 1) {
+    if (n_args >= 1 && args[0] != mp_const_none) {
         mod_trezorcrypto_Sha3_256_update(MP_OBJ_FROM_PTR(o), args[0]);
     }
     return MP_OBJ_FROM_PTR(o);
@@ -73,7 +86,7 @@ STATIC mp_obj_t mod_trezorcrypto_Sha3_256_digest(size_t n_args, const mp_obj_t *
     uint8_t out[SHA3_256_DIGEST_LENGTH];
     SHA3_CTX ctx;
     memcpy(&ctx, &(o->ctx), sizeof(SHA3_CTX));
-    if (n_args > 1 && args[1] == mp_const_true) {
+    if (o->keccak == 1 || (n_args > 1 && args[1] == mp_const_true)) {
         keccak_Final(&ctx, out);
     } else {
         sha3_Final(&ctx, out);
