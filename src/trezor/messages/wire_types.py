@@ -121,3 +121,7 @@ MoneroKeyImageSync = 311
 MoneroKeyImageExportInitResp = 320
 MoneroKeyImageSyncStepResp = 321
 MoneroKeyImageSyncFinalResp = 322
+MoneroGetAddress = 330
+MoneroAddress = 331
+MoneroGetWatchKey = 332
+MoneroWatchKey = 333
