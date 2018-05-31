@@ -8,8 +8,7 @@ if __debug__:
 from .MoneroExportedKeyImage import MoneroExportedKeyImage
 
 
-class MoneroKeyImageSyncResp(p.MessageType):
-    MESSAGE_WIRE_TYPE = 322
+class MoneroKeyImageSyncStepResp(p.MessageType):
     FIELDS = {
         1: ('kis', MoneroExportedKeyImage, p.FLAG_REPEATED),
     }
