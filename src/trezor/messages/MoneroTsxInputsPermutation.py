@@ -8,7 +8,6 @@ if __debug__:
 
 
 class MoneroTsxInputsPermutation(p.MessageType):
-    MESSAGE_WIRE_TYPE = 305
     FIELDS = {
         1: ('perm', p.UVarintType, p.FLAG_REPEATED),
     }

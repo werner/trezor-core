@@ -3,4 +3,4 @@ import protobuf as p
 
 
 class MoneroTsxInputViniResp(p.MessageType):
-    MESSAGE_WIRE_TYPE = 308
+    MESSAGE_WIRE_TYPE = 305

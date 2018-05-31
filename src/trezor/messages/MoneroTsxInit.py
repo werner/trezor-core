@@ -4,7 +4,6 @@ from .MoneroTsxData import MoneroTsxData
 
 
 class MoneroTsxInit(p.MessageType):
-    MESSAGE_WIRE_TYPE = 301
     FIELDS = {
         1: ('version', p.UVarintType, 0),
         2: ('tsx_data', MoneroTsxData, 0),

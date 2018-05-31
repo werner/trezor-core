@@ -3,4 +3,4 @@ import protobuf as p
 
 
 class MoneroTsxAllOutSet(p.MessageType):
-    MESSAGE_WIRE_TYPE = 311
+    pass

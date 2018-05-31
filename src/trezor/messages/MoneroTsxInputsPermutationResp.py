@@ -3,4 +3,4 @@ import protobuf as p
 
 
 class MoneroTsxInputsPermutationResp(p.MessageType):
-    MESSAGE_WIRE_TYPE = 306
+    MESSAGE_WIRE_TYPE = 304

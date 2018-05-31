@@ -3,4 +3,4 @@ import protobuf as p
 
 
 class MoneroKeyImageSyncFinal(p.MessageType):
-    MESSAGE_WIRE_TYPE = 323
+    pass

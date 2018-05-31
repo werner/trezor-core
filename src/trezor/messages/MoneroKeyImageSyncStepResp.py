@@ -9,6 +9,7 @@ from .MoneroExportedKeyImage import MoneroExportedKeyImage
 
 
 class MoneroKeyImageSyncStepResp(p.MessageType):
+    MESSAGE_WIRE_TYPE = 321
     FIELDS = {
         1: ('kis', MoneroExportedKeyImage, p.FLAG_REPEATED),
     }

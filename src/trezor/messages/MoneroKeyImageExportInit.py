@@ -9,7 +9,6 @@ from .MoneroSubAddrIndicesList import MoneroSubAddrIndicesList
 
 
 class MoneroKeyImageExportInit(p.MessageType):
-    MESSAGE_WIRE_TYPE = 319
     FIELDS = {
         1: ('num', p.UVarintType, 0),
         2: ('hash', p.BytesType, 0),

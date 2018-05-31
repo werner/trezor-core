@@ -3,7 +3,6 @@ import protobuf as p
 
 
 class MoneroTsxSetOutput(p.MessageType):
-    MESSAGE_WIRE_TYPE = 309
     FIELDS = {
         1: ('dst_entr', p.BytesType, 0),
         2: ('dst_entr_hmac', p.BytesType, 0),

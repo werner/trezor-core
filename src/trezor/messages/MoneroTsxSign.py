@@ -12,6 +12,7 @@ from .MoneroTsxSignInput import MoneroTsxSignInput
 
 
 class MoneroTsxSign(p.MessageType):
+    MESSAGE_WIRE_TYPE = 301
     FIELDS = {
         1: ('init', MoneroTsxInit, 0),
         2: ('set_input', MoneroTsxSetInput, 0),

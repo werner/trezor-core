@@ -3,7 +3,6 @@ import protobuf as p
 
 
 class MoneroTsxInputVini(p.MessageType):
-    MESSAGE_WIRE_TYPE = 307
     FIELDS = {
         1: ('src_entr', p.BytesType, 0),
         2: ('vini', p.BytesType, 0),

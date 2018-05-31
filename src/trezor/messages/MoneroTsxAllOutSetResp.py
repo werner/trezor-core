@@ -3,7 +3,7 @@ import protobuf as p
 
 
 class MoneroTsxAllOutSetResp(p.MessageType):
-    MESSAGE_WIRE_TYPE = 312
+    MESSAGE_WIRE_TYPE = 307
     FIELDS = {
         1: ('extra', p.BytesType, 0),
         2: ('tx_prefix_hash', p.BytesType, 0),
