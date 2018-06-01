@@ -51,6 +51,7 @@ typedef union {
 
 STATIC const mp_obj_type_t mod_trezorcrypto_monero_ge25519_type;
 STATIC const mp_obj_type_t mod_trezorcrypto_monero_bignum256modm_type;
+STATIC const mp_obj_type_t mod_trezorcrypto_monero_hasher_type;
 
 
 static uint64_t mp_obj_uint64_get_checked(mp_const_obj_t self_in) {
@@ -219,6 +220,30 @@ STATIC mp_obj_t mod_trezorcrypto_monero_bignum256modm___del__(mp_obj_t self) {
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_monero_bignum256modm___del___obj, mod_trezorcrypto_monero_bignum256modm___del__);
+
+
+STATIC mp_obj_t mod_trezorcrypto_monero_hasher_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
+  mp_arg_check_num(n_args, n_kw, 0, 1, false);
+  mp_obj_hasher_t *o = m_new_obj(mp_obj_hasher_t);
+  o->base.type = type;
+  xmr_hasher_init(&(o->h));
+
+  if (n_args == 1 && MP_OBJ_IS_STR_OR_BYTES(args[0])) {
+    mp_buffer_info_t buff;
+    mp_get_buffer_raise(args[0], &buff, MP_BUFFER_READ);
+    xmr_hasher_update(&o->h, buff.buf, buff.len);
+  }
+
+  return MP_OBJ_FROM_PTR(o);
+}
+
+STATIC mp_obj_t mod_trezorcrypto_monero_hasher___del__(mp_obj_t self) {
+  mp_obj_hasher_t *o = MP_OBJ_TO_PTR(self);
+  memzero(&(o->h), sizeof(Hasher));
+  return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_monero_hasher___del___obj, mod_trezorcrypto_monero_hasher___del__);
+
 
 //
 // Scalar defs
@@ -770,6 +795,40 @@ STATIC mp_obj_t mod_trezorcrypto_monero_gen_range_proof(size_t n_args, const mp_
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_monero_gen_range_proof_obj, 1, 2, mod_trezorcrypto_monero_gen_range_proof);
 
 
+// Hasher
+STATIC mp_obj_t mod_trezorcrypto_monero_hasher_update(mp_obj_t self, const mp_obj_t arg){
+  mp_obj_hasher_t *o = MP_OBJ_TO_PTR(self);
+  mp_buffer_info_t buff;
+  mp_get_buffer_raise(arg, &buff, MP_BUFFER_READ);
+  if (buff.len > 0) {
+    xmr_hasher_update(&o->h, buff.buf, buff.len);
+  }
+  return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_monero_hasher_update_obj, mod_trezorcrypto_monero_hasher_update);
+
+STATIC mp_obj_t mod_trezorcrypto_monero_hasher_digest(mp_obj_t self){
+  mp_obj_hasher_t *o = MP_OBJ_TO_PTR(self);
+  uint8_t out[SHA3_256_DIGEST_LENGTH];
+  Hasher ctx;
+  memcpy(&ctx, &(o->h), sizeof(Hasher));
+
+  xmr_hasher_final(&ctx, out);
+  memset(&ctx, 0, sizeof(SHA3_CTX));
+  return mp_obj_new_bytes(out, sizeof(out));
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_monero_hasher_digest_obj, mod_trezorcrypto_monero_hasher_digest);
+
+STATIC mp_obj_t mod_trezorcrypto_monero_hasher_copy(mp_obj_t self){
+  mp_obj_hasher_t *o = MP_OBJ_TO_PTR(self);
+  mp_obj_hasher_t *cp = m_new_obj(mp_obj_hasher_t);
+  cp->base.type = o->base.type;
+  memcpy(&(cp->h), &(o->h), sizeof(Hasher));
+  return MP_OBJ_FROM_PTR(o);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_monero_hasher_copy_obj, mod_trezorcrypto_monero_hasher_copy);
+
+
 //
 // Type defs
 //
@@ -797,6 +856,24 @@ STATIC const mp_obj_type_t mod_trezorcrypto_monero_bignum256modm_type = {
     .name = MP_QSTR_bignum256modm,
     .make_new = mod_trezorcrypto_monero_bignum256modm_make_new,
     .locals_dict = (void*)&mod_trezorcrypto_monero_bignum256modm_locals_dict,
+};
+
+STATIC const mp_rom_map_elem_t mod_trezorcrypto_monero_hasher_locals_dict_table[] = {
+    { MP_ROM_QSTR(MP_QSTR_update), MP_ROM_PTR(&mod_trezorcrypto_monero_hasher_update_obj) },
+    { MP_ROM_QSTR(MP_QSTR_digest), MP_ROM_PTR(&mod_trezorcrypto_monero_hasher_digest_obj) },
+    { MP_ROM_QSTR(MP_QSTR_copy), MP_ROM_PTR(&mod_trezorcrypto_monero_hasher_copy_obj) },
+    { MP_ROM_QSTR(MP_QSTR___del__), MP_ROM_PTR(&mod_trezorcrypto_monero_hasher___del___obj) },
+    { MP_ROM_QSTR(MP_QSTR_block_size), MP_OBJ_NEW_SMALL_INT(SHA3_256_BLOCK_LENGTH) },
+    { MP_ROM_QSTR(MP_QSTR_digest_size), MP_OBJ_NEW_SMALL_INT(SHA3_256_DIGEST_LENGTH) },
+};
+STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_monero_hasher_locals_dict, mod_trezorcrypto_monero_hasher_locals_dict_table);
+
+
+STATIC const mp_obj_type_t mod_trezorcrypto_monero_hasher_type = {
+    { &mp_type_type },
+    .name = MP_QSTR_hasher,
+    .make_new = mod_trezorcrypto_monero_hasher_make_new,
+    .locals_dict = (void*)&mod_trezorcrypto_monero_hasher_locals_dict,
 };
 
 STATIC const mp_rom_map_elem_t mod_trezorcrypto_monero_globals_table[] = {
