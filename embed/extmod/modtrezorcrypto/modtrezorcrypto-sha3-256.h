@@ -47,17 +47,21 @@ STATIC mp_obj_t mod_trezorcrypto_Sha3_256_make_new(const mp_obj_type_t *type, si
 
     // keccak = True / False keyword arg
     STATIC const mp_arg_t allowed_args[] = {
-        { MP_QSTR_keccak,   MP_ARG_BOOL, {.u_bool = 0} },
+        { MP_QSTR_data,    MP_ARG_OBJ,  {.u_obj = mp_const_none} },
+        { MP_QSTR_keccak,  MP_ARG_OBJ,  {.u_obj = MP_OBJ_NULL} },
     };
     mp_arg_val_t vals[MP_ARRAY_SIZE(allowed_args)];
     mp_arg_parse_all_kw_array(n_args, n_kw, args, MP_ARRAY_SIZE(allowed_args), allowed_args, vals);
-    if (n_kw > 0){
-        o->keccak = vals[0].u_bool ? 1 : -1;
+    if (vals[1].u_obj != MP_OBJ_NULL){
+        o->keccak = mp_obj_is_true(vals[1].u_obj) ? 1 : -1;
     }
 
     // constructor called with bytes/str as first parameter
     if (n_args >= 1 && args[0] != mp_const_none) {
         mod_trezorcrypto_Sha3_256_update(MP_OBJ_FROM_PTR(o), args[0]);
+    }
+    if (vals[0].u_obj != mp_const_none){
+        mod_trezorcrypto_Sha3_256_update(MP_OBJ_FROM_PTR(o), vals[0].u_obj);
     }
     return MP_OBJ_FROM_PTR(o);
 }
