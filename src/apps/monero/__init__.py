@@ -4,8 +4,8 @@ from trezor.messages.wire_types import \
 
 
 def dispatch_MoneroGetAddress(*args, **kwargs):
-    from .get_address import layout_lisk_get_address
-    # return layout_lisk_get_address(*args, **kwargs)
+    from .get_address import layout_monero_get_address
+    return layout_monero_get_address(*args, **kwargs)
 
 
 def dispatch_MoneroGetWatchKey(*args, **kwargs):
