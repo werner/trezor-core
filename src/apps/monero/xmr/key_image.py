@@ -7,7 +7,6 @@ from apps.monero.xmr.serialize import xmrtypes, xmrserialize
 from apps.monero.xmr import mlsag2, ring_ct, crypto, common, monero
 from apps.monero.misc import b58_mnr
 import collections
-import binascii
 
 
 class SubAddrIndicesList(xmrserialize.MessageType):

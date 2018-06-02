@@ -4,11 +4,9 @@
 # Author: Dusan Klinec, ph4r05, 2018
 # see https://eprint.iacr.org/2015/1098.pdf
 
-import logging
-from apps.monero.xmr import crypto, common
-from monero_serialize import xmrtypes
 
-logger = logging.getLogger(__name__)
+from apps.monero.xmr import crypto, common
+from apps.monero.xmr.serialize import xmrtypes
 
 
 def key_zero_vector(rows):

@@ -3,12 +3,10 @@
 # Author: https://github.com/monero-project/mininero
 # Author: Dusan Klinec, ph4r05, 2018
 
-import logging
 
 from apps.monero.xmr.serialize import xmrtypes
 from apps.monero.xmr import mlsag2, crypto, common, monero
 
-logger = logging.getLogger(__name__)
 ATOMS = 64
 
     
@@ -160,7 +158,7 @@ def decode_rct(rv, sk, i):
     H = crypto.gen_H()
     Ctmp = crypto.point_add(crypto.scalarmult_base(mask), crypto.scalarmult(H, amount))
     if not crypto.point_eq(crypto.point_sub(C, Ctmp), crypto.identity()):
-        logger.warning("warning, amount decoded incorrectly, will be unable to spend")
+        raise ValueError("warning, amount decoded incorrectly, will be unable to spend")
     return amount
 
 

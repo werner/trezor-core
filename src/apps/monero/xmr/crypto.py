@@ -9,11 +9,7 @@
 # https://tools.ietf.org/html/draft-josefsson-eddsa-ed25519-00#section-4
 # https://github.com/monero-project/research-lab
 
-import sys
-import operator
-import binascii
-
-from apps.monero.xmr.core.pycompat import *
+import ubinascii as binascii
 
 from apps.monero.xmr.serialize import xmrserialize
 from apps.monero.xmr import common
