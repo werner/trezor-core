@@ -8,6 +8,15 @@ from trezor.utils import chunks
 from .helpers import get_vote_tx_text
 
 
+async def require_confirm_watchkey(ctx):
+    content = Text('Confirm watch-only', ui.ICON_SEND,
+                   'Do you really want to',
+                   'return a watch-only?',
+                   ui.BOLD,
+                   icon_color=ui.GREEN)
+    return await require_confirm(ctx, content, ButtonRequestType.SignTx)
+
+
 async def require_confirm_tx(ctx, to, value):
     content = Text('Confirm sending', ui.ICON_SEND,
                    ui.BOLD, format_amount(value),

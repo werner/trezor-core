@@ -9,9 +9,8 @@ def dispatch_MoneroGetAddress(*args, **kwargs):
 
 
 def dispatch_MoneroGetWatchKey(*args, **kwargs):
-    pass
-    # from .get_public_key import lisk_get_public_key
-    # return lisk_get_public_key(*args, **kwargs)
+    from .get_watch_only import layout_monero_get_watch_only
+    return layout_monero_get_watch_only(*args, **kwargs)
 
 
 def dispatch_MoneroTsxSign(*args, **kwargs):
