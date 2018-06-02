@@ -612,6 +612,41 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_monero_ge25519_unpac
 // XMR defs
 //
 
+// int xmr_base58_addr_encode_check(uint64_t tag, const uint8_t *data, size_t binsz, char *b58, size_t b58sz);
+STATIC mp_obj_t mod_trezorcrypto_monero_xmr_base58_addr_encode_check(size_t n_args, const mp_obj_t *args){
+    uint8_t out[128];
+    mp_buffer_info_t data;
+    mp_get_buffer_raise(args[1], &data, MP_BUFFER_READ);
+
+    int sz = xmr_base58_addr_encode_check(mp_obj_get_int(args[0]), data.buf, data.len, (char *)out, sizeof(out));
+    if (sz == 0){
+        mp_raise_ValueError("b58 encoding error");
+    }
+
+    return mp_obj_new_bytes(out, sz);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_monero_xmr_base58_addr_encode_check_obj, 2, 2, mod_trezorcrypto_monero_xmr_base58_addr_encode_check);
+
+// int xmr_base58_addr_decode_check(const char *addr, size_t sz, uint64_t *tag, void *data, size_t datalen);
+STATIC mp_obj_t mod_trezorcrypto_monero_xmr_base58_addr_decode_check(size_t n_args, const mp_obj_t *args){
+    uint8_t out[128];
+    uint64_t tag;
+
+    mp_buffer_info_t data;
+    mp_get_buffer_raise(args[0], &data, MP_BUFFER_READ);
+
+    int sz = xmr_base58_addr_decode_check(data.buf, data.len, &tag, out, sizeof(out));
+    if (sz == 0){
+        mp_raise_ValueError("b58 decoding error");
+    }
+
+    mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(2, NULL));
+    tuple->items[0] = mp_obj_new_bytes(out, sz);
+    tuple->items[1] = mp_obj_new_int_from_ull(tag);
+    return MP_OBJ_FROM_PTR(tuple);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_monero_xmr_base58_addr_decode_check_obj, 1, 1, mod_trezorcrypto_monero_xmr_base58_addr_decode_check);
+
 // xmr_random_scalar
 STATIC mp_obj_t mod_trezorcrypto_monero_xmr_random_scalar(size_t n_args, const mp_obj_t *args){
     mp_obj_t res = n_args == 1 ? args[0] : mp_obj_new_scalar();
@@ -916,6 +951,8 @@ STATIC const mp_rom_map_elem_t mod_trezorcrypto_monero_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR_ge25519_double_scalarmult_vartime2), MP_ROM_PTR(&mod_trezorcrypto_monero_ge25519_double_scalarmult_vartime2_obj) },
     { MP_ROM_QSTR(MP_QSTR_ge25519_scalarmult_base), MP_ROM_PTR(&mod_trezorcrypto_monero_ge25519_scalarmult_base_obj) },
     { MP_ROM_QSTR(MP_QSTR_ge25519_scalarmult), MP_ROM_PTR(&mod_trezorcrypto_monero_ge25519_scalarmult_obj) },
+    { MP_ROM_QSTR(MP_QSTR_xmr_base58_addr_encode_check), MP_ROM_PTR(&mod_trezorcrypto_monero_xmr_base58_addr_encode_check_obj) },
+    { MP_ROM_QSTR(MP_QSTR_xmr_base58_addr_decode_check), MP_ROM_PTR(&mod_trezorcrypto_monero_xmr_base58_addr_decode_check_obj) },
     { MP_ROM_QSTR(MP_QSTR_xmr_random_scalar), MP_ROM_PTR(&mod_trezorcrypto_monero_xmr_random_scalar_obj) },
     { MP_ROM_QSTR(MP_QSTR_xmr_fast_hash), MP_ROM_PTR(&mod_trezorcrypto_monero_xmr_fast_hash_obj) },
     { MP_ROM_QSTR(MP_QSTR_xmr_hash_to_ec), MP_ROM_PTR(&mod_trezorcrypto_monero_xmr_hash_to_ec_obj) },
