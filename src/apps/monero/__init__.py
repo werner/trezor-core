@@ -14,9 +14,8 @@ def dispatch_MoneroGetWatchKey(*args, **kwargs):
 
 
 def dispatch_MoneroTsxSign(*args, **kwargs):
-    pass
-    # from .sign_tx import lisk_sign_tx
-    # return lisk_sign_tx(*args, **kwargs)
+    from .sign_tx import layout_sign_tx
+    return layout_sign_tx(*args, **kwargs)
 
 
 def dispatch_MoneroKeyImageSync(*args, **kwargs):
