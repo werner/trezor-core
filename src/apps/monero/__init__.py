@@ -20,9 +20,8 @@ def dispatch_MoneroTsxSign(*args, **kwargs):
 
 
 def dispatch_MoneroKeyImageSync(*args, **kwargs):
-    pass
-    # from .sign_tx import lisk_sign_tx
-    # return lisk_sign_tx(*args, **kwargs)
+    from .key_image_sync import layout_key_image_sync
+    return layout_key_image_sync(*args, **kwargs)
 
 
 def boot():
