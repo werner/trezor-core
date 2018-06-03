@@ -5,8 +5,6 @@ from trezor.messages import ButtonRequestType
 from trezor.ui.text import Text
 from trezor.utils import chunks
 
-from .helpers import get_vote_tx_text
-
 
 async def require_confirm_watchkey(ctx):
     content = Text('Confirm watch-only', ui.ICON_SEND,
@@ -31,22 +29,6 @@ async def require_confirm_tx(ctx, to, value):
                    ui.BOLD, format_amount(value),
                    ui.NORMAL, 'to',
                    ui.MONO, *split_address(to),
-                   icon_color=ui.GREEN)
-    return await require_confirm(ctx, content, ButtonRequestType.SignTx)
-
-
-async def require_confirm_delegate_registration(ctx, delegate_name):
-    content = Text('Confirm transaction', ui.ICON_SEND,
-                   'Do you really want to',
-                   'register a delegate?',
-                   ui.BOLD, *chunks(delegate_name, 20),
-                   icon_color=ui.GREEN)
-    return await require_confirm(ctx, content, ButtonRequestType.SignTx)
-
-
-async def require_confirm_vote_tx(ctx, votes):
-    content = Text('Confirm transaction', ui.ICON_SEND,
-                   *get_vote_tx_text(votes),
                    icon_color=ui.GREEN)
     return await require_confirm(ctx, content, ButtonRequestType.SignTx)
 
