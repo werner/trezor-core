@@ -91,7 +91,7 @@ class TrezorLite(object):
         self.iface = trezor_iface.get_iface(ctx)
 
         if msg.init:
-            await self.setup(msg)
+            await self.setup(msg.init)
             return await self.tsx_init(msg.init.tsx_data)
         elif msg.set_input:
             return await self.tsx_set_input(msg.set_input)
@@ -127,7 +127,7 @@ class TrezorLite(object):
             await self.tsx_exc_handler(e)
             return MoneroRespError(exc=e)
 
-    async def tsx_set_input(self, src_entr):
+    async def tsx_set_input(self, msg: MoneroTsxSetInput):
         """
         Sets UTXO one by one.
         Computes spending secret key, key image. tx.vin[i] + HMAC, Pedersen commitment on amount.
@@ -136,29 +136,29 @@ class TrezorLite(object):
         Otherwise pseudo_outs are offloaded with HMAC, alpha is offloaded encrypted under AES-GCM() with
         key derived for exactly this purpose.
 
-        :param src_entr
-        :type src_entr: xmrtypes.TxSourceEntry
+        :param msg
         :return:
         """
         try:
+            src_entr = await trezor_misc.parse_src_entry(msg.src_entr)
             return await self.tsx_obj.set_input(src_entr)
         except Exception as e:
             await self.tsx_exc_handler(e)
             return MoneroRespError(exc=e)
 
-    async def tsx_inputs_permutation(self, permutation):
+    async def tsx_inputs_permutation(self, msg: MoneroTsxInputsPermutation):
         """
         Set permutation on the inputs - sorted by key image on host.
 
         :return:
         """
         try:
-            return await self.tsx_obj.tsx_inputs_permutation(permutation)
+            return await self.tsx_obj.tsx_inputs_permutation(msg.perm)
         except Exception as e:
             await self.tsx_exc_handler(e)
             return MoneroRespError(exc=e)
 
-    async def tsx_input_vini(self, *args, **kwargs):
+    async def tsx_input_vini(self, msg: MoneroTsxInputVini):
         """
         Set tx.vin[i] for incremental tx prefix hash computation.
         After sorting by key images on host.
@@ -166,28 +166,29 @@ class TrezorLite(object):
         :return:
         """
         try:
-            return await self.tsx_obj.input_vini(*args, **kwargs)
+            src_entr = await trezor_misc.parse_src_entry(msg.src_entr)
+            vini = await trezor_misc.parse_vini(msg.vini)
+            return await self.tsx_obj.input_vini(src_entr, vini, msg.vini_hmac, msg.pseudo_out, msg.pseudo_out_hmac)
         except Exception as e:
             await self.tsx_exc_handler(e)
             return MoneroRespError(exc=e)
 
-    async def tsx_set_output1(self, dst_entr, dst_entr_hmac):
+    async def tsx_set_output1(self, msg: MoneroTsxSetOutput):
         """
         Set destination entry one by one.
         Computes destination stealth address, amount key, range proof + HMAC, out_pk, ecdh_info.
 
-        :param dst_entr
-        :type dst_entr: xmrtypes.TxDestinationEntry
-        :param dst_entr_hmac
+        :param msg
         :return:
         """
         try:
-            return await self.tsx_obj.set_out1(dst_entr, dst_entr_hmac)
+            dst_entr = await trezor_misc.parse_dst_entry(msg.dst_entr)
+            return await self.tsx_obj.set_out1(dst_entr, msg.dst_entr_hmac)
         except Exception as e:
             await self.tsx_exc_handler(e)
             return MoneroRespError(exc=e)
 
-    async def tsx_all_out1_set(self, msg=None):
+    async def tsx_all_out1_set(self, msg: MoneroTsxAllOutSet = None):
         """
         All outputs were set in this phase. Computes additional public keys (if needed), tx.extra and
         transaction prefix hash.
@@ -206,7 +207,7 @@ class TrezorLite(object):
             await self.tsx_exc_handler(e)
             return MoneroRespError(exc=e)
 
-    async def tsx_mlsag_done(self):
+    async def tsx_mlsag_done(self, msg: MoneroTsxMlsagDone = None):
         """
         MLSAG message computed.
 
@@ -218,19 +219,22 @@ class TrezorLite(object):
             await self.tsx_exc_handler(e)
             return MoneroRespError(exc=e)
 
-    async def tsx_sign_input(self, src_entr, vini, hmac_vini, pseudo_out, alpha):
+    async def tsx_sign_input(self, msg: MoneroTsxSignInput):
         """
         Generates a signature for one input.
         
         :return:
         """
         try:
-            return await self.tsx_obj.sign_input(src_entr, vini, hmac_vini, pseudo_out, alpha)
+            src_entr = await trezor_misc.parse_src_entry(msg.src_entr)
+            vini = await trezor_misc.parse_vini(msg.vini)
+            return await self.tsx_obj.sign_input(src_entr, vini, msg.vini_hmac,
+                                                 msg.pseudo_out, msg.pseudo_out_hmac, msg.alpha)
         except Exception as e:
             await self.tsx_exc_handler(e)
             return MoneroRespError(exc=e)
 
-    async def tsx_sign_final(self, *args, **kwargs):
+    async def tsx_sign_final(self, msg: MoneroTsxFinal = None):
         """
         Final message.
         Offloading tx related data, encrypted.
@@ -238,7 +242,7 @@ class TrezorLite(object):
         :return:
         """
         try:
-            return await self.tsx_obj.final_msg(*args, **kwargs)
+            return await self.tsx_obj.final_msg()
         except Exception as e:
             await self.tsx_exc_handler(e)
             return MoneroRespError(exc=e)
@@ -1160,7 +1164,7 @@ class TTransaction(object):
 
         return MoneroTsxMlsagDoneResp(full_message_hash=self.full_message)
 
-    async def sign_input(self, src_entr, vini, hmac_vini, pseudo_out, alpha):
+    async def sign_input(self, src_entr, vini, hmac_vini, pseudo_out, pseudo_out_hmac, alpha):
         """
         Generates a signature for one input.
 
@@ -1170,6 +1174,7 @@ class TTransaction(object):
         :param hmac_vini: HMAC for the tx.vin[i] as returned from Trezor
         :param pseudo_out: pedersen commitment for the current input, uses alpha as the mask.
         Only in memory offloaded scenario. Tuple containing HMAC, as returned from the Trezor.
+        :param pseudo_out_hmac:
         :param alpha: alpha mask for the current input. Only in memory offloaded scenario,
         tuple as returned from the Trezor
         :return: Generated signature MGs[i]
@@ -1182,7 +1187,7 @@ class TTransaction(object):
             raise ValueError('Invalid ins')
         if not self.in_memory() and alpha is None:
             raise ValueError('Inconsistent')
-        if not self.in_memory() and pseudo_out[0] is None:
+        if not self.in_memory() and pseudo_out is None:
             raise ValueError('Inconsistent')
         if self.inp_idx >= 1 and not self.use_simple_rct:
             raise ValueError('Inconsistent')
@@ -1195,13 +1200,13 @@ class TTransaction(object):
             raise ValueError('HMAC is not correct')
 
         if not self.in_memory():
-            pseudo_out_hmac = crypto.compute_hmac(self.hmac_key_txin_comm(inv_idx), pseudo_out[0])
-            if not common.ct_equal(pseudo_out_hmac, pseudo_out[1]):
+            pseudo_out_hmac_comp = crypto.compute_hmac(self.hmac_key_txin_comm(inv_idx), pseudo_out)
+            if not common.ct_equal(pseudo_out_hmac_comp, pseudo_out_hmac):
                 raise ValueError('HMAC is not correct')
 
             alpha_c = chacha_poly.decrypt(self.enc_key_txin_alpha(inv_idx), alpha[0], alpha[1], alpha[2])
             alpha_c = crypto.decodeint(alpha_c)
-            pseudo_out_c = crypto.decodepoint(pseudo_out[0])
+            pseudo_out_c = crypto.decodepoint(pseudo_out)
 
         elif self.use_simple_rct:
             alpha_c = self.input_alphas[self.inp_idx]
@@ -1261,7 +1266,7 @@ class TTransaction(object):
 
         return MoneroTsxSignInputResp(signature=mgs[0], cout=cout)
 
-    async def final_msg(self, *args, **kwargs):
+    async def final_msg(self):
         """
         Final step after transaction signing.
 

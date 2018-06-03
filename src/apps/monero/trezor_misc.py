@@ -79,6 +79,23 @@ async def tsx_data_translate(tsx_data: MoneroTsxData):
     return tsxd
 
 
+async def parse_msg(bts, msg):
+    reader = xmrserialize.MemoryReaderWriter(bts)
+    ar = xmrserialize.Archive(reader, False)
+    return await ar.message(msg)
+
+
+async def parse_src_entry(bts):
+    return await parse_msg(bts, xmrtypes.TxSourceEntry())
+
+
+async def parse_dst_entry(bts):
+    return await parse_msg(bts, xmrtypes.TxDestinationEntry())
+
+
+async def parse_vini(bts):
+    return await parse_msg(bts, xmrtypes.TxinToKey())
+
 
 
 

@@ -20,7 +20,7 @@ TX_STATE = None
 
 async def layout_sign_tx(ctx, msg: MoneroTsxSign):
     global TX_STATE
-    if TX_STATE is None:
+    if TX_STATE is None or msg.init:
         TX_STATE = TrezorLite()
 
     try:
