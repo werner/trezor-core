@@ -97,5 +97,10 @@ async def parse_vini(bts):
     return await parse_msg(bts, xmrtypes.TxinToKey())
 
 
+async def dump_msg(msg):
+    writer = xmrserialize.MemoryReaderWriter()
+    ar = xmrserialize.Archive(writer, True)
+    return await ar.message(msg)
+
 
 

@@ -793,7 +793,7 @@ class TTransaction(object):
         if self.inp_idx + 1 == self.num_inputs():
             await self.tsx_inputs_done()
 
-        return MoneroTsxSetInputResp(vini=vini, vini_hmac=hmac_vini,
+        return MoneroTsxSetInputResp(vini=await trezor_misc.dump_msg(vini), vini_hmac=hmac_vini,
                                      pseudo_out=pseudo_out, pseudo_out_hmac=pseudo_out_hmac,
                                      alpha_enc=alpha_enc)
 
@@ -964,16 +964,15 @@ class TTransaction(object):
             raise ValueError('Bulletproof not yet supported')
 
         else:
-            C, mask, rsig = ring_ct.prove_range(amount, last_mask, backend_impl=True)
+            C, mask, rsig = ring_ct.prove_range(amount, last_mask)
 
             if __debug__:
-                self.assrt(ring_ct.ver_range(C, rsig))
                 self.assrt(crypto.point_eq(C, crypto.point_add(
                     crypto.scalarmult_base(mask),
                     crypto.scalarmult_h(amount))))
 
             # Incremental hashing
-            await self.full_message_hasher.rsig_val(rsig, self.use_bulletproof)
+            await self.full_message_hasher.rsig_val(rsig, self.use_bulletproof, raw=True)
 
         # Mask sum
         out_pk.mask = crypto.encodepoint(C)
@@ -1056,9 +1055,6 @@ class TTransaction(object):
 
         # Range proof, out_pk, ecdh_info
         rsig, out_pk, ecdh_info = await self.range_proof(self.out_idx, dest_pub_key=tk.key, amount=dst_entr.amount, amount_key=amount_key)
-        kwriter = monero.get_keccak_writer()
-        ar = xmrserialize.Archive(kwriter, True)
-        await ar.message(rsig)
 
         # Incremental hashing of the ECDH info.
         # RctSigBase allows to hash only one of the (ecdh, out_pk) as they are serialized
@@ -1068,7 +1064,10 @@ class TTransaction(object):
         # Output_pk is stored to the state as it is used during the signature and hashed to the
         # RctSigBase later.
         self.output_pk.append(out_pk)
-        return MoneroTsxSetOutputResp(tx_out=tx_out, hmac_vouti=hmac_vouti, rsig=rsig, out_pk=out_pk, ecdh_info=ecdh_info)
+        return MoneroTsxSetOutputResp(tx_out=await trezor_misc.dump_msg(tx_out),
+                                      vouti_hmac=hmac_vouti, rsig=rsig,
+                                      out_pk=await trezor_misc.dump_msg(out_pk),
+                                      ecdh_info=await trezor_misc.dump_msg(ecdh_info))
 
     async def all_out1_set(self):
         """
@@ -1122,7 +1121,8 @@ class TTransaction(object):
             self.state.set_fail()
             raise trezor_misc.TrezorTxPrefixHashNotMatchingError()
 
-        return MoneroTsxAllOutSetResp(extra=self.tx.extra, tx_prefix_hash=self.tx_prefix_hash, rv=rv)
+        return MoneroTsxAllOutSetResp(extra=self.tx.extra, tx_prefix_hash=self.tx_prefix_hash,
+                                      rv=await trezor_misc.dump_msg(rv))
 
     async def tsx_mlsag_ecdh_info(self):
         """
@@ -1264,7 +1264,7 @@ class TTransaction(object):
             self.state.set_signature_done()
             await self.trezor.iface.transaction_signed()
 
-        return MoneroTsxSignInputResp(signature=mgs[0], cout=cout)
+        return MoneroTsxSignInputResp(signature=await trezor_misc.dump_msg(mgs[0]), cout=cout)
 
     async def final_msg(self):
         """
