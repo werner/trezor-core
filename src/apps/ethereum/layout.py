@@ -1,17 +1,18 @@
-from apps.common.confirm import *
-from apps.ethereum import tokens
+from ubinascii import hexlify
+
 from trezor import ui
 from trezor.utils import chunks, format_amount
 from trezor.messages import ButtonRequestType
 from trezor.ui.text import Text
-from ubinascii import hexlify
-from . import networks
-from .get_address import _ethereum_address_hex
+
+from apps.common.confirm import require_confirm, require_hold_to_confirm
+from apps.ethereum import networks, tokens
+from apps.ethereum.get_address import _ethereum_address_hex
 
 
 async def require_confirm_tx(ctx, to, value, chain_id, token=None, tx_type=None):
     if to:
-        str_to = _ethereum_address_hex(to)
+        str_to = _ethereum_address_hex(to, networks.by_chain_id(chain_id))
     else:
         str_to = 'new contract?'
     content = Text('Confirm sending', ui.ICON_SEND,
@@ -59,7 +60,7 @@ def format_ethereum_amount(value: int, token, chain_id: int, tx_type=None):
         suffix = token[2]
         decimals = token[3]
     else:
-        suffix = networks.suffix_by_chain_id(chain_id, tx_type)
+        suffix = networks.shortcut_by_chain_id(chain_id, tx_type)
         decimals = 18
 
     if value <= 1e9:

@@ -28,6 +28,7 @@ CPPDEFINES_MOD += [
     ('USE_KECCAK', '1'),
     ('USE_ETHEREUM', '1'),
     ('USE_MONERO', '1'),
+    ('USE_NEM', '1'),
 ]
 SOURCE_MOD += [
     'embed/extmod/modtrezorcrypto/modtrezorcrypto.c',
@@ -39,6 +40,7 @@ SOURCE_MOD += [
     'vendor/trezor-crypto/aes/aes_modes.c',
     'vendor/trezor-crypto/aes/aestab.c',
     'vendor/trezor-crypto/base58.c',
+    'vendor/trezor-crypto/base32.c',
     'vendor/trezor-crypto/bignum.c',
     'vendor/trezor-crypto/bip32.c',
     'vendor/trezor-crypto/bip39.c',
@@ -71,6 +73,7 @@ SOURCE_MOD += [
     'vendor/trezor-crypto/hasher.c',
     'vendor/trezor-crypto/hmac.c',
     'vendor/trezor-crypto/memzero.c',
+    'vendor/trezor-crypto/nem.c',
     'vendor/trezor-crypto/nist256p1.c',
     'vendor/trezor-crypto/pbkdf2.c',
     'vendor/trezor-crypto/rand.c',
@@ -337,7 +340,6 @@ env.Replace(
     ] + CPPPATH_MOD,
     CPPDEFINES=[
         'TREZOR_MODEL_T',
-        'MCU_SERIES_F4',
         'STM32F427xx',
         'USE_HAL_DRIVER',
         ('STM32_HAL_H', '"<stm32f4xx.h>"'),

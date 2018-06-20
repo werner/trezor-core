@@ -26,6 +26,7 @@ CPPDEFINES_MOD += [
     ('USE_KECCAK', '1'),
     ('USE_ETHEREUM', '1'),
     ('USE_MONERO', '1'),
+    ('USE_NEM', '1'),
 ]
 SOURCE_MOD += [
     'embed/extmod/modtrezorcrypto/modtrezorcrypto.c',
@@ -36,6 +37,7 @@ SOURCE_MOD += [
     'vendor/trezor-crypto/aes/aes_modes.c',
     'vendor/trezor-crypto/aes/aestab.c',
     'vendor/trezor-crypto/base58.c',
+    'vendor/trezor-crypto/base32.c',
     'vendor/trezor-crypto/bignum.c',
     'vendor/trezor-crypto/bip32.c',
     'vendor/trezor-crypto/bip39.c',
@@ -75,6 +77,7 @@ SOURCE_MOD += [
     'vendor/trezor-crypto/secp256k1.c',
     'vendor/trezor-crypto/sha2.c',
     'vendor/trezor-crypto/sha3.c',
+    'vendor/trezor-crypto/nem.c',
 ]
 
 # modtrezorio
@@ -137,8 +140,6 @@ SOURCE_MICROPYTHON = [
     'vendor/micropython/py/emitbc.c',
     'vendor/micropython/py/emitcommon.c',
     'vendor/micropython/py/emitglue.c',
-    'vendor/micropython/py/emitinlinethumb.c',
-    'vendor/micropython/py/emitinlinextensa.c',
     'vendor/micropython/py/formatfloat.c',
     'vendor/micropython/py/frozenmod.c',
     'vendor/micropython/py/gc.c',
@@ -156,6 +157,7 @@ SOURCE_MICROPYTHON = [
     'vendor/micropython/py/mpstate.c',
     'vendor/micropython/py/mpz.c',
     'vendor/micropython/py/nativeglue.c',
+    'vendor/micropython/py/nlr.c',
     'vendor/micropython/py/nlrx86.c',
     'vendor/micropython/py/nlrx64.c',
     'vendor/micropython/py/obj.c',
@@ -234,9 +236,7 @@ SOURCE_UNIX = [
     'embed/unix/usb.c',
 ]
 
-SOURCE_EMIT_NATIVE = ['vendor/micropython/py/emitnative.c']
-
-SOURCE_QSTR = SOURCE_MOD + SOURCE_MICROPYTHON + SOURCE_UNIX + SOURCE_EMIT_NATIVE
+SOURCE_QSTR = SOURCE_MOD + SOURCE_MICROPYTHON + SOURCE_UNIX
 
 env = Environment(ENV=os.environ, CFLAGS=ARGUMENTS.get('CFLAGS', ''))
 
@@ -282,11 +282,6 @@ env.Replace(
     MPY_TOOL='$PYTHON vendor/micropython/tools/mpy-tool.py',
     MPY_CROSS='vendor/micropython/mpy-cross/mpy-cross', )
 
-if int(ARGUMENTS.get('TREZOR_X86', '0')):
-    env.Append(
-        CCFLAGS='-m32',
-        LINKFLAGS='-m32', )
-
 #
 # Micropython version
 #
@@ -322,21 +317,6 @@ obj_program = []
 obj_program += env.Object(source=SOURCE_MOD)
 obj_program += env.Object(source=SOURCE_MICROPYTHON)
 obj_program += env.Object(source=SOURCE_UNIX)
-
-obj_program += env.Object(
-    source=SOURCE_EMIT_NATIVE,
-    target='vendor/micropython/py/emitnx64.o',
-    CPPDEFINES=[env['CPPDEFINES'], 'N_X64'], )
-
-obj_program += env.Object(
-    source=SOURCE_EMIT_NATIVE,
-    target='vendor/micropython/py/emitnx86.o',
-    CPPDEFINES=[env['CPPDEFINES'], 'N_X86'], )
-
-obj_program += env.Object(
-    source=SOURCE_EMIT_NATIVE,
-    target='vendor/micropython/py/emitnthumb.o',
-    CPPDEFINES=[env['CPPDEFINES'], 'N_THUMB'], )
 
 env.Depends(obj_program, qstr_generated)
 
