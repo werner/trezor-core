@@ -56,7 +56,7 @@ async def require_confirm_fee(ctx, value, fee):
 
 
 def format_amount(value):
-    return '%s LSK' % (int(value) / 100000000)
+    return '%f XMR' % (value / 1000000000000)
 
 
 def split_address(address):
