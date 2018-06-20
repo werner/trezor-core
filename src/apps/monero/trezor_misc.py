@@ -65,7 +65,7 @@ async def translate_monero_dest_entry(dst_entry: MoneroTxDestinationEntry):
     return d
 
 
-async def tsx_data_translate(tsx_data: MoneroTsxData):
+async def translate_tsx_data(tsx_data: MoneroTsxData):
     tsxd = TsxData()
     for fld in TsxData.MFIELDS:
         fname = fld[0]

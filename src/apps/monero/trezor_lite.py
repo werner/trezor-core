@@ -47,7 +47,7 @@ class TrezorLite(object):
         self.ctx = None
         self.tsx_ctr = 0
         self.err_ctr = 0
-        self.tsx_obj = None  # type: TTransaction
+        self.tsx_obj = None  # type: TTransactionBuilder
         self.creds = None  # type: monero.AccountCreds
         self.iface = trezor_iface.get_iface()
         self.debug = True
@@ -119,9 +119,9 @@ class TrezorLite(object):
         :return:
         """
         self.tsx_ctr += 1
-        self.tsx_obj = TTransaction(self, creds=self.creds)
+        self.tsx_obj = TTransactionBuilder(self, creds=self.creds)
         try:
-            tsxd = await trezor_misc.tsx_data_translate(tsx_data)
+            tsxd = await trezor_misc.translate_tsx_data(tsx_data)
             return await self.tsx_obj.init_transaction(tsxd, self.tsx_ctr)
         except Exception as e:
             await self.tsx_exc_handler(e)
@@ -344,7 +344,7 @@ class TState(object):
         return self.s in [self.FINAL, self.FAIL]
 
 
-class TTransaction(object):
+class TTransactionBuilder(object):
     """
     Transaction builder
     """
