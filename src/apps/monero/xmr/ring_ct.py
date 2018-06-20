@@ -9,28 +9,6 @@ from apps.monero.xmr import mlsag2, crypto, common, monero
 
 ATOMS = 64
 
-    
-def d2b(n, digits):
-    b = [0] * digits
-    i = 0
-    while n:
-        b[i] = n & 1
-        i = i + 1
-        n >>= 1
-    return b 
-
-
-def sum_Ci(Cis):
-    """
-    Sums points
-    :param Cis:
-    :return:
-    """
-    CSum = crypto.identity()
-    for i in Cis:
-        CSum = crypto.point_add(CSum, i)
-    return CSum
-
 
 def prove_range(amount, last_mask=None, decode=False):
     """
