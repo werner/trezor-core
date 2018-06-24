@@ -56,7 +56,7 @@ def compute_tx_key(spend_key_private, tx_prefix_hash, salt=None, rand_mult=None)
     return tx_key, salt, rand_mult
 
 
-async def translate_monero_dest_entry(dst_entry: MoneroTxDestinationEntry):
+def translate_monero_dest_entry(dst_entry: MoneroTxDestinationEntry):
     d = xmrtypes.TxDestinationEntry()
     d.amount = dst_entry.amount
     d.is_subaddress = dst_entry.is_subaddress
@@ -80,7 +80,7 @@ async def translate_tsx_data(tsx_data: MoneroTsxData):
 
 
 async def parse_msg(bts, msg):
-    reader = xmrserialize.MemoryReaderWriter(bts)
+    reader = xmrserialize.MemoryReaderWriter(bytearray(bts))
     ar = xmrserialize.Archive(reader, False)
     return await ar.message(msg)
 
@@ -100,7 +100,8 @@ async def parse_vini(bts):
 async def dump_msg(msg):
     writer = xmrserialize.MemoryReaderWriter()
     ar = xmrserialize.Archive(writer, True)
-    return await ar.message(msg)
+    await ar.message(msg)
+    return bytes(writer.buffer)
 
 
 
