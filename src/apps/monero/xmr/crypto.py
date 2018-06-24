@@ -31,29 +31,6 @@ def b16_to_scalar(bts):
 #
 
 
-def public_key(sk):
-    """
-    Creates public key from the private key (integer scalar)
-    Returns encoded point
-    :param sk:
-    :return:
-    """
-    return encodepoint(scalarmult_base(sk))
-
-
-def gen_Hpow(size):
-    """
-    Returns powers of point H
-    :return:
-    """
-    HPow2 = gen_H()
-    H2 = [None] * size
-    for i in range(0, size):
-        H2[i] = HPow2
-        HPow2 = point_double(HPow2)
-    return H2
-
-
 def hmac_point(key, point):
     """
     HMAC single point
