@@ -11,7 +11,7 @@ from apps.monero.xmr.monero import TsxData, classify_subaddresses
 from apps.monero.xmr import monero, mlsag2, ring_ct, crypto, common, trezor
 from apps.monero.xmr.enc import chacha_poly
 
-from trezor.messages import MoneroRespError, MoneroTsxSign, \
+from apps.monero.messages import MoneroRespError, MoneroTsxSign, \
     MoneroTsxInit, MoneroTsxInitResp, \
     MoneroTsxData, MoneroTsxSetInput, MoneroTsxSetInputResp, \
     MoneroTsxInputsPermutation, MoneroTsxInputsPermutationResp, \

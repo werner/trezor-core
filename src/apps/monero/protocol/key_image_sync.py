@@ -3,17 +3,12 @@
 # Author: Dusan Klinec, ph4r05, 2018
 
 
-import ubinascii as binascii
+from monero_glue import trezor_iface, trezor_misc
+from monero_glue.xmr import monero, crypto, common, key_image
+from monero_glue.xmr.enc import chacha_poly
+from monero_glue.trezor import wrapper as twrap
 
-from apps.monero import trezor_iface, trezor_misc
-from apps.monero.xmr.serialize import xmrtypes, xmrserialize
-from apps.monero.xmr.monero import TsxData, classify_subaddresses
-from apps.monero.xmr import monero, mlsag2, ring_ct, crypto, common, key_image, trezor
-from apps.monero.xmr.enc import chacha_poly
-from apps.monero.xmr import trezor as twrap
-
-from apps.monero import layout
-from apps.monero.messages import MoneroKeyImageSync, MoneroExportedKeyImage, \
+from monero_glue.messages import MoneroKeyImageSync, MoneroExportedKeyImage, \
     MoneroKeyImageExportInit, MoneroKeyImageExportInitResp, \
     MoneroKeyImageSyncStep, MoneroKeyImageSyncStepResp, \
     MoneroKeyImageSyncFinal, MoneroKeyImageSyncFinalResp, \
@@ -51,7 +46,7 @@ class KeyImageSync(object):
 
         # Sub address precomputation
         if msg.subs and len(msg.subs) > 0:
-            for sub in msg.subs:  # type: MoneroSubAddrIndicesList
+            for sub in msg.subs:  # type: key_image.MoneroSubAddrIndicesList
                 monero.compute_subaddresses(self.creds, sub.account, sub.minor_indices, self.subaddresses)
         return MoneroKeyImageExportInitResp()
 
@@ -96,31 +91,6 @@ class KeyImageSync(object):
             raise ValueError('Invalid hash')
 
         return MoneroKeyImageSyncFinalResp(enc_key=self.enc_key)
-
-
-SYNC_STATE = None
-
-
-async def layout_key_image_sync(ctx, msg: MoneroKeyImageSync):
-    global SYNC_STATE
-    try:
-        if msg.init:
-            SYNC_STATE = KeyImageSync()
-            return await SYNC_STATE.init(ctx, msg.init)
-
-        elif msg.step:
-            return await SYNC_STATE.sync(ctx, msg.step)
-
-        elif msg.final_msg:
-            res = await SYNC_STATE.final(ctx, msg.final_msg)
-            SYNC_STATE = None
-            return res
-
-        else:
-            raise ValueError('Unknown error')
-
-    except Exception as e:
-        SYNC_STATE = None
 
 
 
