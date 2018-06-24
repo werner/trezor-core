@@ -23,3 +23,7 @@ async def monero_get_creds(ctx, address_n=None, network_type=None):
 def get_interface(ctx):
     return trezor_iface.get_iface(ctx)
 
+
+def exc2str(e):
+    return str(e)
+
