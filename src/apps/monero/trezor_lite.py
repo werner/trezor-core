@@ -38,9 +38,9 @@ from trezor.messages.MoneroTsxFinalResp import MoneroTsxFinalResp
 #         super().__init__(*args, **kwargs)
 
 
-class TrezorLite(object):
+class TsxSigner(object):
     """
-    Main Trezor object.
+    Monero Transaction signer.
     Provides interface to the host, packages messages.
     """
     def __init__(self):
@@ -75,7 +75,7 @@ class TrezorLite(object):
         Delete global state?
         :return:
         """
-        return self.tsx_obj.is_terminal() or self.purge
+        return self.purge or (self.tsx_obj and self.tsx_obj.is_terminal())
 
     async def setup(self, msg: MoneroTsxInit):
         self.creds = await trezor.monero_get_creds(self.ctx, msg.address_n or (), msg.network_type)
@@ -358,7 +358,7 @@ class TTransactionBuilder(object):
     STEP_SIGN = 700
 
     def __init__(self, trezor=None, creds=None, **kwargs):
-        self.trezor = trezor  # type: TrezorLite
+        self.trezor = trezor  # type: TsxSigner
         self.creds = creds  # type: monero.AccountCreds
         self.key_master = None
         self.key_hmac = None
@@ -1065,7 +1065,7 @@ class TTransactionBuilder(object):
         # RctSigBase later.
         self.output_pk.append(out_pk)
         return MoneroTsxSetOutputResp(tx_out=await trezor_misc.dump_msg(tx_out),
-                                      vouti_hmac=hmac_vouti, rsig=rsig,
+                                      vouti_hmac=hmac_vouti, rsig=rsig,  # rsig is already byte-encoded
                                       out_pk=await trezor_misc.dump_msg(out_pk),
                                       ecdh_info=await trezor_misc.dump_msg(ecdh_info))
 
