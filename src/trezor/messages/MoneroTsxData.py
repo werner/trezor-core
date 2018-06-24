@@ -21,7 +21,7 @@ class MoneroTsxData(p.MessageType):
         9: ('account', p.UVarintType, 0),
         10: ('minor_indices', p.UVarintType, p.FLAG_REPEATED),
         11: ('is_multisig', p.BoolType, 0),
-        12: ('exp_tx_prefix_hash', p.UnicodeType, 0),
+        12: ('exp_tx_prefix_hash', p.BytesType, 0),
         13: ('use_tx_keys', p.BytesType, p.FLAG_REPEATED),
     }
 
@@ -38,7 +38,7 @@ class MoneroTsxData(p.MessageType):
         account: int = None,
         minor_indices: List[int] = None,
         is_multisig: bool = None,
-        exp_tx_prefix_hash: str = None,
+        exp_tx_prefix_hash: bytes = None,
         use_tx_keys: List[bytes] = None
     ) -> None:
         self.version = version

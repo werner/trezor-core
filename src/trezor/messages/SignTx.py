@@ -10,8 +10,7 @@ class SignTx(p.MessageType):
         3: ('coin_name', p.UnicodeType, 0),  # default='Bitcoin'
         4: ('version', p.UVarintType, 0),  # default=1
         5: ('lock_time', p.UVarintType, 0),  # default=0
-        6: ('expiry', p.UVarintType, 0),
-        7: ('overwintered', p.BoolType, 0),
+        6: ('decred_expiry', p.UVarintType, 0),
     }
 
     def __init__(
@@ -21,13 +20,11 @@ class SignTx(p.MessageType):
         coin_name: str = None,
         version: int = None,
         lock_time: int = None,
-        expiry: int = None,
-        overwintered: bool = None
+        decred_expiry: int = None
     ) -> None:
         self.outputs_count = outputs_count
         self.inputs_count = inputs_count
         self.coin_name = coin_name
         self.version = version
         self.lock_time = lock_time
-        self.expiry = expiry
-        self.overwintered = overwintered
+        self.decred_expiry = decred_expiry
