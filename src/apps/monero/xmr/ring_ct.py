@@ -10,7 +10,7 @@ from apps.monero.xmr import mlsag2, crypto, common, monero
 ATOMS = 64
 
 
-def prove_range(amount, last_mask=None, decode=False):
+def prove_range(amount, last_mask=None, decode=False, backend_impl=True, byte_enc=True):
     """
     Range proof generator.
     In order to minimize the memory consumption and CPU usage during transaction generation the returned values
@@ -18,12 +18,14 @@ def prove_range(amount, last_mask=None, decode=False):
 
     :param amount:
     :param last_mask:
-    :param use_asnl: ASNL range proof, insecure
-    :param mem_opt: memory optimized
     :param backend_impl: backend implementation, if available
     :param decode: decodes output
+    :param byte_enc: byte encoded
     :return:
     """
+    if not backend_impl or not byte_enc:
+        raise ValueError
+
     C, a, R = crypto.prove_range(amount, last_mask)[:3]  # backend returns encoded
     if decode:
         R = monero.recode_rangesig(R, encode=False)

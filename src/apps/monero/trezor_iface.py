@@ -16,6 +16,7 @@ class TrezorInterface(object):
         """
         Ask for confirmation from user
         :param tsx_data:
+        :param ctx:
         :return:
         """
         return True

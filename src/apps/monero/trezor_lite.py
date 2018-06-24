@@ -11,31 +11,16 @@ from apps.monero.xmr.monero import TsxData, classify_subaddresses
 from apps.monero.xmr import monero, mlsag2, ring_ct, crypto, common, trezor
 from apps.monero.xmr.enc import chacha_poly
 
-from trezor.messages.MoneroRespError import MoneroRespError
-from trezor.messages.MoneroTsxSign import MoneroTsxSign
-from trezor.messages.MoneroTsxInit import MoneroTsxInit
-from trezor.messages.MoneroTsxInitResp import MoneroTsxInitResp
-from trezor.messages.MoneroTsxData import MoneroTsxData
-from trezor.messages.MoneroTsxSetInput import MoneroTsxSetInput
-from trezor.messages.MoneroTsxSetInputResp import MoneroTsxSetInputResp
-from trezor.messages.MoneroTsxInputsPermutation import MoneroTsxInputsPermutation
-from trezor.messages.MoneroTsxInputsPermutationResp import MoneroTsxInputsPermutationResp
-from trezor.messages.MoneroTsxInputVini import MoneroTsxInputVini
-from trezor.messages.MoneroTsxInputViniResp import MoneroTsxInputViniResp
-from trezor.messages.MoneroTsxSetOutput import MoneroTsxSetOutput
-from trezor.messages.MoneroTsxSetOutputResp import MoneroTsxSetOutputResp
-from trezor.messages.MoneroTsxAllOutSet import MoneroTsxAllOutSet
-from trezor.messages.MoneroTsxAllOutSetResp import MoneroTsxAllOutSetResp
-from trezor.messages.MoneroTsxMlsagDone import MoneroTsxMlsagDone
-from trezor.messages.MoneroTsxMlsagDoneResp import MoneroTsxMlsagDoneResp
-from trezor.messages.MoneroTsxSignInput import MoneroTsxSignInput
-from trezor.messages.MoneroTsxSignInputResp import MoneroTsxSignInputResp
-from trezor.messages.MoneroTsxFinal import MoneroTsxFinal
-from trezor.messages.MoneroTsxFinalResp import MoneroTsxFinalResp
-
-# class TTxHashNotMatchingError(TError):
-#     def __init__(self, *args, **kwargs):
-#         super().__init__(*args, **kwargs)
+from trezor.messages import MoneroRespError, MoneroTsxSign, \
+    MoneroTsxInit, MoneroTsxInitResp, \
+    MoneroTsxData, MoneroTsxSetInput, MoneroTsxSetInputResp, \
+    MoneroTsxInputsPermutation, MoneroTsxInputsPermutationResp, \
+    MoneroTsxInputVini, MoneroTsxInputViniResp, \
+    MoneroTsxSetOutput, MoneroTsxSetOutputResp, \
+    MoneroTsxAllOutSet, MoneroTsxAllOutSetResp, \
+    MoneroTsxMlsagDone, MoneroTsxMlsagDoneResp, \
+    MoneroTsxSignInput, MoneroTsxSignInputResp, \
+    MoneroTsxFinal, MoneroTsxFinalResp, MoneroRctSig
 
 
 class TsxSigner(object):
@@ -264,7 +249,7 @@ class TState(object):
     FINAL_MESSAGE = 9
     SIGNATURE = 10
     SIGNATURE_DONE = 11
-    FINAL = 11
+    FINAL = 12
     FAIL = 250
 
     def __init__(self):
@@ -787,7 +772,7 @@ class TTransactionBuilder(object):
                 self.input_pseudo_outs.append(pseudo_out)
             else:
                 pseudo_out_hmac = crypto.compute_hmac(self.hmac_key_txin_comm(self.inp_idx), pseudo_out)
-                alpha_enc = chacha_poly.encrypt(self.enc_key_txin_alpha(self.inp_idx), crypto.encodeint(alpha))
+                alpha_enc = chacha_poly.encrypt_pack(self.enc_key_txin_alpha(self.inp_idx), crypto.encodeint(alpha))
 
         # All inputs done?
         if self.inp_idx + 1 == self.num_inputs():
@@ -807,7 +792,7 @@ class TTransactionBuilder(object):
             raise ValueError('Input count mismatch')
 
         if self.in_memory():
-            await self.tsx_inputs_done_inm()
+            return await self.tsx_inputs_done_inm()
 
     async def tsx_inputs_done_inm(self):
         """
@@ -964,7 +949,7 @@ class TTransactionBuilder(object):
             raise ValueError('Bulletproof not yet supported')
 
         else:
-            C, mask, rsig = ring_ct.prove_range(amount, last_mask)
+            C, mask, rsig = ring_ct.prove_range(amount, last_mask, backend_impl=True, byte_enc=True)
 
             if __debug__:
                 self.assrt(crypto.point_eq(C, crypto.point_add(
@@ -1121,8 +1106,8 @@ class TTransactionBuilder(object):
             self.state.set_fail()
             raise trezor_misc.TrezorTxPrefixHashNotMatchingError()
 
-        return MoneroTsxAllOutSetResp(extra=self.tx.extra, tx_prefix_hash=self.tx_prefix_hash,
-                                      rv=await trezor_misc.dump_msg(rv))
+        rv_pb = MoneroRctSig(txn_fee=rv.txnFee, message=rv.message, rv_type=rv.type)
+        return MoneroTsxAllOutSetResp(extra=self.tx.extra, tx_prefix_hash=self.tx_prefix_hash, rv=rv_pb)
 
     async def tsx_mlsag_ecdh_info(self):
         """
@@ -1204,7 +1189,7 @@ class TTransactionBuilder(object):
             if not common.ct_equal(pseudo_out_hmac_comp, pseudo_out_hmac):
                 raise ValueError('HMAC is not correct')
 
-            alpha_c = chacha_poly.decrypt(self.enc_key_txin_alpha(inv_idx), alpha[0], alpha[1], alpha[2])
+            alpha_c = chacha_poly.decrypt_pack(self.enc_key_txin_alpha(inv_idx), bytes(alpha))
             alpha_c = crypto.decodeint(alpha_c)
             pseudo_out_c = crypto.decodepoint(pseudo_out)
 
@@ -1266,7 +1251,7 @@ class TTransactionBuilder(object):
 
         return MoneroTsxSignInputResp(signature=await trezor_misc.dump_msg(mgs[0]), cout=cout)
 
-    async def final_msg(self):
+    async def final_msg(self, *args, **kwargs):
         """
         Final step after transaction signing.
 
@@ -1286,5 +1271,6 @@ class TTransactionBuilder(object):
         tx_enc_keys = chacha_poly.encrypt(tx_key, key_buff)
 
         return MoneroTsxFinalResp(cout_key=cout_key, salt=salt, rand_mult=rand_mult, tx_enc_keys=b''.join(list(tx_enc_keys)))
+
 
 

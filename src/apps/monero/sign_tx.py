@@ -8,7 +8,7 @@ from apps.monero.xmr.serialize import xmrtypes, xmrserialize
 from apps.monero.xmr.monero import TsxData, classify_subaddresses
 from apps.monero.xmr import monero, mlsag2, ring_ct, crypto, common, key_image, trezor
 from apps.monero.xmr.enc import chacha_poly
-from apps.monero.trezor_lite import TrezorLite
+from apps.monero.trezor_lite import TsxSigner
 
 from apps.monero import layout
 from trezor.messages.MoneroRespError import MoneroRespError
@@ -21,7 +21,7 @@ TX_STATE = None
 async def layout_sign_tx(ctx, msg: MoneroTsxSign):
     global TX_STATE
     if TX_STATE is None or msg.init:
-        TX_STATE = TrezorLite()
+        TX_STATE = TsxSigner()
 
     try:
         res = await TX_STATE.sign(ctx, msg)

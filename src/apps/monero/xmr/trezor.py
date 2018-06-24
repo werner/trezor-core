@@ -7,6 +7,7 @@ import ubinascii as binascii
 from apps.common import seed
 from apps.monero.xmr import crypto
 from apps.monero.xmr import monero
+from apps.monero import trezor_iface
 from trezor.crypto.hashlib import sha256
 
 MONERO_CURVE = 'ed25519-keccak'
@@ -20,4 +21,8 @@ async def monero_get_creds(ctx, address_n=None, network_type=None):
     keys = monero.generate_monero_keys(hashed)  # spend_sec, spend_pub, view_sec, view_pub
     creds = monero.AccountCreds.new_wallet(keys[2], keys[0], network_type)
     return creds
+
+
+def get_interface(ctx):
+    return trezor_iface.get_iface(ctx)
 
