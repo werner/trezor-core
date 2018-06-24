@@ -2,23 +2,21 @@
 # -*- coding: utf-8 -*-
 # Author: Dusan Klinec, ph4r05, 2018
 
+from apps.monero.xmr import monero, crypto, common, key_image
+from apps.monero.xmr.enc import chacha_poly
+from apps.monero.controller import wrapper as twrap
 
-from monero_glue import trezor_iface, trezor_misc
-from monero_glue.xmr import monero, crypto, common, key_image
-from monero_glue.xmr.enc import chacha_poly
-from monero_glue.trezor import wrapper as twrap
-
-from monero_glue.messages import MoneroKeyImageSync, MoneroExportedKeyImage, \
+from apps.monero.messages import MoneroExportedKeyImage, \
     MoneroKeyImageExportInit, MoneroKeyImageExportInitResp, \
     MoneroKeyImageSyncStep, MoneroKeyImageSyncStepResp, \
-    MoneroKeyImageSyncFinal, MoneroKeyImageSyncFinalResp, \
+    MoneroKeyImageSyncFinalResp, \
     MoneroRespError
 
 
 class KeyImageSync(object):
     def __init__(self, ctx=None, iface=None, creds=None):
         self.ctx = ctx
-        self.iface = iface  # type: trezor_iface.TrezorInterface
+        self.iface = iface
         self.creds = creds  # type: monero.AccountCreds
 
         self.num = 0
@@ -46,7 +44,7 @@ class KeyImageSync(object):
 
         # Sub address precomputation
         if msg.subs and len(msg.subs) > 0:
-            for sub in msg.subs:  # type: key_image.MoneroSubAddrIndicesList
+            for sub in msg.subs:  # type: MoneroSubAddrIndicesList
                 monero.compute_subaddresses(self.creds, sub.account, sub.minor_indices, self.subaddresses)
         return MoneroKeyImageExportInitResp()
 
@@ -91,6 +89,3 @@ class KeyImageSync(object):
             raise ValueError('Invalid hash')
 
         return MoneroKeyImageSyncFinalResp(enc_key=self.enc_key)
-
-
-

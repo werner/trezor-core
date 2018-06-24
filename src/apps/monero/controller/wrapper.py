@@ -2,13 +2,10 @@
 # -*- coding: utf-8 -*-
 # Author: Dusan Klinec, ph4r05, 2018
 
-import ubinascii as binascii
-
 from apps.common import seed
 from apps.monero.xmr import crypto
 from apps.monero.xmr import monero
-from apps.monero import trezor_iface
-from trezor.crypto.hashlib import sha256
+from apps.monero.trezor import trezor_iface
 
 MONERO_CURVE = 'ed25519-keccak'
 

@@ -3,15 +3,7 @@
 # Author: Dusan Klinec, ph4r05, 2018
 
 
-from apps.monero import trezor_iface, trezor_misc
-from apps.monero.xmr.serialize import xmrtypes, xmrserialize
-from apps.monero.xmr.monero import TsxData, classify_subaddresses
-from apps.monero.xmr import monero, mlsag2, ring_ct, crypto, common, key_image, trezor
-from apps.monero.xmr.enc import chacha_poly
-from apps.monero.trezor_lite import TsxSigner
-
-from apps.monero import layout
-from trezor.messages.MoneroRespError import MoneroRespError
+from apps.monero.protocol.tsx_sign import TsxSigner
 from trezor.messages.MoneroTsxSign import MoneroTsxSign
 
 

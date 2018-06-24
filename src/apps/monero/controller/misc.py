@@ -7,7 +7,6 @@ from apps.monero.xmr.monero import TsxData
 from apps.monero.xmr.serialize import xmrtypes, xmrserialize
 from trezor.messages.MoneroTsxData import MoneroTsxData
 from trezor.messages.MoneroTxDestinationEntry import MoneroTxDestinationEntry
-from trezor.messages.MoneroAccountPublicAddress import MoneroAccountPublicAddress
 
 
 class TrezorError(Exception):
