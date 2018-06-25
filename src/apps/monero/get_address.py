@@ -14,5 +14,5 @@ async def layout_monero_get_address(ctx, msg):
             if await _show_qr(ctx, creds.address):
                 break
 
-    return MoneroAddress(address=creds.address.decode('ascii'))
+    return MoneroAddress(address=creds.address)
 

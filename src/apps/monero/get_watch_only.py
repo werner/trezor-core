@@ -1,14 +1,14 @@
 from apps.monero.controller import wrapper
 from apps.monero.xmr import crypto
 from apps.monero import layout
-from trezor.messages.MoneroWatchKey import MoneroWatchKey
+from apps.monero.messages import MoneroGetWatchKey, MoneroWatchKey
 
 
-async def layout_monero_get_watch_only(ctx, msg):
+async def layout_monero_get_watch_only(ctx, msg: MoneroGetWatchKey):
     address_n = msg.address_n or ()
-    creds = await wrapper.monero_get_creds(ctx, address_n, msg.network_type)
     await layout.require_confirm_watchkey(ctx)
-    return MoneroWatchKey(watch_key=crypto.encodeint(creds.view_key_private))
+    creds = await wrapper.monero_get_creds(ctx, address_n, msg.network_type)
+    return MoneroWatchKey(watch_key=crypto.encodeint(creds.view_key_private), address=creds.address)
 
 
 
