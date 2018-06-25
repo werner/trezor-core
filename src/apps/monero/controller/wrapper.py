@@ -5,7 +5,7 @@
 from apps.common import seed
 from apps.monero.xmr import crypto
 from apps.monero.xmr import monero
-from apps.monero.trezor import trezor_iface
+from apps.monero.controller import iface
 
 MONERO_CURVE = 'ed25519-keccak'
 
@@ -21,7 +21,7 @@ async def monero_get_creds(ctx, address_n=None, network_type=None):
 
 
 def get_interface(ctx):
-    return trezor_iface.get_iface(ctx)
+    return iface.get_iface(ctx)
 
 
 def exc2str(e):
