@@ -1,5 +1,5 @@
 from apps.monero.controller import wrapper
-from apps.wallet.get_address import _show_address, _show_qr
+from apps.common.display_address import show_qr, show_address
 from trezor.messages.MoneroAddress import MoneroAddress
 
 
@@ -9,9 +9,9 @@ async def layout_monero_get_address(ctx, msg):
 
     if msg.show_display:
         while True:
-            if await _show_address(ctx, creds.address):
+            if await show_address(ctx, creds.address.decode('ascii')):
                 break
-            if await _show_qr(ctx, creds.address):
+            if await show_qr(ctx, creds.address.decode('ascii')):
                 break
 
     return MoneroAddress(address=creds.address)
