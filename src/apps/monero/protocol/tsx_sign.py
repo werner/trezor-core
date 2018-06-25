@@ -1218,9 +1218,6 @@ class TTransactionBuilder(object):
             mg, msc = mlsag2.prove_rct_mg_simple(self.full_message, mix_ring,
                                                  in_sk, alpha_c, pseudo_out_c, kLRki, None, index)
 
-            if __debug__:
-                self.assrt(mlsag2.ver_rct_mg_simple(self.full_message, mg, mix_ring, pseudo_out_c))
-
         else:
             # Full RingCt, only one input
             txn_fee_key = crypto.scalarmult_h(self.get_fee())
@@ -1231,9 +1228,6 @@ class TTransactionBuilder(object):
 
             mg, msc = mlsag2.prove_rct_mg(self.full_message, mix_ring,
                                           [in_sk], self.output_sk, self.output_pk, kLRki, None, index, txn_fee_key)
-
-            if __debug__:
-                self.assrt(mlsag2.ver_rct_mg(mg, mix_ring, self.output_pk, txn_fee_key, self.full_message))
 
         # Encode
         mgs = monero.recode_msg([mg])
