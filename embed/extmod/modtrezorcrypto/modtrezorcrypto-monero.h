@@ -827,7 +827,7 @@ STATIC mp_obj_t mod_trezorcrypto_monero_gen_range_proof(size_t n_args, const mp_
     bignum256modm * last_mask = NULL;
     amount = mp_obj_get_uint64(args[0]);
     if (n_args > 1){
-        last_mask = &MP_OBJ_C_SCALAR(args[1]);
+        last_mask = &MP_OBJ_SCALAR(args[1]);
     }
 
     xmr_gen_range_sig(&rsig, &C, mask, amount, last_mask);
