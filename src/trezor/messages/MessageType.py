@@ -130,3 +130,5 @@ MoneroGetAddress = 330
 MoneroAddress = 331
 MoneroGetWatchKey = 332
 MoneroWatchKey = 333
+MoneroGetKey = 334
+MoneroKey = 335
