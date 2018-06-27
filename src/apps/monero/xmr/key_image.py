@@ -4,8 +4,7 @@
 
 
 from apps.monero.xmr.serialize import xmrtypes, xmrserialize
-from apps.monero.xmr import mlsag2, ring_ct, crypto, common, monero
-import collections
+from apps.monero.xmr import ring_ct, crypto, common, monero
 
 
 class SubAddrIndicesList(xmrserialize.MessageType):
@@ -102,9 +101,12 @@ async def generate_commitment(outputs):
     :return:
     """
     hashes = []
-    sub_indices = collections.defaultdict(lambda: set())
+    sub_indices = {}
     for out in outputs:
-        sub_indices[out.m_subaddr_index.major].add(out.m_subaddr_index.minor)
+        midx = out.m_subaddr_index.major
+        if midx not in sub_indices:
+            sub_indices[midx] = []
+        sub_indices[midx].add(out.m_subaddr_index.minor)
 
     num = 0
     iter = await yield_key_image_data(outputs)
