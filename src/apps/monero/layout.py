@@ -15,6 +15,15 @@ async def require_confirm_watchkey(ctx):
     return await require_confirm(ctx, content, ButtonRequestType.SignTx)
 
 
+async def require_confirm_keys(ctx):
+    content = Text('Confirm export', ui.ICON_SEND,
+                   'Do you really want to',
+                   'export wallet keys?',
+                   ui.BOLD,
+                   icon_color=ui.RED)
+    return await require_confirm(ctx, content, ButtonRequestType.SignTx)
+
+
 async def require_confirm_keyimage_sync(ctx):
     content = Text('Confirm ki sync', ui.ICON_SEND,
                    'Do you really want to',

@@ -6,7 +6,9 @@ from trezor.messages.MoneroTsxData import MoneroTsxData
 from trezor.messages.MoneroTxDestinationEntry import MoneroTxDestinationEntry
 from trezor.messages.MoneroAddress import MoneroAddress
 from trezor.messages.MoneroGetAddress import MoneroGetAddress
+from trezor.messages.MoneroGetKey import MoneroGetKey
 from trezor.messages.MoneroGetWatchKey import MoneroGetWatchKey
+from trezor.messages.MoneroKey import MoneroKey
 from trezor.messages.MoneroKeyImageExportInit import MoneroKeyImageExportInit
 from trezor.messages.MoneroKeyImageExportInitResp import MoneroKeyImageExportInitResp
 from trezor.messages.MoneroKeyImageSync import MoneroKeyImageSync
