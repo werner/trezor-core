@@ -36,8 +36,9 @@ PB2_OUT="$TMPDIR/pb2"
 mkdir -p "$PB2_OUT"
 
 # compile .proto files to python2 modules using google protobuf library
+if [[ -z "$PROTOC_INCLUDE" ]]; then PROTOC_INCLUDE_PAR=""; else PROTOC_INCLUDE_PAR="-I${PROTOC_INCLUDE}"; fi
 for file in $PROTO_FILES; do
-    protoc --python_out="$PB2_OUT" -I/usr/include -I/usr/local/include -I"$PROTO_PATH" "$PROTO_PATH/$file.proto"
+    protoc --python_out="$PB2_OUT" -I/usr/include $PROTOC_PARAMS $PROTOC_INCLUDE_PAR -I"$PROTO_PATH" "$PROTO_PATH/$file.proto"
 done
 
 
