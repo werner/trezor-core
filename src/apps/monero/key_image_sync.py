@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # Author: Dusan Klinec, ph4r05, 2018
 
-from apps.monero.messages import MoneroKeyImageSync
+from apps.monero.messages import MoneroKeyImageSync, MoneroRespError
 
 SYNC_STATE = None
 
@@ -35,6 +35,7 @@ async def layout_key_image_sync(ctx, msg: MoneroKeyImageSync):
 
     except Exception as e:
         SYNC_STATE = None
+        return MoneroRespError(exc=str(e))
 
 
 

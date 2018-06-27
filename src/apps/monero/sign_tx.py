@@ -4,6 +4,7 @@
 
 
 from trezor.messages.MoneroTsxSign import MoneroTsxSign
+from trezor.messages.MoneroRespError import MoneroRespError
 
 
 TX_STATE = None
@@ -25,6 +26,7 @@ async def layout_sign_tx(ctx, msg: MoneroTsxSign):
 
     except Exception as e:
         TX_STATE = None
+        return MoneroRespError(exc=str(e))
 
 
 
