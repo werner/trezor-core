@@ -842,6 +842,21 @@ STATIC mp_obj_t mod_trezorcrypto_monero_gen_range_proof(size_t n_args, const mp_
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_monero_gen_range_proof_obj, 1, 2, mod_trezorcrypto_monero_gen_range_proof);
 
 
+/// def
+STATIC mp_obj_t mod_trezorcrypto_ct_equals(const mp_obj_t a, const mp_obj_t b){
+  mp_buffer_info_t buff_a, buff_b;
+  mp_get_buffer_raise(a, &buff_a, MP_BUFFER_READ);
+  mp_get_buffer_raise(b, &buff_b, MP_BUFFER_READ);
+
+  if (buff_a.len < 32 != buff_b.len) {
+    return MP_OBJ_NEW_SMALL_INT(0);
+  }
+
+  int r = ed25519_verify(buff_a.buf, buff_b.buf, buff_a.len);
+  return MP_OBJ_NEW_SMALL_INT(r);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_ct_equals_obj, mod_trezorcrypto_ct_equals);
+
 // Hasher
 STATIC mp_obj_t mod_trezorcrypto_monero_hasher_update(mp_obj_t self, const mp_obj_t arg){
   mp_obj_hasher_t *o = MP_OBJ_TO_PTR(self);
@@ -962,12 +977,13 @@ STATIC const mp_rom_map_elem_t mod_trezorcrypto_monero_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR_xmr_derive_private_key), MP_ROM_PTR(&mod_trezorcrypto_monero_xmr_derive_private_key_obj) },
     { MP_ROM_QSTR(MP_QSTR_xmr_derive_public_key), MP_ROM_PTR(&mod_trezorcrypto_monero_xmr_derive_public_key_obj) },
     { MP_ROM_QSTR(MP_QSTR_xmr_add_keys2), MP_ROM_PTR(&mod_trezorcrypto_monero_xmr_add_keys2_obj) },
-    { MP_ROM_QSTR(MP_QSTR_add_keys2_vartime), MP_ROM_PTR(&mod_trezorcrypto_monero_xmr_add_keys2_vartime_obj) },
+    { MP_ROM_QSTR(MP_QSTR_xmr_add_keys2_vartime), MP_ROM_PTR(&mod_trezorcrypto_monero_xmr_add_keys2_vartime_obj) },
     { MP_ROM_QSTR(MP_QSTR_xmr_add_keys3), MP_ROM_PTR(&mod_trezorcrypto_monero_xmr_add_keys3_obj) },
     { MP_ROM_QSTR(MP_QSTR_xmr_add_keys3_vartime), MP_ROM_PTR(&mod_trezorcrypto_monero_xmr_add_keys3_vartime_obj) },
     { MP_ROM_QSTR(MP_QSTR_xmr_get_subaddress_secret_key), MP_ROM_PTR(&mod_trezorcrypto_monero_xmr_get_subaddress_secret_key_obj) },
     { MP_ROM_QSTR(MP_QSTR_xmr_gen_c), MP_ROM_PTR(&mod_trezorcrypto_monero_xmr_gen_c_obj) },
     { MP_ROM_QSTR(MP_QSTR_gen_range_proof), MP_ROM_PTR(&mod_trezorcrypto_monero_gen_range_proof_obj) },
+    { MP_ROM_QSTR(MP_QSTR_ct_equals), MP_ROM_PTR(&mod_trezorcrypto_ct_equals_obj) },
 };
 STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_monero_globals, mod_trezorcrypto_monero_globals_table);
 
