@@ -4,6 +4,7 @@
 
 from trezor.crypto import random
 from trezor.crypto.chacha20poly1305 import ChaCha20Poly1305
+from trezor.crypto.monero import ct_equals
 
 
 def encrypt(key, plaintext, associated_data=None):
@@ -19,7 +20,8 @@ def encrypt(key, plaintext, associated_data=None):
     if associated_data:
         cipher.auth(associated_data)
     ciphertext = cipher.encrypt(plaintext)
-    return nonce, ciphertext, b''
+    tag = cipher.finish()
+    return nonce, ciphertext + tag, b''
 
 
 def decrypt(key, iv, ciphertext, tag=None, associated_data=None):
@@ -35,7 +37,12 @@ def decrypt(key, iv, ciphertext, tag=None, associated_data=None):
     cipher = ChaCha20Poly1305(iv, key)
     if associated_data:
         cipher.auth(associated_data)
+    exp_tag, ciphertext = ciphertext[-16:], ciphertext[:-16]
     plaintext = cipher.decrypt(ciphertext)
+    tag = cipher.finish()
+    if not ct_equals(tag, exp_tag):
+        raise ValueError
+
     return plaintext
 
 
