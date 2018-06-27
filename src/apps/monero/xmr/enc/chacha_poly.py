@@ -3,8 +3,8 @@
 # Author: Dusan Klinec, ph4r05, 2018
 
 from trezor.crypto import random
-from trezor.crypto.chacha20poly1305 import ChaCha20Poly1305
-from trezor.crypto.monero import ct_equals
+from trezor.crypto import chacha20poly1305 as ChaCha20Poly1305
+from trezor.crypto import monero
 
 
 def encrypt(key, plaintext, associated_data=None):
@@ -40,7 +40,7 @@ def decrypt(key, iv, ciphertext, tag=None, associated_data=None):
     exp_tag, ciphertext = ciphertext[-16:], ciphertext[:-16]
     plaintext = cipher.decrypt(ciphertext)
     tag = cipher.finish()
-    if not ct_equals(tag, exp_tag):
+    if not monero.ct_equals(tag, exp_tag):
         raise ValueError
 
     return plaintext
