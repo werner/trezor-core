@@ -201,7 +201,8 @@ def sc_check(key):
     :param key:
     :return:
     """
-    return not tcry.check256_modm(key)
+    tcry.check256_modm(key)
+    return 0
 
 
 def check_sc(key):
@@ -388,8 +389,8 @@ def ge_frombytes_vartime_check(point):
     #     raise ValueError('Point check failed')
     #
     # return 0
-
-    return 0 if tcry.ge25519_fromfe_check(point) == 1 else -1
+    tcry.ge25519_fromfe_check(point)
+    return 0
 
 
 def ge_frombytes_vartime(point):
