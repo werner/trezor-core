@@ -848,7 +848,7 @@ STATIC mp_obj_t mod_trezorcrypto_ct_equals(const mp_obj_t a, const mp_obj_t b){
   mp_get_buffer_raise(a, &buff_a, MP_BUFFER_READ);
   mp_get_buffer_raise(b, &buff_b, MP_BUFFER_READ);
 
-  if (buff_a.len < 32 != buff_b.len) {
+  if (buff_a.len != buff_b.len) {
     return MP_OBJ_NEW_SMALL_INT(0);
   }
 
