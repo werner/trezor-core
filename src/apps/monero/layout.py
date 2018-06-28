@@ -2,23 +2,26 @@ from apps.common.confirm import confirm, require_confirm, require_hold_to_confir
 from apps.wallet.get_public_key import _show_pubkey
 from trezor import ui
 from trezor.messages import ButtonRequestType
+from trezor.ui.loader import Loader
 from trezor.ui.text import Text
 from trezor.utils import chunks
 
 
 async def require_confirm_watchkey(ctx):
-    content = Text('Confirm watch-only', ui.ICON_SEND,
+    content = Text('Confirm export', ui.ICON_SEND,
                    'Do you really want to',
-                   'return a watch-only?',
+                   'export watch-only',
+                   'credentials?',
                    ui.BOLD,
                    icon_color=ui.GREEN)
     return await require_confirm(ctx, content, ButtonRequestType.SignTx)
 
 
 async def require_confirm_keys(ctx):
-    content = Text('Confirm export', ui.ICON_SEND,
+    content = Text('Confirm export', ui.ICON_WIPE,
                    'Do you really want to',
-                   'export wallet keys?',
+                   'export', ui.BOLD, 
+                   'private wallet keys?',
                    ui.BOLD,
                    icon_color=ui.RED)
     return await require_confirm(ctx, content, ButtonRequestType.SignTx)
