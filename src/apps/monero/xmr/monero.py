@@ -106,13 +106,6 @@ class AccountCreds(object):
                    address=addr, network_type=network_type)
 
 
-class TxScanInfo(object):
-    """
-    struct tx_scan_info_t
-    """
-    __slots__ = ['in_ephemeral', 'ki', 'mask', 'amount', 'money_transfered', 'error', 'received']
-
-
 class KeccakArchive(object):
     def __init__(self):
         self.kwriter = get_keccak_writer()
@@ -411,126 +404,6 @@ def generate_key_image_helper(creds, subaddresses, out_key, tx_public_key, addit
     return xi, ki, recv_derivation
 
 
-def check_acc_out_precomp(tx_out, subaddresses, derivation, additional_derivations, i):
-    """
-    wallet2::check_acc_out_precomp
-    Detects whether the tx output belongs to the subaddresses. If yes, computes the derivation.
-    Returns TxScanInfo
-
-    :param tx_out:
-    :param derivation:
-    :param additional_derivations:
-    :param i:
-    :return:
-    """
-    tx_scan_info = TxScanInfo()
-    tx_scan_info.error = True
-
-    if not isinstance(tx_out.target, xmrtypes.TxoutToKey):
-        return tx_scan_info
-
-    tx_scan_info.received = is_out_to_acc_precomp(subaddresses, crypto.decodepoint(tx_out.target.key), derivation, additional_derivations, i)
-    if tx_scan_info.received:
-        tx_scan_info.money_transfered = tx_out.amount
-    else:
-        tx_scan_info.money_transfered = 0
-    tx_scan_info.error = False
-    return tx_scan_info
-
-
-def scan_output(creds, tx, i, tx_scan_info, tx_money_got_in_outs, outs, multisig):
-    """
-    Wallet2::scan_output()
-    Computes spending key, key image, decodes ECDH info, amount, checks masks.
-
-    :param creds:
-    :param tx:
-    :param i:
-    :param tx_scan_info:
-    :param tx_money_got_in_outs:
-    :param outs:
-    :param multisig:
-    :return:
-    """
-    if multisig:
-        tx_scan_info.in_ephemeral = 0
-        tx_scan_info.ki = crypto.identity()
-
-    else:
-        out_dec = crypto.decodepoint(tx.vout[i].target.key)
-        res = generate_key_image_helper_precomp(creds, out_dec,
-                                                tx_scan_info.received[1], i, tx_scan_info.received[0])
-        tx_scan_info.in_ephemeral, tx_scan_info.ki = res
-        if not tx_scan_info.ki:
-            raise ValueError('Key error generation failed')
-
-    outs.append(i)
-    if tx_scan_info.money_transfered == 0:
-        res2 = ecdh_decode_rv(tx.rct_signatures, tx_scan_info.received[1], i)
-        tx_scan_info.money_transfered, tx_scan_info.mask = res2
-        tx_scan_info.money_transfered = crypto.sc_get64(tx_scan_info.money_transfered)
-
-    tx_money_got_in_outs[tx_scan_info.received[0]] += tx_scan_info.money_transfered
-    tx_scan_info.amount = tx_scan_info.money_transfered
-    return tx_scan_info
-
-
-def ecdh_decode_rv(rv, derivation, i):
-    """
-    Decodes ECDH info from transaction.
-
-    :param rv:
-    :param derivation:
-    :param i:
-    :return:
-    """
-    scalar = crypto.derivation_to_scalar(derivation, i)
-    if rv.type in [xmrtypes.RctType.Simple, xmrtypes.RctType.SimpleBulletproof]:
-        return ecdh_decode_simple(rv, scalar, i)
-
-    elif rv.type in [xmrtypes.RctType.Full, xmrtypes.RctType.FullBulletproof]:
-        return ecdh_decode_simple(rv, scalar, i)
-
-    else:
-        raise ValueError('Unknown rv type')
-
-
-def ecdh_decode_simple(rv, sk, i):
-    """
-    Decodes ECDH from the transaction, checks mask (decoding validity).
-
-    :param rv:
-    :param sk:
-    :param i:
-    :return:
-    """
-    if i >= len(rv.ecdhInfo):
-        raise ValueError('Bad index')
-    if len(rv.outPk) != len(rv.ecdhInfo):
-        raise ValueError('outPk vs ecdhInfo mismatch')
-
-    ecdh_info = rv.ecdhInfo[i]
-    ecdh_info = recode_ecdh(ecdh_info, False)
-    ecdh_info = ring_ct.ecdh_decode(ecdh_info, derivation=crypto.encodeint(sk))
-    c_tmp = crypto.add_keys2(ecdh_info.mask, ecdh_info.amount, crypto.gen_H())
-    if not crypto.point_eq(c_tmp, crypto.decodepoint(rv.outPk[i].mask)):
-        raise ValueError('Amount decoded incorrectly')
-
-    return ecdh_info.amount, ecdh_info.mask
-
-
-async def get_transaction_prefix_hash(tx):
-    """
-    Computes transaction prefix in one step
-    :param tx:
-    :return:
-    """
-    writer = get_keccak_writer()
-    ar1 = xmrserialize.Archive(writer, True)
-    await ar1.message(tx, msg_type=xmrtypes.TransactionPrefixExtraBlob)
-    return writer.get_digest()
-
-
 class PreMlsagHasher(object):
     """
     Iterative construction of the pre_mlsag_hash
@@ -709,34 +582,6 @@ def recode_ecdh(ecdh, encode=True):
     return ecdh
 
 
-def recode_rangesig(rsig, encode=True, copy=False):
-    """
-    In - place rsig recoding
-    :param rsig:
-    :param encode: if true encodes to byte representation, otherwise decodes from byte representation
-    :param copy:
-    :return:
-    """
-    recode_int = crypto.encodeint if encode else crypto.decodeint
-    recode_point = crypto.encodepoint if encode else crypto.decodepoint
-    nrsig = rsig
-    if copy:
-        nrsig = xmrtypes.RangeSig()
-        nrsig.Ci = [None] * 64
-        nrsig.asig = xmrtypes.BoroSig()
-        nrsig.asig.s0 = [None] * 64
-        nrsig.asig.s1 = [None] * 64
-
-    for i in range(len(rsig.Ci)):
-        nrsig.Ci[i] = recode_point(rsig.Ci[i])
-    for i in range(len(rsig.asig.s0)):
-        nrsig.asig.s0[i] = recode_int(rsig.asig.s0[i])
-    for i in range(len(rsig.asig.s1)):
-        nrsig.asig.s1[i] = recode_int(rsig.asig.s1[i])
-    nrsig.asig.ee = recode_int(rsig.asig.ee)
-    return nrsig
-
-
 def recode_msg(mgs, encode=True):
     """
     Recodes MGs signatures from raw forms to bytearrays so it works with serialization
@@ -757,44 +602,6 @@ def recode_msg(mgs, encode=True):
             for j in range(len(mgs[idx].ss[i])):
                 mgs[idx].ss[i][j] = recode_int(mgs[idx].ss[i][j])
     return mgs
-
-
-def recode_rct(rv, encode=True):
-    """
-    Recodes RCT MGs signatures from raw forms to bytearrays so it works with serialization
-    :param rv:
-    :param encode: if true encodes to byte representation, otherwise decodes from byte representation
-    :return:
-    """
-    rv.p.MGs = recode_msg(rv.p.MGs, encode=encode)
-    return rv
-
-
-def expand_transaction(tx):
-    """
-    Expands transaction - recomputes fields not serialized.
-    Recomputes only II, does not have access to the blockchain to get public keys for inputs
-    for mix ring reconstruction.
-
-    :param tx:
-    :return:
-    """
-    rv = tx.rct_signatures
-    if rv.type in [xmrtypes.RctType.Full, xmrtypes.RctType.FullBulletproof]:
-        rv.p.MGs[0].II = [None] * len(tx.vin)
-        for n in range(len(tx.vin)):
-            rv.p.MGs[0].II[n] = tx.vin[n].k_image
-
-    elif rv.type in [xmrtypes.RctType.Simple, xmrtypes.RctType.SimpleBulletproof]:
-        if len(rv.p.MGs) != len(tx.vin):
-            raise ValueError('Bad MGs size')
-        for n in range(len(tx.vin)):
-            rv.p.MGs[n].II = [tx.vin[n].k_image]
-
-    else:
-        raise ValueError('Unsupported rct tx type %s' % rv.type)
-
-    return tx
 
 
 def compute_subaddresses(creds, account, indices, subaddresses=None):
@@ -821,32 +628,6 @@ def compute_subaddresses(creds, account, indices, subaddresses=None):
         pub = crypto.encodepoint(pub)
         subaddresses[pub] = (account, idx)
     return subaddresses
-
-
-async def get_tx_pub_key_from_received_outs(td):
-    """
-    Extracts tx pub key from extras.
-    Handles previous bug in Monero.
-
-    :param td:
-    :type td: xmrtypes.TransferDetails
-    :return:
-    """
-    extras = await parse_extra_fields(list(td.m_tx.extra))
-    tx_pub = find_tx_extra_field_by_type(extras, xmrtypes.TxExtraPubKey, 0)
-
-    # Due to a previous bug, there might be more than one tx pubkey in extra, one being
-    # the result of a previously discarded signature.
-    # For speed, since scanning for outputs is a slow process, we check whether extra
-    # contains more than one pubkey. If not, the first one is returned. If yes, they're
-    # checked for whether they yield at least one output
-    second_pub = find_tx_extra_field_by_type(extras, xmrtypes.TxExtraPubKey, 1)
-    if second_pub is None:
-        return tx_pub.pub_key
-
-    # Workaround: resend all your funds to the wallet in a different transaction.
-    # Proper handling would require derivation -> need trezor roundtrips.
-    raise ValueError('Input transaction is buggy, contains two tx keys')
 
 
 def generate_keys(recovery_key):

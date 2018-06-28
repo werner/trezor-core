@@ -52,30 +52,6 @@ class ExportedKeyImage(xmrserialize.MessageType):
     ]
 
 
-async def yield_key_image_data(outputs):
-    """
-    Process outputs, yields out_key, tx pub key, additional tx pub keys data
-    yield in async from py3.6
-
-    :param outputs:
-    :return:
-    """
-    res = []
-    for idx, td in enumerate(outputs):  # type: xmrtypes.TransferDetails
-        if common.is_empty(td.m_tx.vout):
-            raise ValueError('Tx with no outputs %s' % idx)
-
-        tx_pub_key = await monero.get_tx_pub_key_from_received_outs(td)
-        extras = await monero.parse_extra_fields(list(td.m_tx.extra))
-        additional_pub_keys = monero.find_tx_extra_field_by_type(extras, xmrtypes.TxExtraAdditionalPubKeys)
-        out_key = td.m_tx.vout[td.m_internal_output_index].target.key
-        cres = TransferDetails(out_key=out_key, tx_pub_key=tx_pub_key,
-                               additional_tx_pub_keys=additional_pub_keys.data if additional_pub_keys else None,
-                               m_internal_output_index=td.m_internal_output_index)
-        res.append(cres)
-    return res
-
-
 def compute_hash(rr):
     """
     Hash over output to ki-sync
@@ -91,37 +67,6 @@ def compute_hash(rr):
     buff += xmrserialize.dump_uvarint_b(rr.m_internal_output_index)
 
     return crypto.cn_fast_hash(buff)
-
-
-async def generate_commitment(outputs):
-    """
-    Generates num, hash commitment for initial message for ki syc
-    :param outputs:
-    :type outputs: list[xmrtypes.TransferDetails]
-    :return:
-    """
-    hashes = []
-    sub_indices = {}
-    for out in outputs:
-        midx = out.m_subaddr_index.major
-        if midx not in sub_indices:
-            sub_indices[midx] = []
-        sub_indices[midx].add(out.m_subaddr_index.minor)
-
-    num = 0
-    iter = await yield_key_image_data(outputs)
-    for rr in iter:  # type: TransferDetails
-        hash = compute_hash(rr)
-        hashes.append(hash)
-        num += 1
-
-    final_hash = crypto.cn_fast_hash(b''.join(hashes))
-    indices = []
-
-    for major in sub_indices:
-        indices.append(SubAddrIndicesList(account=major, minor_indices=list(sub_indices[major])))
-
-    return KeyImageExportInit(num=num, hash=final_hash, subs=indices)
 
 
 async def export_key_image(creds, subaddresses, td):

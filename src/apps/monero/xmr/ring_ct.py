@@ -23,41 +23,11 @@ def prove_range(amount, last_mask=None, decode=False, backend_impl=True, byte_en
     :param byte_enc: byte encoded
     :return:
     """
-    if not backend_impl or not byte_enc:
-        raise ValueError
+    if not backend_impl or not byte_enc or decode:
+        raise ValueError('Unsupported params')
 
-    C, a, R = crypto.prove_range(amount, last_mask)[:3]  # backend returns encoded
-    if decode:
-        R = monero.recode_rangesig(R, encode=False)
-        return C, a, R
+    C, a, R = crypto.prove_range(amount, last_mask)  # backend returns encoded
     return C, a, R
-
-
-def ver_range(C=None, rsig=None, decode=True):
-    """
-    Verifies that \sum Ci = C and that each Ci is a commitment to 0 or 2^i
-    :param C:
-    :param rsig:
-    :param decode: decodes encoded range proof
-    :return:
-    """
-    n = ATOMS
-    CiH = [None] * n
-    C_tmp = crypto.identity()
-    c_H = crypto.gen_H()
-
-    if decode:
-        rsig = monero.recode_rangesig(rsig, encode=False, copy=True)
-
-    for i in range(0, n):
-        CiH[i] = crypto.point_sub(rsig.Ci[i], c_H)
-        C_tmp = crypto.point_add(C_tmp, rsig.Ci[i])
-        c_H = crypto.point_double(c_H)
-
-    if C is not None and not crypto.point_eq(C_tmp, C):
-        return 0
-
-    return mlsag2.ver_borromean(rsig.Ci, CiH, rsig.asig.s0, rsig.asig.s1, rsig.asig.ee)
 
 
 # Ring-ct MG sigs
@@ -113,33 +83,6 @@ def ecdh_decode(masked, receiver_sk=None, derivation=None):
     rv.mask = crypto.sc_sub(masked.mask, sharedSec1)
     rv.amount = crypto.sc_sub(masked.amount, sharedSec2)
     return rv
-
-
-#
-# RingCT protocol
-#
-
-
-def decode_rct(rv, sk, i):
-    """
-    c.f. http:#eprint.iacr.org/2015/1098 section 5.1.1
-    Uses the attached ecdh info to find the amounts represented by each output commitment
-    must know the destination private key to find the correct amount, else will return a random number
-
-    :param rv:
-    :param sk:
-    :param i:
-    :return:
-    """
-    decodedTuple = ecdh_decode(rv.ecdhInfo[i], sk)
-    mask = decodedTuple.mask
-    amount = decodedTuple.amount
-    C = rv.outPk[i].mask
-    H = crypto.gen_H()
-    Ctmp = crypto.point_add(crypto.scalarmult_base(mask), crypto.scalarmult(H, amount))
-    if not crypto.point_eq(crypto.point_sub(C, Ctmp), crypto.identity()):
-        raise ValueError("warning, amount decoded incorrectly, will be unable to spend")
-    return amount
 
 
 #

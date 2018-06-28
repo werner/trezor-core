@@ -72,39 +72,6 @@ def scalar_gen_vector(n):
 
 
 #
-# Borromean signatures for range proofs
-#
-
-
-def ver_borromean(P1, P2, s0, s1, ee):
-    """
-    Verify range proof signature, Borromean
-    (c.f. gmax/andytoshi's paper)
-    :param P1:
-    :param P2:
-    :param s0:
-    :param s1:
-    :param ee:
-    :return:
-    """
-    n = len(P1)
-    Lv1 = key_vector(n)
-    for ii in range(n):
-        LL = crypto.add_keys2(s0[ii], ee, P1[ii])
-        chash = crypto.hash_to_scalar(crypto.encodepoint(LL))
-        Lv1[ii] = crypto.add_keys2(s1[ii], chash, P2[ii])
-
-    kck = crypto.get_keccak()
-    for ii in range(n):
-        kck.update(crypto.encodepoint(Lv1[ii]))
-
-    # ee_computed = crypto.hash_to_scalar(crypto.encodepoint(Lv1))
-    ee_computed = crypto.sc_reduce32(crypto.decodeint(kck.digest()))
-
-    return crypto.sc_eq(ee_computed, ee)
-
-
-#
 # Optimized versions with incremental hashing,
 # Simple and full variants for Monero
 #

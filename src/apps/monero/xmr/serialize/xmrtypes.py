@@ -298,7 +298,6 @@ class RctSigBase(x.MessageType):
 
         await self._msg_field(ar, idx=1)
         if self.type == RctType.Simple:
-            await ar.tag('pseudoOuts')
             await ar.begin_array()
             await ar.prepare_container(inputs, eref(self, 'pseudoOuts'), KeyV)
             if ar.writing and len(self.pseudoOuts) != inputs:
@@ -308,7 +307,6 @@ class RctSigBase(x.MessageType):
                 await ar.field(eref(self.pseudoOuts, i), KeyV.ELEM_TYPE)
             await ar.end_array()
 
-        await ar.tag('ecdhInfo')
         await ar.begin_array()
         await ar.prepare_container(outputs, eref(self, 'ecdhInfo'), EcdhTuple)
         if ar.writing and len(self.ecdhInfo) != outputs:
@@ -318,7 +316,6 @@ class RctSigBase(x.MessageType):
             await ar.field(eref(self.ecdhInfo, i), EcdhInfo.ELEM_TYPE)
         await ar.end_array()
 
-        await ar.tag('outPk')
         await ar.begin_array()
         await ar.prepare_container((outputs), eref(self, 'outPk'), CtKey)
         if ar.writing and len(self.outPk) != outputs:
@@ -365,7 +362,6 @@ class RctSigPrunable(x.MessageType):
             raise ValueError('Unknown type')
 
         if type == RctType.SimpleBulletproof or type == RctType.FullBulletproof:
-            await ar.tag('bp')
             await ar.begin_array()
             if len(self.bulletproofs) != outputs:
                 raise ValueError('Bulletproofs size mismatch')
@@ -376,7 +372,6 @@ class RctSigPrunable(x.MessageType):
             await ar.end_array()
 
         else:
-            await ar.tag('rangeSigs')
             await ar.begin_array()
             await ar.prepare_container(outputs, eref(self, 'rangeSigs'), elem_type=RangeSig)
             if len(self.rangeSigs) != outputs:
@@ -386,7 +381,6 @@ class RctSigPrunable(x.MessageType):
                 await ar.field(elem=eref(self.rangeSigs, i), elem_type=RangeSig)
             await ar.end_array()
 
-        await ar.tag('MGs')
         await ar.begin_array()
 
         # We keep a byte for size of MGs, because we don't know whether this is
@@ -401,7 +395,6 @@ class RctSigPrunable(x.MessageType):
             # arrays and matrices without the size prefixes, and the load can't
             # know what size to expect if it's not in the data
             await ar.begin_object()
-            await ar.tag('ss')
             await ar.begin_array()
 
             await ar.prepare_container(mixin + 1, eref(self.MGs[i], 'ss'), elem_type=KeyM)
@@ -420,7 +413,6 @@ class RctSigPrunable(x.MessageType):
                     await ar.field(eref(self.MGs[i].ss[j], k), elem_type=KeyV.ELEM_TYPE)
                 await ar.end_array()
 
-            await ar.tag('cc')
             await ar.field(eref(self.MGs[i], 'cc'), elem_type=ECKey)
             await ar.end_object()
         await ar.end_array()
@@ -493,7 +485,6 @@ class Transaction(TransactionPrefix):
         await ar.message(self, TransactionPrefix)
 
         if self.version == 1:
-            await ar.tag('signatures')
             await ar.begin_array()
             await ar.prepare_container(len(self.vin), eref(self, 'signatures'), elem_type=SignatureArray)
             signatures_not_expected = len(self.signatures) == 0
@@ -515,7 +506,6 @@ class Transaction(TransactionPrefix):
                 await ar.message(self.signatures[i], Signature)
 
         else:
-            await ar.tag('rct_signatures')
             if len(self.vin) == 0:
                 return
 
@@ -526,7 +516,6 @@ class Transaction(TransactionPrefix):
 
             if self.rct_signatures.type != RctType.Null:
                 mixin_size = len(self.vin[0].key_offsets) - 1 if len(self.vin) > 0 and isinstance(self.vin[0], TxinToKey) else 0
-                await ar.tag('rctsig_prunable')
                 await ar.begin_object()
                 await ar.prepare_message(eref(self.rct_signatures, 'p'), RctSigPrunable)
                 await self.rct_signatures.p.serialize_rctsig_prunable(ar, self.rct_signatures.type,
