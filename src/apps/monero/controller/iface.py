@@ -10,15 +10,30 @@ class TrezorInterface(object):
         self.ctx = ctx
 
     def gctx(self, ctx):
-        return ctx if not None else self.ctx
+        return ctx if ctx is not None else self.ctx
 
-    async def confirm_transaction(self, tsx_data, ctx=None):
+    async def confirm_transaction(self, tsx_data, creds=None, ctx=None):
         """
         Ask for confirmation from user
         :param tsx_data:
+        :param creds:
         :param ctx:
         :return:
         """
+        from apps.monero.xmr import crypto
+        from apps.monero.xmr.monero import encode_addr, net_version
+
+        change_coord = None, None
+        if tsx_data.change_dts:
+            change_coord = tsx_data.change_dts.amount, tsx_data.change_dts.addr
+
+        for dst in tsx_data.outputs:
+            addr = encode_addr(net_version(creds.network_type),
+                               dst.addr.m_spend_public_key,
+                               dst.addr.m_view_public_key)
+
+            await layout.require_confirm_tx(self.gctx(ctx), addr.decode('ascii'), dst.amount)
+
         return True
 
     async def transaction_error(self, *args, **kwargs):

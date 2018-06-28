@@ -602,7 +602,7 @@ class TTransactionBuilder(object):
         self.state.init_tsx()
 
         # Ask for confirmation
-        confirmation = await self.trezor.iface.confirm_transaction(tsx_data)
+        confirmation = await self.trezor.iface.confirm_transaction(tsx_data, self.creds)
         if not confirmation:
             return MoneroRespError(reason='rejected')
 
