@@ -2,16 +2,16 @@
 # -*- coding: utf-8 -*-
 # Author: Dusan Klinec, ph4r05, 2018
 
-import protobuf as xproto
+import ustruct as struct
+from micropython import const
 
 from apps.monero.xmr.serialize import xmrtypes
 from apps.monero.xmr import common
 from apps.monero.xmr.core.tsx_helper import *
 from trezor.crypto import monero as tcry
-import ustruct as struct
 
 
-DISPLAY_DECIMAL_POINT = 12
+DISPLAY_DECIMAL_POINT = const(12)
 
 
 class XmrNoSuchAddressException(common.XmrException):
