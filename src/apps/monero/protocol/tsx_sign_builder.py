@@ -1,11 +1,7 @@
-import gc
-import micropython
-from trezor import log
-
 from apps.monero.controller import misc
 from apps.monero.protocol.tsx_sign_state import TState
 from apps.monero.xmr import crypto, common, monero, ring_ct, mlsag2
-from apps.monero.xmr.core import tsx_helper
+from apps.monero.xmr.sub import tsx_helper
 from apps.monero.xmr.enc import chacha_poly
 from apps.monero.xmr.serialize import xmrserialize
 from apps.monero.xmr.serialize_messages.ct_keys import CtKey
@@ -29,9 +25,6 @@ from apps.monero.xmr.sub.mlsag_hasher import PreMlsagHasher
 
 
 from trezor.messages.MoneroRespError import MoneroRespError
-
-
-
 from trezor.messages.MoneroTsxInputsPermutationResp import MoneroTsxInputsPermutationResp
 from trezor.messages.MoneroTsxMlsagDoneResp import MoneroTsxMlsagDoneResp
 from trezor.messages.MoneroTsxSetInputResp import MoneroTsxSetInputResp
