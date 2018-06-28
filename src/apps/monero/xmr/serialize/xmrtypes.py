@@ -4,7 +4,7 @@
 XMR types
 '''
 
-
+from micropython import const
 from . import xmrserialize as x
 from .xmrserialize import eref
 
@@ -91,7 +91,6 @@ class TxoutTargetV(x.VariantType):
 class TxinGen(x.MessageType):
     __slots__ = ['height']
     VARIANT_CODE = 0xff
-    BOOST_VARIANT_CODE = 0x0
     MFIELDS = [
         ('height', x.UVarintType),
     ]
@@ -100,7 +99,6 @@ class TxinGen(x.MessageType):
 class TxinToKey(x.MessageType):
     __slots__ = ['amount', 'key_offsets', 'k_image']
     VARIANT_CODE = 0x2
-    BOOST_VARIANT_CODE = 0x3
     MFIELDS = [
         ('amount', x.UVarintType),
         ('key_offsets', x.ContainerType, x.UVarintType),
@@ -111,14 +109,12 @@ class TxinToKey(x.MessageType):
 class TxinToScript(x.MessageType):
     __slots__ = []
     VARIANT_CODE = 0x0
-    BOOST_VARIANT_CODE = 0x1
     MFIELDS = []
 
 
 class TxinToScriptHash(x.MessageType):
     __slots__ = []
     VARIANT_CODE = 0x1
-    BOOST_VARIANT_CODE = 0x2
     MFIELDS = []
 
 
@@ -164,7 +160,6 @@ class TransactionPrefixExtraBlob(TransactionPrefix):
 class Key64(x.ContainerType):
     FIX_SIZE = 1
     SIZE = 64
-    BOOST_RAW_ARRAY = True
     ELEM_TYPE = ECKey
 
 
@@ -559,7 +554,6 @@ class SubaddressIndex(x.MessageType):
 
 class MultisigLR(x.MessageType):
     __slots__ = ['L', 'R']
-    BOOST_VERSION = 0
     MFIELDS = [
         ('L', ECKey),
         ('R', ECKey),
@@ -568,7 +562,6 @@ class MultisigLR(x.MessageType):
 
 class MultisigInfo(x.MessageType):
     __slots__ = ['signer', 'LR', 'partial_key_images']
-    BOOST_VERSION = 1
     MFIELDS = [
         ('signer', ECPublicKey),
         ('LR', x.ContainerType, MultisigLR),
@@ -683,7 +676,6 @@ class OutputEntry(x.TupleType):
 
 
 class TxSourceEntry(x.MessageType):
-    BOOST_VERSION = 1
     MFIELDS = [
         ('outputs', x.ContainerType, OutputEntry),
         ('real_output', x.SizeT),
@@ -699,7 +691,6 @@ class TxSourceEntry(x.MessageType):
 
 class TxDestinationEntry(x.MessageType):
     __slots__ = ['amount', 'addr', 'is_subaddress']
-    BOOST_VERSION = 1
     MFIELDS = [
         ('amount', x.UVarintType),  # original: UInt64
         ('addr', AccountPublicAddress),
@@ -708,7 +699,6 @@ class TxDestinationEntry(x.MessageType):
 
 
 class TransferDetails(x.MessageType):
-    BOOST_VERSION = 9
     MFIELDS = [
         ('m_block_height', x.UInt64),
         ('m_tx', TransactionPrefix),
@@ -731,7 +721,6 @@ class TransferDetails(x.MessageType):
 
 
 class TxConstructionData(x.MessageType):
-    BOOST_VERSION = 2
     MFIELDS = [
         ('sources', x.ContainerType, TxSourceEntry),
         ('change_dts', TxDestinationEntry),
@@ -747,7 +736,6 @@ class TxConstructionData(x.MessageType):
 
 
 class PendingTransaction(x.MessageType):
-    BOOST_VERSION = 3
     MFIELDS = [
         ('tx', Transaction),
         ('dust', x.UInt64),
@@ -769,7 +757,6 @@ class PendingTransactionVector(x.ContainerType):
 
 
 class MultisigTxSet(x.MessageType):
-    BOOST_VERSION = 0
     MFIELDS = [
         ('m_ptx', PendingTransactionVector),
         ('m_signers', UnorderedSet, ECPublicKey),
