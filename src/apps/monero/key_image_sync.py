@@ -13,19 +13,15 @@ async def layout_key_image_sync(ctx, msg: MoneroKeyImageSync):
 
     global SYNC_STATE
     try:
-        print('msgin')
         if msg.init:
-            print('init')
             SYNC_STATE = key_image_sync.KeyImageSync(ctx=ctx, iface=iface.get_iface(ctx))
             return await SYNC_STATE.init(ctx, msg.init)
 
         elif msg.step:
-            print('step')
             print(SYNC_STATE)
             return await SYNC_STATE.sync(ctx, msg.step)
 
         elif msg.final_msg:
-            print('final')
             res = await SYNC_STATE.final(ctx, msg.final_msg)
             SYNC_STATE = None
             return res
