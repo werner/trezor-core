@@ -471,7 +471,7 @@ def gen_H():
     8b655970153799af2aeadc9ff1add0ea6c7251d54154cfa92c173a0dd39c1f94
     :return:
     """
-    return tcry.ge25519_set_xmr_h()
+    return tcry.ge25519_set_h()
 
 
 def scalarmult_h(i):
@@ -580,18 +580,6 @@ def prove_range(amount, last_mask=None):
     """
     C, a, R = tcry.gen_range_proof(amount, last_mask)
 
-    # Rewrap to serializable structures
-    nrsig = xmrtypes.RangeSig()
-    nrsig.asig = xmrtypes.BoroSig()
-    nrsig.asig.ee = bytes(R.asig.ee)
-    nrsig.Ci = list(R.Ci)
-    nrsig.asig.s0 = list(R.asig.s0)
-    nrsig.asig.s1 = list(R.asig.s1)
-    del R
+    # Trezor micropython extmod returns byte-serialized/flattened rsig
+    return C, a, R
 
-    for i in range(64):
-        nrsig.Ci[i] = bytes(nrsig.Ci[i])
-        nrsig.asig.s0[i] = bytes(nrsig.asig.s0[i])
-        nrsig.asig.s1[i] = bytes(nrsig.asig.s1[i])
-
-    return C, a, nrsig
