@@ -5,6 +5,7 @@
 
 from trezor.crypto import hmac
 from trezor.crypto import random
+from trezor.crypto import monero
 
 
 class XmrException(Exception):
@@ -57,17 +58,12 @@ def random_bytes(by):
 
 def ct_equal(a, b):
     """
-    Constant time a,b comparisson
+    Constant time a,b comparison
     :param a:
     :param b:
     :return:
     """
-    if len(a) != len(b):
-        return False
-    result = 0
-    for x, y in zip(a, b):
-        result |= ord(x) ^ ord(y)
-    return result == 0
+    return monero.ct_equals(a, b)
 
 
 def check_permutation(permutation):
