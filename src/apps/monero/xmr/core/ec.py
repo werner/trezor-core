@@ -114,12 +114,20 @@ def encodepoint(pt):
     return tcry.ge25519_pack(pt)
 
 
+def encodepoint_into(pt, b):
+    return tcry.ge25519_pack_into(pt, b)
+
+
 def decodeint(x):
     return tcry.unpack256_modm(x)
 
 
 def encodeint(x):
     return tcry.pack256_modm(x)
+
+
+def encodeint_into(x, b):
+    return tcry.pack256_modm_into(x, b)
 
 
 def check_ed25519point(x):
