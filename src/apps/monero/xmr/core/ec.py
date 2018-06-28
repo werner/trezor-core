@@ -9,14 +9,11 @@
 # https://tools.ietf.org/html/draft-josefsson-eddsa-ed25519-00#section-4
 # https://github.com/monero-project/research-lab
 
-import ubinascii as binascii
-
 from trezor.crypto import hmac
 from trezor.crypto import random
 from trezor.crypto import monero as tcry
 from trezor.crypto import pbkdf2 as tpbkdf2
 from trezor.crypto.hashlib import sha3_256
-from apps.monero.xmr.serialize import xmrtypes
 
 
 # py constants

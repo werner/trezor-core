@@ -4,7 +4,7 @@
 
 
 from apps.monero.xmr.serialize import xmrtypes, xmrserialize
-from apps.monero.xmr import ring_ct, crypto, common, monero
+from apps.monero.xmr import ring_ct, crypto, common
 
 
 class SubAddrIndicesList(xmrserialize.MessageType):

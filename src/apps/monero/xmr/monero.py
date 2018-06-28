@@ -4,8 +4,8 @@
 
 import protobuf as xproto
 
-from apps.monero.xmr.serialize import xmrtypes, xmrserialize
-from apps.monero.xmr import mlsag2, ring_ct, crypto, common
+from apps.monero.xmr.serialize import xmrtypes
+from apps.monero.xmr import common
 from apps.monero.xmr.core.tsx_helper import *
 from trezor.crypto import monero as tcry
 import ustruct as struct

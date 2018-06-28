@@ -5,7 +5,7 @@
 
 
 from apps.monero.xmr.serialize import xmrtypes
-from apps.monero.xmr import mlsag2, crypto, common, monero
+from apps.monero.xmr import crypto, monero
 
 ATOMS = 64
 

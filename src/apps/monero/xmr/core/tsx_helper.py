@@ -3,7 +3,7 @@
 # Author: Dusan Klinec, ph4r05, 2018
 
 from apps.monero.xmr.serialize import xmrtypes, xmrserialize
-from apps.monero.xmr import mlsag2, ring_ct, crypto, common
+from apps.monero.xmr import crypto
 
 
 async def parse_extra_fields(extra_buff):

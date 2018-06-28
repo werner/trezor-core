@@ -11,9 +11,6 @@
 
 import ubinascii as binascii
 
-from apps.monero.xmr.serialize import xmrserialize
-from apps.monero.xmr import common
-
 from apps.monero.xmr.core.ec import *
 
 

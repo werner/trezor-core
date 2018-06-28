@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # Author: Dusan Klinec, ph4r05, 2018
 
-from apps.monero.xmr import common, crypto
+from apps.monero.xmr import crypto
 from apps.monero.xmr.monero import TsxData
 from apps.monero.xmr.serialize import xmrtypes, xmrserialize
 from trezor.messages.MoneroTsxData import MoneroTsxData
