@@ -71,8 +71,8 @@ class KeyImageSync(object):
             crypto.encodeint_into(sig[0][0], buff_mv[32:64])
             crypto.encodeint_into(sig[0][1], buff_mv[64:])
 
-            nonce, ciph, tag = chacha_poly.encrypt(self.enc_key, buff)
-            eki = MoneroExportedKeyImage(iv=nonce, tag=tag, blob=ciph)
+            nonce, ciph, _ = chacha_poly.encrypt(self.enc_key, buff)
+            eki = MoneroExportedKeyImage(iv=nonce, tag=b'', blob=ciph)
             resp.append(eki)
         return MoneroKeyImageSyncStepResp(kis=resp)
 

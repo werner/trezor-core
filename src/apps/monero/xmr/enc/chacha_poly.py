@@ -47,7 +47,8 @@ def decrypt(key, iv, ciphertext, tag=None, associated_data=None):
 
 
 def encrypt_pack(key, plaintext, associated_data=None):
-    return b''.join(encrypt(key, plaintext, associated_data))
+    b = encrypt(key, plaintext, associated_data)
+    return b[0] + b[1]
 
 
 def decrypt_pack(key, ciphertext):
