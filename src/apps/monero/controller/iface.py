@@ -20,7 +20,6 @@ class TrezorInterface(object):
         :param ctx:
         :return:
         """
-        from apps.monero.xmr import crypto
         from apps.monero.xmr.monero import encode_addr, net_version
 
         change_coord = None, None
