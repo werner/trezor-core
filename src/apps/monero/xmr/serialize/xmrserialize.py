@@ -588,37 +588,6 @@ class Archive(object):
         self.writing = writing
         self.iobj = iobj
 
-    async def tag(self, tag):
-        """
-
-        :param tag:
-        :return:
-        """
-
-    async def begin_array(self):
-        """
-        Mark start of the array. Used for JSON serialization.
-        :return:
-        """
-
-    async def end_array(self):
-        """
-        Mark end of the array. Used for JSON serialization.
-        :return:
-        """
-
-    async def begin_object(self):
-        """
-        Mark start of the object. Used for JSON serialization.
-        :return:
-        """
-
-    async def end_object(self):
-        """
-        Mark end of the object. Used for JSON serialization.
-        :return:
-        """
-
     async def prepare_container(self, size, container, elem_type=None):
         """
         Prepares container for serialization
@@ -824,24 +793,6 @@ class Archive(object):
         for field in fields:
             await self.message_field(msg, field)
         return msg
-
-    async def rfield(self, elem=None, elem_type=None, params=None):
-        """
-        Loads/Dumps message field
-        :param elem:
-        :param elem_type:
-        :param params:
-        :return:
-        """
-        if self.writing:
-            return await dump_field(self.iobj, elem=elem,
-                                    elem_type=elem_type if elem_type else elem.__class__,
-                                    params=params)
-        else:
-            return await load_field(self.iobj,
-                                    elem_type=elem_type if elem_type else elem.__class__,
-                                    params=params,
-                                    elem=elem)
 
     async def field(self, elem=None, elem_type=None, params=None):
         """
@@ -1232,93 +1183,10 @@ async def load_variant(reader, elem_type, params=None, elem=None, wrapped=None, 
 
 
 async def dump_field(writer, elem, elem_type, params=None):
-    """
-    Dumps field to the writer, according to the element specification.
-    General multiplexer.
-
-    :param writer:
-    :param elem:
-    :param elem_type:
-    :param params:
-    :return:
-    """
-    if issubclass(elem_type, UVarintType):
-        await dump_uvarint(writer, elem)
-
-    elif issubclass(elem_type, IntType):
-        await dump_uint(writer, elem, elem_type.WIDTH)
-
-    elif issubclass(elem_type, BlobType):
-        await dump_blob(writer, elem, elem_type, params)
-
-    elif issubclass(elem_type, UnicodeType):
-        await dump_unicode(elem)
-
-    elif issubclass(elem_type, VariantType):
-        await dump_variant(writer, elem, elem_type, params)
-
-    elif issubclass(elem_type, ContainerType):  # container ~ simple list
-        await dump_container(writer, elem, elem_type, params)
-
-    elif issubclass(elem_type, TupleType):  # container ~ simple list
-        await dump_tuple(writer, elem, elem_type, params)
-
-    elif issubclass(elem_type, MessageType):
-        await dump_message(writer, elem, elem_type)
-
-    else:
-        raise TypeError
+    raise TypeError
 
 
 async def load_field(reader, elem_type, params=None, elem=None):
-    """
-    Loads a field from the reader, based on the field type specification. Demultiplexer.
-
-    :param reader:
-    :param elem_type:
-    :param params:
-    :param elem:
-    :return:
-    """
-    if issubclass(elem_type, UVarintType):
-        fvalue = await load_uvarint(reader)
-        return set_elem(elem, fvalue)
-
-    elif issubclass(elem_type, BoolType):
-        fvalue = await load_uint(reader, elem_type.WIDTH)
-        if fvalue != 0 and fvalue != 1:
-            raise ValueError('Unexpected bool value')
-        return set_elem(elem, fvalue)
-
-    elif issubclass(elem_type, IntType):
-        fvalue = await load_uint(reader, elem_type.WIDTH)
-        return set_elem(elem, fvalue)
-
-    elif issubclass(elem_type, BlobType):
-        fvalue = await load_blob(reader, elem_type, params=params, elem=get_elem(elem))
-        return set_elem(elem, fvalue)
-
-    elif issubclass(elem_type, UnicodeType):
-        fvalue = await load_unicode(reader)
-        return set_elem(elem, fvalue)
-
-    elif issubclass(elem_type, VariantType):
-        fvalue = await load_variant(reader, elem_type, params=params, elem=get_elem(elem))
-        return set_elem(elem, fvalue)
-
-    elif issubclass(elem_type, ContainerType):  # container ~ simple list
-        fvalue = await load_container(reader, elem_type, params=params, container=get_elem(elem))
-        return set_elem(elem, fvalue)
-
-    elif issubclass(elem_type, TupleType):  # tuple ~ simple list
-        fvalue = await load_tuple(reader, elem_type, params=params, elem=get_elem(elem))
-        return set_elem(elem, fvalue)
-
-    elif issubclass(elem_type, MessageType):
-        fvalue = await load_message(reader, msg_type=elem_type, msg=get_elem(elem))
-        return set_elem(elem, fvalue)
-
-    else:
-        raise TypeError
+    raise TypeError
 
 
