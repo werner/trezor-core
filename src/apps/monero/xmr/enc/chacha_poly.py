@@ -34,7 +34,7 @@ def decrypt(key, iv, ciphertext, tag=None, associated_data=None):
     :param associated_data:
     :return:
     """
-    cipher = ChaCha20Poly1305(iv, key)
+    cipher = ChaCha20Poly1305(key, iv)
     if associated_data:
         cipher.auth(associated_data)
     exp_tag, ciphertext = ciphertext[-16:], ciphertext[:-16]
