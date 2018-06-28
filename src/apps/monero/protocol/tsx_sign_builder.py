@@ -20,7 +20,7 @@ from apps.monero.xmr.serialize_messages.tx_full import RctSigPrunable
 from apps.monero.xmr.serialize_messages.tx_dest_entry import TxDestinationEntry
 from apps.monero.xmr.serialize_messages.tx_src_entry import TxSourceEntry
 
-from apps.monero.xmr.sub.keccak_archive import KeccakArchive, get_keccak_writer
+from apps.monero.xmr.sub.keccak_hasher import KeccakArchive, get_keccak_writer
 from apps.monero.xmr.sub.mlsag_hasher import PreMlsagHasher
 
 

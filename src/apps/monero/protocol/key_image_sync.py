@@ -4,12 +4,15 @@
 
 import gc
 from trezor import log
+
+
 from apps.monero.controller import wrapper as twrap
 
 
 class KeyImageSync(object):
     def __init__(self, ctx=None, iface=None, creds=None):
-        from apps.monero.xmr import crypto, common
+        from apps.monero.xmr import crypto
+        from apps.monero.xmr.sub.keccak_hasher import HashWrapper
 
         self.ctx = ctx
         self.iface = iface
@@ -21,7 +24,7 @@ class KeyImageSync(object):
         self.blocked = None
         self.enc_key = None
         self.subaddresses = {}
-        self.hasher = common.HashWrapper(crypto.get_keccak())
+        self.hasher = HashWrapper(crypto.get_keccak())
 
     async def derive_creds(self, msg):
         self.creds = await twrap.monero_get_creds(self.ctx, msg.address_n or (), msg.network_type)

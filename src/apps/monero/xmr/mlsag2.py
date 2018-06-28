@@ -4,8 +4,9 @@
 # Author: Dusan Klinec, ph4r05, 2018
 # see https://eprint.iacr.org/2015/1098.pdf
 
+from apps.monero.xmr.sub.keccak_hasher import HashWrapper
 from apps.monero.xmr.serialize_messages.tx_full import MgSig
-from apps.monero.xmr import crypto, common
+from apps.monero.xmr import crypto
 
 
 def key_zero_vector(rows):
@@ -82,7 +83,7 @@ def hasher_message(message):
     :param message:
     :return:
     """
-    ctx = common.HashWrapper(crypto.get_keccak())
+    ctx = HashWrapper(crypto.get_keccak())
     ctx.update(message)
     return ctx
 

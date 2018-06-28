@@ -14,7 +14,6 @@ import apps.monero.xmr.serialize_messages.tx_full
 import apps.monero.xmr.serialize_messages.tx_prefix
 import apps.monero.xmr.serialize_messages.tx_rsig
 import apps.monero.xmr.serialize_messages.tx_src_entry
-import apps.monero.xmr.sub.keccak_archive
 import apps.monero.xmr.sub.mlsag_hasher
 import apps.monero.xmr.sub.recode
 from apps.monero.controller import iface, misc, wrapper

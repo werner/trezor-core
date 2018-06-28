@@ -1,4 +1,4 @@
-from apps.monero.xmr import common, crypto
+from apps.monero.xmr import crypto
 from apps.monero.xmr.serialize_messages.base import ECKey
 from apps.monero.xmr.serialize_messages.ct_keys import KeyV
 from apps.monero.xmr.serialize_messages.tx_full import RctSigBase
@@ -11,11 +11,11 @@ class PreMlsagHasher(object):
     Iterative construction of the pre_mlsag_hash
     """
     def __init__(self):
-        from apps.monero.xmr.sub.keccak_archive import KeccakArchive
+        from apps.monero.xmr.sub.keccak_hasher import KeccakArchive, HashWrapper
 
         self.is_simple = None
         self.state = 0
-        self.kc_master = common.HashWrapper(crypto.get_keccak())
+        self.kc_master = HashWrapper(crypto.get_keccak())
         self.rtcsig_hasher = KeccakArchive()
         self.rsig_hasher = crypto.get_keccak()
 
@@ -119,10 +119,10 @@ async def get_pre_mlsag_hash(rv):
     :type rv: RctSig
     :return:
     """
-    from apps.monero.xmr.sub.keccak_archive import get_keccak_writer
+    from apps.monero.xmr.sub.keccak_hasher import get_keccak_writer, HashWrapper
     from apps.monero.xmr.serialize import xmrserialize
 
-    kc_master = common.HashWrapper(crypto.get_keccak())
+    kc_master = HashWrapper(crypto.get_keccak())
     kc_master.update(rv.message)
 
     is_simple = rv.type in [RctType.Simple, RctType.SimpleBulletproof]
