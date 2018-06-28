@@ -1,10 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Author: Dusan Klinec, ph4r05, 2018
+from apps.monero.xmr.serialize.messages.addr import AccountPublicAddress
+from apps.monero.xmr.serialize.messages.tx_dest_entry import TxDestinationEntry
+from apps.monero.xmr.serialize.messages.tx_src_entry import TxSourceEntry
+from apps.monero.xmr.serialize.messages.tx_prefix import TxinToKey
 
+from apps.monero.xmr.serialize.readwriter import MemoryReaderWriter
 from apps.monero.xmr import crypto
-from apps.monero.xmr.monero import TsxData
-from apps.monero.xmr.serialize import xmrtypes, xmrserialize
+from apps.monero.xmr.tsx_data import TsxData
+from apps.monero.xmr.serialize import xmrserialize
 from trezor.messages.MoneroTsxData import MoneroTsxData
 from trezor.messages.MoneroTxDestinationEntry import MoneroTxDestinationEntry
 
@@ -56,11 +61,11 @@ def compute_tx_key(spend_key_private, tx_prefix_hash, salt=None, rand_mult=None)
 
 
 def translate_monero_dest_entry(dst_entry: MoneroTxDestinationEntry):
-    d = xmrtypes.TxDestinationEntry()
+    d = TxDestinationEntry()
     d.amount = dst_entry.amount
     d.is_subaddress = dst_entry.is_subaddress
-    d.addr = xmrtypes.AccountPublicAddress(m_spend_public_key=dst_entry.addr.m_spend_public_key,
-                                           m_view_public_key=dst_entry.addr.m_view_public_key)
+    d.addr = AccountPublicAddress(m_spend_public_key=dst_entry.addr.m_spend_public_key,
+                                  m_view_public_key=dst_entry.addr.m_view_public_key)
     return d
 
 
@@ -79,28 +84,25 @@ async def translate_tsx_data(tsx_data: MoneroTsxData):
 
 
 async def parse_msg(bts, msg):
-    reader = xmrserialize.MemoryReaderWriter(bytearray(bts))
+    reader = MemoryReaderWriter(bytearray(bts))
     ar = xmrserialize.Archive(reader, False)
     return await ar.message(msg)
 
 
 async def parse_src_entry(bts):
-    return await parse_msg(bts, xmrtypes.TxSourceEntry())
+    return await parse_msg(bts, TxSourceEntry())
 
 
 async def parse_dst_entry(bts):
-    return await parse_msg(bts, xmrtypes.TxDestinationEntry())
+    return await parse_msg(bts, TxDestinationEntry())
 
 
 async def parse_vini(bts):
-    return await parse_msg(bts, xmrtypes.TxinToKey())
+    return await parse_msg(bts, TxinToKey())
 
 
 async def dump_msg(msg):
-    writer = xmrserialize.MemoryReaderWriter()
+    writer = MemoryReaderWriter()
     ar = xmrserialize.Archive(writer, True)
     await ar.message(msg)
     return bytes(writer.buffer)
-
-
-

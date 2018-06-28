@@ -1,7 +1,8 @@
 from apps.monero.controller import wrapper
 from apps.monero.xmr import crypto
 from apps.monero import layout
-from apps.monero.messages import MoneroGetKey, MoneroKey
+from trezor.messages.MoneroGetKey import MoneroGetKey
+from trezor.messages.MoneroKey import MoneroKey
 
 
 async def layout_monero_get_keys(ctx, msg: MoneroGetKey):

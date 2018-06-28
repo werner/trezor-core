@@ -9,6 +9,8 @@
 # https://tools.ietf.org/html/draft-josefsson-eddsa-ed25519-00#section-4
 # https://github.com/monero-project/research-lab
 
+#from micropython import const
+
 from trezor.crypto import hmac
 from trezor.crypto import random
 from trezor.crypto import monero as tcry
@@ -17,10 +19,17 @@ from trezor.crypto.hashlib import sha3_256
 
 
 # py constants
+# b = const(256)
+# q = const(2**255 - 19)
+# l = const(2**252 + 27742317777372353535851937790883648493)
+# d = const(-0x98412dfc9311d490018c7338bf8688861767ff8ff5b2bebe27548a14b235ec8feda4)  # -121665 * inv(121666) % q
+
+# py constants
 b = 256
 q = 2**255 - 19
 l = 2**252 + 27742317777372353535851937790883648493
 d = -0x98412dfc9311d490018c7338bf8688861767ff8ff5b2bebe27548a14b235ec8feda4  # -121665 * inv(121666) % q
+
 
 py_b = b
 py_q = q
@@ -387,7 +396,7 @@ def ge_frombytes_vartime_check(point):
     sqrt(s) = s^((q+3) / 8) if s^((q+3)/4) == s
             = sqrt(-1) s ^((q+3) / 8) otherwise
 
-    :param key:
+    :param point:
     :return:
     """
     # if tcry.ge25519_check(point) != 1:
@@ -402,7 +411,7 @@ def ge_frombytes_vartime(point):
     """
     https://www.imperialviolet.org/2013/12/25/elligator.html
 
-    :param key:
+    :param point:
     :return:
     """
     ge_frombytes_vartime_check(point)
@@ -459,7 +468,7 @@ def hash_to_ec(buf):
     Code adapted from MiniNero: https://github.com/monero-project/mininero
     https://github.com/monero-project/research-lab/blob/master/whitepaper/ge_fromfe_writeup/ge_fromfe.pdf
     http://archive.is/yfINb
-    :param key:
+    :param buf:
     :return:
     """
     return tcry.xmr_hash_to_ec(buf)

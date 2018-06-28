@@ -2,7 +2,6 @@ from apps.common.confirm import confirm, require_confirm, require_hold_to_confir
 from apps.wallet.get_public_key import _show_pubkey
 from trezor import ui
 from trezor.messages import ButtonRequestType
-from trezor.ui.loader import Loader
 from trezor.ui.text import Text
 from trezor.utils import chunks
 

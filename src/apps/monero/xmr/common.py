@@ -3,7 +3,6 @@
 # Author: Dusan Klinec, ph4r05, 2018
 
 
-from trezor.crypto import hmac
 from trezor.crypto import random
 from trezor.crypto import monero
 
@@ -152,7 +151,6 @@ def defvalkeys(js, key, default=None):
     :param js:
     :param key:
     :param default:
-    :param take_none:
     :return:
     """
     if js is None:

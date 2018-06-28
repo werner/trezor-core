@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Author: Dusan Klinec, ph4r05, 2018
-
-from apps.monero.xmr.serialize import xmrtypes, xmrserialize
+from apps.monero.xmr.serialize.readwriter import MemoryReaderWriter
+from apps.monero.xmr.serialize.messages.tx_extra import TxExtraField, TxExtraAdditionalPubKeys
+from apps.monero.xmr.serialize.messages.addr import AccountPublicAddress
+from apps.monero.xmr.serialize import xmrserialize
 from apps.monero.xmr import crypto
 
 
@@ -13,10 +15,10 @@ async def parse_extra_fields(extra_buff):
     :return:
     """
     extras = []
-    rw = xmrserialize.MemoryReaderWriter(list(extra_buff))
+    rw = MemoryReaderWriter(list(extra_buff))
     ar2 = xmrserialize.Archive(rw, False)
     while len(rw.buffer) > 0:
-        extras.append(await ar2.variant(elem_type=xmrtypes.TxExtraField))
+        extras.append(await ar2.variant(elem_type=TxExtraField))
     return extras
 
 
@@ -87,11 +89,11 @@ def get_destination_view_key_pub(destinations, change_addr=None):
     """
     Returns destination address public view key
     :param destinations:
-    :type destinations: list[xmrtypes.TxDestinationEntry]
+    :type destinations: list[apps.monero.xmr.serialize.messages.tx_construct.TxDestinationEntry]
     :param change_addr:
     :return:
     """
-    addr = xmrtypes.AccountPublicAddress(m_spend_public_key=crypto.NULL_KEY_ENC, m_view_public_key=crypto.NULL_KEY_ENC)
+    addr = AccountPublicAddress(m_spend_public_key=crypto.NULL_KEY_ENC, m_view_public_key=crypto.NULL_KEY_ENC)
     count = 0
     for dest in destinations:
         if dest.amount == 0:
@@ -141,14 +143,14 @@ async def remove_field_from_tx_extra(extra, mtype):
     if len(extra) == 0:
         return []
 
-    reader = xmrserialize.MemoryReaderWriter(extra)
-    writer = xmrserialize.MemoryReaderWriter()
+    reader = MemoryReaderWriter(extra)
+    writer = MemoryReaderWriter()
     ar_read = xmrserialize.Archive(reader, False)
     ar_write = xmrserialize.Archive(writer, True)
     while len(reader.buffer) > 0:
-        c_extras = await ar_read.variant(elem_type=xmrtypes.TxExtraField)
+        c_extras = await ar_read.variant(elem_type=TxExtraField)
         if not isinstance(c_extras, mtype):
-            await ar_write.variant(c_extras, elem_type=xmrtypes.TxExtraField)
+            await ar_write.variant(c_extras, elem_type=TxExtraField)
 
     return writer.buffer
 
@@ -185,14 +187,13 @@ async def add_additional_tx_pub_keys_to_extra(tx_extra, additional_pub_keys=None
     :param pub_enc: None
     :return:
     """
-    pubs_msg = xmrtypes.TxExtraAdditionalPubKeys(
-        data=pub_enc if pub_enc else [crypto.encodepoint(x) for x in additional_pub_keys])
+    pubs_msg = TxExtraAdditionalPubKeys(data=pub_enc if pub_enc else [crypto.encodepoint(x) for x in additional_pub_keys])
 
-    rw = xmrserialize.MemoryReaderWriter()
+    rw = MemoryReaderWriter()
     ar = xmrserialize.Archive(rw, True)
 
     # format: variant_tag (0x4) | array len varint | 32B | 32B | ...
-    await ar.variant(pubs_msg, xmrtypes.TxExtraField)
+    await ar.variant(pubs_msg, TxExtraField)
     tx_extra += bytes(rw.buffer)
     return tx_extra
 

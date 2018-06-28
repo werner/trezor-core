@@ -2,19 +2,24 @@ from trezor.wire import register, protobuf_workflow
 from trezor.messages.wire_types import \
     MoneroGetAddress, MoneroGetWatchKey, MoneroGetKey, MoneroTsxSign, MoneroKeyImageSync
 
+
+import gc
+import micropython
+from trezor import log
+
 # persistent state objects
-from .sign_tx import layout_sign_tx
-from .key_image_sync import layout_key_image_sync
+from apps.monero.sign_tx import layout_sign_tx
+from apps.monero.key_image_sync import layout_key_image_sync
 
 
 
 def dispatch_MoneroGetAddress(*args, **kwargs):
-    from .get_address import layout_monero_get_address
+    from apps.monero.get_address import layout_monero_get_address
     return layout_monero_get_address(*args, **kwargs)
 
 
 def dispatch_MoneroGetWatchKey(*args, **kwargs):
-    from .get_watch_only import layout_monero_get_watch_only
+    from apps.monero.get_watch_only import layout_monero_get_watch_only
     return layout_monero_get_watch_only(*args, **kwargs)
 
 

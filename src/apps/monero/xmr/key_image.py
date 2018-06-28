@@ -2,53 +2,57 @@
 # -*- coding: utf-8 -*-
 # Author: Dusan Klinec, ph4r05, 2018
 
+from apps.monero.xmr.serialize.int_serialize import dump_uvarint_b
+from apps.monero.xmr.serialize.base_types import UVarintType
+from apps.monero.xmr.serialize.message_types import MessageType, ContainerType, BlobType
+from apps.monero.xmr.serialize.messages.base import ECPublicKey, Hash
 
-from apps.monero.xmr.serialize import xmrtypes, xmrserialize
 from apps.monero.xmr import ring_ct, crypto, common
 
 
-class SubAddrIndicesList(xmrserialize.MessageType):
+class SubAddrIndicesList(MessageType):
     __slots__ = ['account', 'minor_indices']
     MFIELDS = [
-        ('account', xmrserialize.UVarintType),
-        ('minor_indices', xmrserialize.ContainerType, xmrserialize.UVarintType),
+        ('account', UVarintType),
+        ('minor_indices', ContainerType, UVarintType),
     ]
 
 
-class KeyImageExportInit(xmrserialize.MessageType):
+class KeyImageExportInit(MessageType):
     """
     Initializes key image sync. Commitment
     """
     __slots__ = ['num', 'hash', 'subs']
     MFIELDS = [
-        ('num', xmrserialize.UVarintType),  # number of outputs to gen
-        ('hash', xmrtypes.Hash),  # aggregate hash commitment
-        ('subs', xmrserialize.ContainerType, SubAddrIndicesList),  # aggregated sub addresses indices
+        ('num', UVarintType),  # number of outputs to gen
+        ('hash', Hash),  # aggregate hash commitment
+        ('subs', ContainerType, SubAddrIndicesList),  # aggregated sub addresses indices
     ]
 
 
-class TransferDetails(xmrserialize.MessageType):
+class TransferDetails(MessageType):
     """
     Transfer details for key image sync needs
     """
     __slots__ = ['out_key', 'tx_pub_key', 'additional_tx_pub_keys', 'm_internal_output_index']
     MFIELDS = [
-        ('out_key', xmrtypes.ECPublicKey),
-        ('tx_pub_key', xmrtypes.ECPublicKey),
-        ('additional_tx_pub_keys', xmrserialize.ContainerType, xmrtypes.ECPublicKey),
-        ('m_internal_output_index', xmrserialize.UVarintType),
+        ('out_key', ECPublicKey),
+        ('tx_pub_key', ECPublicKey),
+        ('additional_tx_pub_keys', ContainerType,
+         ECPublicKey),
+        ('m_internal_output_index', UVarintType),
     ]
 
 
-class ExportedKeyImage(xmrserialize.MessageType):
+class ExportedKeyImage(MessageType):
     """
     Exported key image
     """
     __slots__ = ['iv', 'tag', 'blob']
     MFIELDS = [
-        ('iv', xmrserialize.BlobType),   # enc IV
-        ('tag', xmrserialize.BlobType),  # enc tag
-        ('blob', xmrserialize.BlobType),  # encrypted ki || sig
+        ('iv', BlobType),   # enc IV
+        ('tag', BlobType),  # enc tag
+        ('blob', BlobType),  # encrypted ki || sig
     ]
 
 
@@ -64,7 +68,7 @@ def compute_hash(rr):
     buff += rr.tx_pub_key
     if rr.additional_tx_pub_keys:
         buff += b''.join(rr.additional_tx_pub_keys)
-    buff += xmrserialize.dump_uvarint_b(rr.m_internal_output_index)
+    buff += dump_uvarint_b(rr.m_internal_output_index)
 
     return crypto.cn_fast_hash(buff)
 
@@ -87,8 +91,3 @@ async def export_key_image(creds, subaddresses, td):
                                        additional_tx_pub_keys, td.m_internal_output_index)
 
     return ki, sig
-
-
-
-
-

@@ -3,11 +3,8 @@
 # Author: https://github.com/monero-project/mininero
 # Author: Dusan Klinec, ph4r05, 2018
 
-
-from apps.monero.xmr.serialize import xmrtypes
+from apps.monero.xmr.serialize.messages.tx_ecdh import EcdhTuple
 from apps.monero.xmr import crypto, monero
-
-ATOMS = 64
 
 
 def prove_range(amount, last_mask=None, decode=False, backend_impl=True, byte_enc=True):
@@ -49,7 +46,7 @@ def ecdh_encode(unmasked, receiver_pk=None, derivation=None):
     :param derivation:
     :return:
     """
-    rv = xmrtypes.EcdhTuple()
+    rv = EcdhTuple()
     if derivation is None:
         esk = crypto.random_scalar()
         rv.senderPk = crypto.scalarmult_base(esk)
@@ -72,7 +69,7 @@ def ecdh_decode(masked, receiver_sk=None, derivation=None):
     :param derivation:
     :return:
     """
-    rv = xmrtypes.EcdhTuple()
+    rv = EcdhTuple()
 
     if derivation is None:
         derivation = crypto.scalarmult(masked.senderPk, receiver_sk)

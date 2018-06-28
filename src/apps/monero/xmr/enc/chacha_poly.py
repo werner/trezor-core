@@ -41,7 +41,7 @@ def decrypt(key, iv, ciphertext, tag=None, associated_data=None):
     plaintext = cipher.decrypt(ciphertext)
     tag = cipher.finish()
     if not monero.ct_equals(tag, exp_tag):
-        raise ValueError
+        raise ValueError('tag invalid')
 
     return plaintext
 

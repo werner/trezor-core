@@ -4,9 +4,8 @@
 # Author: Dusan Klinec, ph4r05, 2018
 # see https://eprint.iacr.org/2015/1098.pdf
 
-
+from apps.monero.xmr.serialize.messages.tx_full import MgSig
 from apps.monero.xmr import crypto, common
-from apps.monero.xmr.serialize import xmrtypes
 
 
 def key_zero_vector(rows):
@@ -189,7 +188,7 @@ def gen_mlsag_ext(message, pk, xx, kLRki, mscout, index, dsRows):
     """
     rows, cols = gen_mlsag_assert(pk, xx, kLRki, mscout, index, dsRows)
 
-    rv = xmrtypes.MgSig()
+    rv = MgSig()
     c, L, R, Hi = 0, None, None, None
 
     c_old, Ip, alpha = gen_mlsag_rows(message, rv, pk, xx, kLRki, index, dsRows, rows, cols)
