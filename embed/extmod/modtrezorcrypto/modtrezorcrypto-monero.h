@@ -808,9 +808,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_monero_xmr_get_subad
 
 //void xmr_gen_c(ge25519 * r, const bignum256modm a, uint64_t amount);
 STATIC mp_obj_t mod_trezorcrypto_monero_xmr_gen_c(size_t n_args, const mp_obj_t *args){
-    mp_obj_t res = n_args == 3 ? args[0] : mp_obj_new_scalar();
+    mp_obj_t res = n_args == 3 ? args[0] : mp_obj_new_ge25519();
     const int off = n_args == 3 ? 0 : -1;
-    assert_scalar(res);
+    assert_ge25519(res);
     assert_scalar(args[1+off]);
     xmr_gen_c(&MP_OBJ_GE25519(res), MP_OBJ_C_SCALAR(args[1+off]), mp_obj_get_uint64(args[2+off]));
     return res;
