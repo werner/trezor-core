@@ -55,6 +55,8 @@ class KeyImageSync(object):
         if len(tds.tdis) == 0:
             raise ValueError('Empty')
         resp = []
+        buff = bytearray(32*3)
+        buff_mv = memoryview(buff)
         for td in tds.tdis:
             self.c_idx += 1
             if self.c_idx >= self.num:
@@ -65,9 +67,9 @@ class KeyImageSync(object):
 
             ki, sig = await key_image.export_key_image(self.creds, self.subaddresses, td)
 
-            buff = crypto.encodepoint(ki)
-            buff += crypto.encodeint(sig[0][0])
-            buff += crypto.encodeint(sig[0][1])
+            crypto.encodepoint_into(ki, buff_mv[0:32])
+            crypto.encodeint_into(sig[0][0], buff_mv[32:64])
+            crypto.encodeint_into(sig[0][1], buff_mv[64:])
 
             nonce, ciph, tag = chacha_poly.encrypt(self.enc_key, buff)
             eki = MoneroExportedKeyImage(iv=nonce, tag=tag, blob=ciph)
