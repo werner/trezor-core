@@ -1,5 +1,5 @@
 from apps.monero.xmr.serialize.message_types import MessageType, ContainerType
-from apps.monero.xmr.serialize.messages.base import ECKey
+from apps.monero.xmr.serialize_messages.base import ECKey
 
 
 class EcdhTuple(MessageType):

@@ -5,7 +5,7 @@
 from apps.monero.xmr.serialize.int_serialize import dump_uvarint_b
 from apps.monero.xmr.serialize.base_types import UVarintType
 from apps.monero.xmr.serialize.message_types import MessageType, ContainerType, BlobType
-from apps.monero.xmr.serialize.messages.base import ECPublicKey, Hash
+from apps.monero.xmr.serialize_messages.base import ECPublicKey, Hash
 
 from apps.monero.xmr import ring_ct, crypto, common
 

@@ -4,7 +4,7 @@
 # Author: Dusan Klinec, ph4r05, 2018
 # see https://eprint.iacr.org/2015/1098.pdf
 
-from apps.monero.xmr.serialize.messages.tx_full import MgSig
+from apps.monero.xmr.serialize_messages.tx_full import MgSig
 from apps.monero.xmr import crypto, common
 
 

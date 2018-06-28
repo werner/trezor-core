@@ -3,7 +3,7 @@
 # Author: https://github.com/monero-project/mininero
 # Author: Dusan Klinec, ph4r05, 2018
 
-from apps.monero.xmr.serialize.messages.tx_ecdh import EcdhTuple
+from apps.monero.xmr.serialize_messages.tx_ecdh import EcdhTuple
 from apps.monero.xmr import crypto, monero
 
 

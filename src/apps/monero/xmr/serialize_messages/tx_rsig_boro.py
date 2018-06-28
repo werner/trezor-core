@@ -1,6 +1,6 @@
 from apps.monero.xmr.serialize.message_types import MessageType
-from apps.monero.xmr.serialize.messages.base import ECKey
-from apps.monero.xmr.serialize.messages.ct_keys import Key64
+from apps.monero.xmr.serialize_messages.base import ECKey
+from apps.monero.xmr.serialize_messages.ct_keys import Key64
 
 
 class BoroSig(MessageType):

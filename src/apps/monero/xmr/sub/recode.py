@@ -1,5 +1,5 @@
 from apps.monero.xmr import crypto
-from apps.monero.xmr.serialize.messages.tx_ecdh import EcdhTuple
+from apps.monero.xmr.serialize_messages.tx_ecdh import EcdhTuple
 
 
 def copy_ecdh(ecdh):

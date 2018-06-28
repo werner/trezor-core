@@ -8,21 +8,21 @@ from apps.monero.xmr import crypto, common, monero, ring_ct, mlsag2
 from apps.monero.xmr.core import tsx_helper
 from apps.monero.xmr.enc import chacha_poly
 from apps.monero.xmr.serialize import xmrserialize
-from apps.monero.xmr.serialize.messages.ct_keys import CtKey
+from apps.monero.xmr.serialize_messages.ct_keys import CtKey
 from apps.monero.xmr.sub.addr import classify_subaddresses
 
 from apps.monero.xmr.serialize.int_serialize import dump_uvarint_b
-from apps.monero.xmr.serialize.messages.tx_rsig import RctType
-from apps.monero.xmr.serialize.messages.tx_ecdh import EcdhTuple
-from apps.monero.xmr.serialize.messages.tx_prefix import TxOut, TransactionPrefixExtraBlob, TxInV
-from apps.monero.xmr.serialize.messages.tx_prefix import TxoutToKey
-from apps.monero.xmr.serialize.messages.tx_prefix import TxinToKey
-from apps.monero.xmr.serialize.messages.tx_prefix import TransactionPrefix
-from apps.monero.xmr.serialize.messages.tx_full import Transaction
-from apps.monero.xmr.serialize.messages.tx_full import RctSig
-from apps.monero.xmr.serialize.messages.tx_full import RctSigPrunable
-from apps.monero.xmr.serialize.messages.tx_dest_entry import TxDestinationEntry
-from apps.monero.xmr.serialize.messages.tx_src_entry import TxSourceEntry
+from apps.monero.xmr.serialize_messages.tx_rsig import RctType
+from apps.monero.xmr.serialize_messages.tx_ecdh import EcdhTuple
+from apps.monero.xmr.serialize_messages.tx_prefix import TxOut, TransactionPrefixExtraBlob, TxInV
+from apps.monero.xmr.serialize_messages.tx_prefix import TxoutToKey
+from apps.monero.xmr.serialize_messages.tx_prefix import TxinToKey
+from apps.monero.xmr.serialize_messages.tx_prefix import TransactionPrefix
+from apps.monero.xmr.serialize_messages.tx_full import Transaction
+from apps.monero.xmr.serialize_messages.tx_full import RctSig
+from apps.monero.xmr.serialize_messages.tx_full import RctSigPrunable
+from apps.monero.xmr.serialize_messages.tx_dest_entry import TxDestinationEntry
+from apps.monero.xmr.serialize_messages.tx_src_entry import TxSourceEntry
 
 from apps.monero.xmr.sub.keccak_archive import KeccakArchive, get_keccak_writer
 from apps.monero.xmr.sub.mlsag_hasher import PreMlsagHasher
@@ -429,7 +429,7 @@ class TTransactionBuilder(object):
         key derived for exactly this purpose.
 
         :param src_entr:
-        :type src_entr: apps.monero.xmr.serialize.messages.tx_construct.TxSourceEntry
+        :type src_entr: apps.monero.xmr.serialize_messages.tx_construct.TxSourceEntry
         :return:
         """
         self.state.input()
@@ -872,7 +872,7 @@ class TTransactionBuilder(object):
         Generates a signature for one input.
 
         :param src_entr: Source entry
-        :type src_entr: apps.monero.xmr.serialize.messages.tx_construct.TxSourceEntry
+        :type src_entr: apps.monero.xmr.serialize_messages.tx_construct.TxSourceEntry
         :param vini: tx.vin[i] for the transaction. Contains key image, offsets, amount (usually zero)
         :param hmac_vini: HMAC for the tx.vin[i] as returned from Trezor
         :param pseudo_out: pedersen commitment for the current input, uses alpha as the mask.

@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 # Author: Dusan Klinec, ph4r05, 2018
 from apps.monero.xmr.serialize.readwriter import MemoryReaderWriter
-from apps.monero.xmr.serialize.messages.tx_extra import TxExtraField, TxExtraAdditionalPubKeys
-from apps.monero.xmr.serialize.messages.addr import AccountPublicAddress
+from apps.monero.xmr.serialize_messages.tx_extra import TxExtraField, TxExtraAdditionalPubKeys
+from apps.monero.xmr.serialize_messages.addr import AccountPublicAddress
 from apps.monero.xmr.serialize import xmrserialize
 from apps.monero.xmr import crypto
 
@@ -89,7 +89,7 @@ def get_destination_view_key_pub(destinations, change_addr=None):
     """
     Returns destination address public view key
     :param destinations:
-    :type destinations: list[apps.monero.xmr.serialize.messages.tx_construct.TxDestinationEntry]
+    :type destinations: list[apps.monero.xmr.serialize_messages.tx_construct.TxDestinationEntry]
     :param change_addr:
     :return:
     """

@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Author: Dusan Klinec, ph4r05, 2018
-from apps.monero.xmr.serialize.messages.addr import AccountPublicAddress
-from apps.monero.xmr.serialize.messages.tx_dest_entry import TxDestinationEntry
-from apps.monero.xmr.serialize.messages.tx_src_entry import TxSourceEntry
-from apps.monero.xmr.serialize.messages.tx_prefix import TxinToKey
+from apps.monero.xmr.serialize_messages.addr import AccountPublicAddress
+from apps.monero.xmr.serialize_messages.tx_dest_entry import TxDestinationEntry
+from apps.monero.xmr.serialize_messages.tx_src_entry import TxSourceEntry
+from apps.monero.xmr.serialize_messages.tx_prefix import TxinToKey
 
 from apps.monero.xmr.serialize.readwriter import MemoryReaderWriter
 from apps.monero.xmr import crypto

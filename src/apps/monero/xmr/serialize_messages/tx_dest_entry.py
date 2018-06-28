@@ -1,6 +1,6 @@
 from apps.monero.xmr.serialize.base_types import UVarintType, BoolType
 from apps.monero.xmr.serialize.message_types import MessageType
-from apps.monero.xmr.serialize.messages.addr import AccountPublicAddress
+from apps.monero.xmr.serialize_messages.addr import AccountPublicAddress
 
 
 class TxDestinationEntry(MessageType):

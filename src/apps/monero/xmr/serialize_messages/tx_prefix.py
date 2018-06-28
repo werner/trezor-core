@@ -1,6 +1,6 @@
 from micropython import const
 
-from apps.monero.xmr.serialize.messages.base import ECPublicKey, Hash, KeyImage
+from apps.monero.xmr.serialize_messages.base import ECPublicKey, Hash, KeyImage
 from apps.monero.xmr.serialize.base_types import UInt8, UVarintType
 from apps.monero.xmr.serialize.message_types import MessageType, VariantType, ContainerType, BlobType
 

@@ -1,7 +1,7 @@
 from apps.monero.xmr.serialize.erefs import eref
 from apps.monero.xmr.serialize.message_types import MessageType, ContainerType
-from apps.monero.xmr.serialize.messages.base import ECKey
-from apps.monero.xmr.serialize.messages.tx_prefix import TxinGen, TxinToScript, TxinToScriptHash, TxinToKey
+from apps.monero.xmr.serialize_messages.base import ECKey
+from apps.monero.xmr.serialize_messages.tx_prefix import TxinGen, TxinToScript, TxinToScriptHash, TxinToKey
 
 
 class Signature(MessageType):

@@ -1,11 +1,11 @@
 from apps.monero.xmr.serialize.base_types import BoolType, UVarintType, SizeT, UInt64, UInt8, UInt32
 from apps.monero.xmr.serialize.message_types import MessageType, ContainerType, UnicodeType
-from apps.monero.xmr.serialize.messages.addr import SubaddressIndex
-from apps.monero.xmr.serialize.messages.base import ECKey, ECPublicKey, KeyImage, Hash, SecretKey, UnorderedSet
-from apps.monero.xmr.serialize.messages.tx_dest_entry import TxDestinationEntry
-from apps.monero.xmr.serialize.messages.tx_full import RctSig, Transaction
-from apps.monero.xmr.serialize.messages.tx_prefix import TransactionPrefix
-from apps.monero.xmr.serialize.messages.tx_src_entry import TxSourceEntry
+from apps.monero.xmr.serialize_messages.addr import SubaddressIndex
+from apps.monero.xmr.serialize_messages.base import ECKey, ECPublicKey, KeyImage, Hash, SecretKey, UnorderedSet
+from apps.monero.xmr.serialize_messages.tx_dest_entry import TxDestinationEntry
+from apps.monero.xmr.serialize_messages.tx_full import RctSig, Transaction
+from apps.monero.xmr.serialize_messages.tx_prefix import TransactionPrefix
+from apps.monero.xmr.serialize_messages.tx_src_entry import TxSourceEntry
 
 
 class MultisigOut(MessageType):

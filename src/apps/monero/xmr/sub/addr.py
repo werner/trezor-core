@@ -40,7 +40,7 @@ def public_addr_encode(pub_addr, is_sub=False, net=NetworkTypes.MAINNET):
     """
     Encodes public address to Monero address
     :param pub_addr:
-    :type pub_addr: apps.monero.xmr.serialize.messages.addr.AccountPublicAddress
+    :type pub_addr: apps.monero.xmr.serialize_messages.addr.AccountPublicAddress
     :param is_sub:
     :param net:
     :return:
@@ -54,7 +54,7 @@ def classify_subaddresses(tx_dests, change_addr):
     Classify destination subaddresses
     void classify_addresses()
     :param tx_dests:
-    :type tx_dests: list[apps.monero.xmr.serialize.messages.tx_construct.TxDestinationEntry]
+    :type tx_dests: list[apps.monero.xmr.serialize_messages.tx_construct.TxDestinationEntry]
     :param change_addr:
     :return:
     """

@@ -1,7 +1,7 @@
 from micropython import const
 
 from apps.monero.xmr.serialize.message_types import ContainerType, MessageType
-from apps.monero.xmr.serialize.messages.base import ECKey
+from apps.monero.xmr.serialize_messages.base import ECKey
 
 
 _c0 = const(0)
