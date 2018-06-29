@@ -16,7 +16,7 @@ class HashWrapper(object):
         if len(buf) == 0:
             return
         if isinstance(buf, bytearray):
-            self.ctx.update(bytes(buf))  # TODO: optimize
+            self.ctx.update(buf)
         else:
             self.ctx.update(buf)
 
