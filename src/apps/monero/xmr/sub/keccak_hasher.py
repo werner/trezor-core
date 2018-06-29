@@ -7,6 +7,19 @@ class KeccakArchive(object):
         self.kwriter = get_keccak_writer()
         self.ar = xmrserialize.Archive(self.kwriter, True)
 
+    def ctx(self):
+        return self.kwriter.ctx()
+
+    def refresh(self, ctx=None, xser=None):
+        if ctx is None:
+            ctx = self.kwriter.ctx()
+        if xser is None:
+            xser = xmrserialize
+
+        self.kwriter = get_keccak_writer(ctx=ctx)
+        self.ar = xser.Archive(self.kwriter, True)
+        return self.ar
+
 
 class HashWrapper(object):
     def __init__(self, ctx):
@@ -41,11 +54,15 @@ class AHashWriter:
     def get_digest(self, *args) -> bytes:
         return self.hasher.digest(*args)
 
+    def ctx(self):
+        return self.hasher.ctx
 
-def get_keccak_writer(sub_writer=None):
+
+def get_keccak_writer(sub_writer=None, ctx=None):
     """
     Creates new fresh async Keccak writer
     :param sub_writer:
+    :param ctx:
     :return:
     """
-    return AHashWriter(HashWrapper(crypto.get_keccak()), sub_writer=sub_writer)
+    return AHashWriter(HashWrapper(crypto.get_keccak() if ctx is None else ctx), sub_writer=sub_writer)
