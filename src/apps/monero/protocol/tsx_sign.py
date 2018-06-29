@@ -2,15 +2,13 @@
 # -*- coding: utf-8 -*-
 # Author: Dusan Klinec, ph4r05, 2018
 import gc
-import micropython
 from trezor import log
 
 from apps.monero.controller import iface, misc, wrapper
 from apps.monero.controller.wrapper import exc2str
-from apps.monero.protocol.tsx_sign_builder import TTransactionBuilder
+# from apps.monero.protocol.tsx_sign_builder import TTransactionBuilder
 
 from trezor.messages.MoneroRespError import MoneroRespError
-from trezor.messages.MoneroTsxSign import MoneroTsxSign
 
 
 class TsxSigner(object):
@@ -38,7 +36,7 @@ class TsxSigner(object):
         :return:
         """
         if self.debug:
-            log.debug(__name__, 'Transaction exception: %s', e)
+            log.warning(__name__, 'Transaction exception: %s: %s (%s)', type(e), e)
 
         self.err_ctr += 1
         self.purge = True
@@ -55,7 +53,7 @@ class TsxSigner(object):
     async def setup(self, msg):
         self.creds = await wrapper.monero_get_creds(self.ctx, msg.address_n or (), msg.network_type)
 
-    async def sign(self, ctx, msg: MoneroTsxSign):
+    async def sign(self, ctx, msg):
         """
         Main multiplex point
         :param ctx:
@@ -64,6 +62,8 @@ class TsxSigner(object):
         """
         self.ctx = ctx
         self.iface = iface.get_iface(ctx)
+        gc.collect()
+        
         log.debug(__name__, 'sign()')
 
         if msg.init:
@@ -102,10 +102,13 @@ class TsxSigner(object):
         :param tsx_data:
         :return:
         """
+        from apps.monero.protocol.tsx_sign_builder import TTransactionBuilder
         self.tsx_ctr += 1
         self.tsx_obj = TTransactionBuilder(self, creds=self.creds)
         try:
             tsxd = await misc.translate_tsx_data(tsx_data)
+            del tsx_data
+
             return await self.tsx_obj.init_transaction(tsxd, self.tsx_ctr)
         except Exception as e:
             await self.tsx_exc_handler(e)
