@@ -25,16 +25,16 @@ from trezor.crypto.hashlib import sha3_256
 # d = const(-0x98412dfc9311d490018c7338bf8688861767ff8ff5b2bebe27548a14b235ec8feda4)  # -121665 * inv(121666) % q
 
 # py constants
-b = 256
-q = 2**255 - 19
-l = 2**252 + 27742317777372353535851937790883648493
-d = -0x98412dfc9311d490018c7338bf8688861767ff8ff5b2bebe27548a14b235ec8feda4  # -121665 * inv(121666) % q
+# b = 256
+# q = 2**255 - 19
+# l = 2**252 + 27742317777372353535851937790883648493
+# d = -0x98412dfc9311d490018c7338bf8688861767ff8ff5b2bebe27548a14b235ec8feda4  # -121665 * inv(121666) % q
 
 
-py_b = b
-py_q = q
-py_l = l
-py_d = d
+# py_b = b
+# py_q = q
+# py_l = l
+# py_d = d
 NULL_KEY_ENC = [0]*32
 
 
