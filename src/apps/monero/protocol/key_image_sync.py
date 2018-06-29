@@ -30,19 +30,14 @@ class KeyImageSync(object):
         self.creds = await twrap.monero_get_creds(self.ctx, msg.address_n or (), msg.network_type)
 
     async def init(self, ctx, msg):
-        log.debug(__name__, '### 1Mem Free: {} Allocated: {}'.format(gc.mem_free(), gc.mem_alloc()))
         from apps.monero.xmr import crypto
-        log.debug(__name__, '### 2Mem Free: {} Allocated: {}'.format(gc.mem_free(), gc.mem_alloc()))
         from apps.monero.xmr import monero
-        log.debug(__name__, '### 3Mem Free: {} Allocated: {}'.format(gc.mem_free(), gc.mem_alloc()))
         from trezor.messages.MoneroRespError import MoneroRespError
         from trezor.messages.MoneroKeyImageExportInitResp import MoneroKeyImageExportInitResp
-        log.debug(__name__, '### 4Mem Free: {} Allocated: {}'.format(gc.mem_free(), gc.mem_alloc()))
 
         self.ctx = ctx
-        log.debug(__name__, '### 5Mem Free: {} Allocated: {}'.format(gc.mem_free(), gc.mem_alloc()))
         await self.derive_creds(msg)
-        log.debug(__name__, '### 6Mem Free: {} Allocated: {}'.format(gc.mem_free(), gc.mem_alloc()))
+
         confirmation = await self.iface.confirm_ki_sync(msg, ctx=ctx)
         if not confirmation:
             return MoneroRespError(reason='rejected')
@@ -50,7 +45,6 @@ class KeyImageSync(object):
         self.num = msg.num
         self.hash = msg.hash
         self.enc_key = crypto.random_bytes(32)
-        log.debug(__name__, '### 5Mem Free: {} Allocated: {}'.format(gc.mem_free(), gc.mem_alloc()))
 
         # Sub address precomputation
         if msg.subs and len(msg.subs) > 0:
@@ -73,11 +67,9 @@ class KeyImageSync(object):
         if len(tds.tdis) == 0:
             raise ValueError('Empty')
 
-        log.debug(__name__, '### Mem Free: {} Allocated: {}'.format(gc.mem_free(), gc.mem_alloc()))
         resp = []
         buff = bytearray(32*3)
         buff_mv = memoryview(buff)
-        log.debug(__name__, '### Mem Free: {} Allocated: {}'.format(gc.mem_free(), gc.mem_alloc()))
 
         for td in tds.tdis:
             self.c_idx += 1
@@ -85,24 +77,19 @@ class KeyImageSync(object):
                 raise ValueError('Too many outputs')
 
             log.debug(__name__, 'ki_sync, step i: %d', self.c_idx)
-            hash = key_image.compute_hash(td)
-            log.debug(__name__, 'ki_sync, hash')
-            self.hasher.update(hash)
-            log.debug(__name__, 'ki_sync, hashed')
+            chash = key_image.compute_hash(td)
+
+            self.hasher.update(chash)
             ki, sig = await key_image.export_key_image(self.creds, self.subaddresses, td)
-            log.debug(__name__, 'ki_sync, ki')
 
             crypto.encodepoint_into(ki, buff_mv[0:32])
             crypto.encodeint_into(sig[0][0], buff_mv[32:64])
             crypto.encodeint_into(sig[0][1], buff_mv[64:])
-            log.debug(__name__, '### Mem Free: {} Allocated: {}'.format(gc.mem_free(), gc.mem_alloc()))
 
-            log.debug(__name__, 'ki_sync, ec: %s', buff)
             nonce, ciph, _ = chacha_poly.encrypt(self.enc_key, buff)
-            log.debug(__name__, 'ki_sync, cip')
             eki = MoneroExportedKeyImage(iv=nonce, tag=b'', blob=ciph)
             resp.append(eki)
-        log.debug(__name__, 'ki_sync, res')
+
         return MoneroKeyImageSyncStepResp(kis=resp)
 
     async def final(self, ctx, msg=None):
