@@ -33,13 +33,15 @@ required:
 >>>         """
 '''
 
-from apps.monero.xmr.serialize.base_types import UVarintType, IntType
+import sys
+
+from apps.monero.xmr.serialize.base_types import UVarintType, IntType, XmrType
 from apps.monero.xmr.serialize.erefs import get_elem, set_elem, eref
 from apps.monero.xmr.serialize.int_serialize import load_uint, dump_uint
 from apps.monero.xmr.serialize.message_types import BlobType, UnicodeType, VariantType, ContainerType, TupleType, \
     MessageType, container_elem_type, gen_elem_array
 from protobuf import load_uvarint, dump_uvarint
-
+from trezor import log
 
 class Archive(object):
     """
@@ -262,6 +264,37 @@ class Archive(object):
             await self.message_field(msg, field)
         return msg
 
+    def _get_type(self, elem_type):
+        # log.info(__name__, 'elem: %s %s %s %s %s', type(elem_type), elem_type.__name__, elem_type.__module__, elem_type, issubclass(elem_type, XmrType))
+        # If part of our hierarchy - return the object
+        if issubclass(elem_type, XmrType):
+            return elem_type
+
+        # Basic decision types
+        etypes = (UVarintType, IntType, BlobType, UnicodeType, VariantType, ContainerType, TupleType, MessageType)
+        cname = elem_type.__name__
+        for e in etypes:
+            if cname == e.__name__:
+                return e
+
+        # Inferred type: need to translate it to the current
+        try:
+            m = elem_type.__module__
+            if m not in sys.modules:
+                if not m.startswith('apps.monero'):
+                    raise ValueError('Module not allowed: %s' % m)
+
+                log.debug(__name__, 'Importing: from %s import %s', m, cname)
+                __import__(m, None, None, (cname,), 0)
+
+            return getattr(sys.modules[m], cname)
+
+        except Exception as e:
+            raise ValueError('Could not translate elem type: %s %s, exc: %s %s' % (type(elem_type), elem_type, type(e), e))
+
+    def _is_type(self, elem_type, test_type):
+        return issubclass(elem_type, test_type)
+
     async def field(self, elem=None, elem_type=None, params=None):
         """
         Archive field
@@ -272,32 +305,34 @@ class Archive(object):
         """
         elem_type = elem_type if elem_type else elem.__class__
         fvalue = None
-        if issubclass(elem_type, UVarintType):
+
+        etype = self._get_type(elem_type)
+        if self._is_type(etype, UVarintType):
             fvalue = await self.uvarint(get_elem(elem))
 
-        elif issubclass(elem_type, IntType):
+        elif self._is_type(etype, IntType):
             fvalue = await self.uint(elem=get_elem(elem), elem_type=elem_type, params=params)
 
-        elif issubclass(elem_type, BlobType):
+        elif self._is_type(etype, BlobType):
             fvalue = await self.blob(elem=get_elem(elem), elem_type=elem_type, params=params)
 
-        elif issubclass(elem_type, UnicodeType):
+        elif self._is_type(etype, UnicodeType):
             fvalue = await self.unicode_type(get_elem(elem))
 
-        elif issubclass(elem_type, VariantType):
+        elif self._is_type(etype, VariantType):
             fvalue = await self.variant(elem=get_elem(elem), elem_type=elem_type, params=params)
 
-        elif issubclass(elem_type, ContainerType):  # container ~ simple list
+        elif self._is_type(etype, ContainerType):  # container ~ simple list
             fvalue = await self.container(container=get_elem(elem), container_type=elem_type, params=params)
 
-        elif issubclass(elem_type, TupleType):  # tuple ~ simple list
+        elif self._is_type(etype, TupleType):  # tuple ~ simple list
             fvalue = await self.tuple(elem=get_elem(elem), elem_type=elem_type, params=params)
 
-        elif issubclass(elem_type, MessageType):
+        elif self._is_type(etype, MessageType):
             fvalue = await self.message(get_elem(elem), msg_type=elem_type)
 
         else:
-            raise TypeError('unknown type: %s %s %s %s' % (elem_type, type(elem_type), elem, ContainerType))
+            raise TypeError('unknown type: %s %s %s' % (elem_type, type(elem_type), elem))
 
         return fvalue if self.writing else set_elem(elem, fvalue)
 
@@ -597,6 +632,21 @@ async def load_message(reader, msg_type, msg=None, field_archiver=None):
     return msg
 
 
+def find_variant_fdef(elem_type, elem):
+    fields = elem_type.f_specs()
+    for x in fields:
+        if isinstance(elem, x[1]):
+            return x
+
+    # Not direct hierarchy
+    name = elem.__class__.__name__
+    for x in fields:
+        if name == x[1].__name__:
+            return x
+
+    raise ValueError('Unrecognized variant: %s' % elem)
+
+
 async def dump_variant(writer, elem, elem_type=None, params=None, field_archiver=None):
     """
     Dumps variant type to the writer.
@@ -615,7 +665,7 @@ async def dump_variant(writer, elem, elem_type=None, params=None, field_archiver
         await field_archiver(writer, getattr(elem, elem.variant_elem), elem.variant_elem_type)
 
     else:
-        fdef = elem_type.find_fdef(elem_type.f_specs(), elem)
+        fdef = find_variant_fdef(elem_type, elem)
         await dump_uint(writer, fdef[1].VARIANT_CODE, 1)
         await field_archiver(writer, elem, fdef[1])
 

@@ -44,13 +44,6 @@ class VariantType(XmrType):
     def f_specs():
         return ()
 
-    @staticmethod
-    def find_fdef(fields, elem):
-        for x in fields:
-            if isinstance(elem, x[1]):
-                return x
-        raise ValueError('Unrecognized variant')
-
     def set_variant(self, fname, fvalue):
         self.variant_elem = fname
         self.variant_elem_type = fvalue.__class__
