@@ -483,8 +483,10 @@ class TTransactionBuilder(object):
         if self.inp_idx + 1 == self.num_inputs():
             await self.tsx_inputs_done()
 
-        return MoneroTsxSetInputResp(vini=await misc.dump_msg(vini), vini_hmac=hmac_vini,
-                                     pseudo_out=pseudo_out, pseudo_out_hmac=pseudo_out_hmac,
+        return MoneroTsxSetInputResp(vini=await misc.dump_msg(vini, preallocate=64),
+                                     vini_hmac=hmac_vini,
+                                     pseudo_out=pseudo_out,
+                                     pseudo_out_hmac=pseudo_out_hmac,
                                      alpha_enc=alpha_enc)
 
     async def tsx_inputs_done(self):
@@ -757,10 +759,10 @@ class TTransactionBuilder(object):
         # Output_pk is stored to the state as it is used during the signature and hashed to the
         # RctSigBase later.
         self.output_pk.append(out_pk)
-        return MoneroTsxSetOutputResp(tx_out=await misc.dump_msg(tx_out),
+        return MoneroTsxSetOutputResp(tx_out=await misc.dump_msg(tx_out, preallocate=34),
                                       vouti_hmac=hmac_vouti, rsig=rsig,  # rsig is already byte-encoded
-                                      out_pk=await misc.dump_msg(out_pk),
-                                      ecdh_info=await misc.dump_msg(ecdh_info))
+                                      out_pk=await misc.dump_msg(out_pk, preallocate=64),
+                                      ecdh_info=await misc.dump_msg(ecdh_info, preallocate=64))
 
     async def all_out1_set(self):
         """
@@ -959,7 +961,7 @@ class TTransactionBuilder(object):
             self.state.set_signature_done()
             await self.trezor.iface.transaction_signed()
 
-        return MoneroTsxSignInputResp(signature=await misc.dump_msg(mgs[0]), cout=cout)
+        return MoneroTsxSignInputResp(signature=await misc.dump_msg(mgs[0], preallocate=488), cout=cout)
 
     async def final_msg(self, *args, **kwargs):
         """
