@@ -117,7 +117,7 @@ class TTransactionBuilder(object):
         Returns true if the input transaction can be processed whole in-memory
         :return:
         """
-        return self.input_count <= 1
+        return False and self.input_count <= 1
 
     def num_inputs(self):
         """
@@ -938,9 +938,9 @@ class TTransactionBuilder(object):
         self.inp_idx += 1
         if self.inp_idx >= self.num_inputs():
             raise ValueError('Invalid ins')
-        if not self.in_memory() and alpha is None:
+        if self.use_simple_rct and (not self.in_memory() and alpha is None):
             raise ValueError('Inconsistent1')
-        if not self.in_memory() and pseudo_out is None:
+        if self.use_simple_rct and (not self.in_memory() and pseudo_out is None):
             raise ValueError('Inconsistent2')
         if self.inp_idx >= 1 and not self.use_simple_rct:
             raise ValueError('Inconsistent3')
@@ -952,7 +952,7 @@ class TTransactionBuilder(object):
         if not common.ct_equal(hmac_vini_comp, hmac_vini):
             raise ValueError('HMAC is not correct')
 
-        if not self.in_memory():
+        if self.use_simple_rct and not self.in_memory():
             pseudo_out_hmac_comp = crypto.compute_hmac(self.hmac_key_txin_comm(inv_idx), pseudo_out)
             if not common.ct_equal(pseudo_out_hmac_comp, pseudo_out_hmac):
                 raise ValueError('HMAC is not correct')
