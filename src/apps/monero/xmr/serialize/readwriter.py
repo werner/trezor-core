@@ -25,11 +25,11 @@ class MemoryReaderWriter:
             self.woffset = len(buffer)
 
     def is_empty(self):
-        return self.offset == len(self.buffer)
+        return self.offset == len(self.buffer) or self.offset == self.woffset
 
     def preallocate(self, size):
         self.buffer = bytearray(size)
-        self.offset = size
+        self.offset = 0
         self.woffset = 0
 
     async def areadinto(self, buf):
@@ -50,6 +50,7 @@ class MemoryReaderWriter:
         if self.threshold is not None and self.offset >= self.threshold:
             log.debug(__name__, 'Free ')
             self.buffer = self.buffer[self.offset]
+            self.woffset -= self.offset
             self.offset = 0
 
             if self.do_gc:
