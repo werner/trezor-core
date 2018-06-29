@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 # Author: Dusan Klinec, ph4r05, 2018
 
-from apps.monero import layout
-
 
 class TrezorInterface(object):
     def __init__(self, ctx=None):
@@ -27,6 +25,7 @@ class TrezorInterface(object):
         if tsx_data.change_dts:
             change_coord = tsx_data.change_dts.amount, tsx_data.change_dts.addr
 
+        from apps.monero import layout
         for dst in tsx_data.outputs:
             addr = encode_addr(net_version(creds.network_type),
                                dst.addr.m_spend_public_key,
@@ -68,6 +67,7 @@ class TrezorInterface(object):
         :param init_msg:
         :return:
         """
+        from apps.monero import layout
         await layout.require_confirm_keyimage_sync(self.gctx(ctx))
         return True
 
