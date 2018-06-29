@@ -31,6 +31,11 @@ def ct_equal(a, b):
     return monero.ct_equals(a, b)
 
 
+def memcpy(dst, dst_from, src, src_from, length):
+    from trezor.utils import memcpy
+    return memcpy(dst, dst_from, src, src_from, length)
+
+
 def check_permutation(permutation):
     """
     Check permutation sanity
