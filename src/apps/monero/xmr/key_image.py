@@ -11,49 +11,60 @@ from apps.monero.xmr import ring_ct, crypto, common
 
 
 class SubAddrIndicesList(MessageType):
-    __slots__ = ['account', 'minor_indices']
-    MFIELDS = [
-        ('account', UVarintType),
-        ('minor_indices', ContainerType, UVarintType),
-    ]
+    __slots__ = ('account', 'minor_indices')
+
+    @staticmethod
+    def f_specs():
+        return (
+            ('account', UVarintType),
+            ('minor_indices', ContainerType, UVarintType),
+        )
 
 
 class KeyImageExportInit(MessageType):
     """
     Initializes key image sync. Commitment
     """
-    __slots__ = ['num', 'hash', 'subs']
-    MFIELDS = [
-        ('num', UVarintType),  # number of outputs to gen
-        ('hash', Hash),  # aggregate hash commitment
-        ('subs', ContainerType, SubAddrIndicesList),  # aggregated sub addresses indices
-    ]
+    __slots__ = ('num', 'hash', 'subs')
+
+    @staticmethod
+    def f_specs():
+        return (
+            ('num', UVarintType),  # number of outputs to gen
+            ('hash', Hash),  # aggregate hash commitment
+            ('subs', ContainerType, SubAddrIndicesList),  # aggregated sub addresses indices
+        )
 
 
 class TransferDetails(MessageType):
     """
     Transfer details for key image sync needs
     """
-    __slots__ = ['out_key', 'tx_pub_key', 'additional_tx_pub_keys', 'm_internal_output_index']
-    MFIELDS = [
-        ('out_key', ECPublicKey),
-        ('tx_pub_key', ECPublicKey),
-        ('additional_tx_pub_keys', ContainerType,
-         ECPublicKey),
-        ('m_internal_output_index', UVarintType),
-    ]
+    __slots__ = ('out_key', 'tx_pub_key', 'additional_tx_pub_keys', 'm_internal_output_index')
+
+    @staticmethod
+    def f_specs():
+        return (
+            ('out_key', ECPublicKey),
+            ('tx_pub_key', ECPublicKey),
+            ('additional_tx_pub_keys', ContainerType, ECPublicKey),
+            ('m_internal_output_index', UVarintType),
+        )
 
 
 class ExportedKeyImage(MessageType):
     """
     Exported key image
     """
-    __slots__ = ['iv', 'tag', 'blob']
-    MFIELDS = [
-        ('iv', BlobType),   # enc IV
-        ('tag', BlobType),  # enc tag
-        ('blob', BlobType),  # encrypted ki || sig
-    ]
+    __slots__ = ('iv', 'tag', 'blob')
+
+    @staticmethod
+    def f_specs():
+        return (
+            ('iv', BlobType),   # enc IV
+            ('tag', BlobType),  # enc tag
+            ('blob', BlobType),  # encrypted ki || sig
+        )
 
 
 def compute_hash(rr):
