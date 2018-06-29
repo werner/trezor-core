@@ -1,17 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Author: Dusan Klinec, ph4r05, 2018
-from apps.monero.xmr.serialize_messages.addr import AccountPublicAddress
-from apps.monero.xmr.serialize_messages.tx_dest_entry import TxDestinationEntry
-from apps.monero.xmr.serialize_messages.tx_src_entry import TxSourceEntry
-from apps.monero.xmr.serialize_messages.tx_prefix import TxinToKey
-
-from apps.monero.xmr.serialize.readwriter import MemoryReaderWriter
-from apps.monero.xmr import crypto
-from apps.monero.xmr.tsx_data import TsxData
-from apps.monero.xmr.serialize import xmrserialize
-from trezor.messages.MoneroTsxData import MoneroTsxData
-from trezor.messages.MoneroTxDestinationEntry import MoneroTxDestinationEntry
 
 
 class TrezorError(Exception):
@@ -45,6 +34,7 @@ def compute_tx_key(spend_key_private, tx_prefix_hash, salt=None, rand_mult=None)
     :param rand_mult:
     :return:
     """
+    from apps.monero.xmr import crypto
     if not salt:
         salt = crypto.random_bytes(32)
 
@@ -60,7 +50,10 @@ def compute_tx_key(spend_key_private, tx_prefix_hash, salt=None, rand_mult=None)
     return tx_key, salt, rand_mult
 
 
-def translate_monero_dest_entry(dst_entry: MoneroTxDestinationEntry):
+def translate_monero_dest_entry(dst_entry):
+    from apps.monero.xmr.serialize_messages.tx_dest_entry import TxDestinationEntry
+    from apps.monero.xmr.serialize_messages.addr import AccountPublicAddress
+
     d = TxDestinationEntry()
     d.amount = dst_entry.amount
     d.is_subaddress = dst_entry.is_subaddress
@@ -69,7 +62,8 @@ def translate_monero_dest_entry(dst_entry: MoneroTxDestinationEntry):
     return d
 
 
-async def translate_tsx_data(tsx_data: MoneroTsxData):
+async def translate_tsx_data(tsx_data):
+    from apps.monero.xmr.tsx_data import TsxData
     tsxd = TsxData()
     for fld in TsxData.f_specs():
         fname = fld[0]
@@ -84,25 +78,34 @@ async def translate_tsx_data(tsx_data: MoneroTsxData):
 
 
 async def parse_msg(bts, msg):
-    reader = MemoryReaderWriter(bytearray(bts))
+    from apps.monero.xmr.serialize import xmrserialize
+    from apps.monero.xmr.serialize.readwriter import MemoryReaderWriter
+
+    reader = MemoryReaderWriter(memoryview(bts))
     ar = xmrserialize.Archive(reader, False)
     return await ar.message(msg)
 
 
 async def parse_src_entry(bts):
+    from apps.monero.xmr.serialize_messages.tx_src_entry import TxSourceEntry
     return await parse_msg(bts, TxSourceEntry())
 
 
 async def parse_dst_entry(bts):
+    from apps.monero.xmr.serialize_messages.tx_dest_entry import TxDestinationEntry
     return await parse_msg(bts, TxDestinationEntry())
 
 
 async def parse_vini(bts):
+    from apps.monero.xmr.serialize_messages.tx_prefix import TxinToKey
     return await parse_msg(bts, TxinToKey())
 
 
-async def dump_msg(msg):
-    writer = MemoryReaderWriter()
+async def dump_msg(msg, preallocate=None):
+    from apps.monero.xmr.serialize import xmrserialize
+    from apps.monero.xmr.serialize.readwriter import MemoryReaderWriter
+
+    writer = MemoryReaderWriter(preallocate=preallocate)
     ar = xmrserialize.Archive(writer, True)
     await ar.message(msg)
     return writer.get_buffer()
