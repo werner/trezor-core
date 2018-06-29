@@ -4,8 +4,6 @@
 # Author: Dusan Klinec, ph4r05, 2018
 # see https://eprint.iacr.org/2015/1098.pdf
 
-from apps.monero.xmr.sub.keccak_hasher import HashWrapper
-from apps.monero.xmr.serialize_messages.tx_full import MgSig
 from apps.monero.xmr import crypto
 
 
@@ -83,6 +81,7 @@ def hasher_message(message):
     :param message:
     :return:
     """
+    from apps.monero.xmr.sub.keccak_hasher import HashWrapper
     ctx = HashWrapper(crypto.get_keccak())
     ctx.update(message)
     return ctx
@@ -187,6 +186,8 @@ def gen_mlsag_ext(message, pk, xx, kLRki, mscout, index, dsRows):
     :param dsRows:
     :return:
     """
+    from apps.monero.xmr.serialize_messages.tx_full import MgSig
+
     rows, cols = gen_mlsag_assert(pk, xx, kLRki, mscout, index, dsRows)
 
     rv = MgSig()
