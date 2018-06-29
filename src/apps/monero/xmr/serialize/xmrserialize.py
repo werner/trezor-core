@@ -43,6 +43,19 @@ from apps.monero.xmr.serialize.message_types import BlobType, UnicodeType, Varia
 from protobuf import load_uvarint, dump_uvarint
 from trezor import log
 
+
+def import_def(module, name):
+    if module not in sys.modules:
+        if not module.startswith('apps.monero'):
+            raise ValueError('Module not allowed: %s' % module)
+
+        log.debug(__name__, 'Importing: from %s import %s', module, name)
+        __import__(module, None, None, (name,), 0)
+
+    r = getattr(sys.modules[module], name)
+    return r
+
+
 class Archive(object):
     """
     Archive object for object binary serialization / deserialization.
@@ -265,7 +278,9 @@ class Archive(object):
         return msg
 
     def _get_type(self, elem_type):
-        # log.info(__name__, 'elem: %s %s %s %s %s', type(elem_type), elem_type.__name__, elem_type.__module__, elem_type, issubclass(elem_type, XmrType))
+        # log.info(__name__, 'elem: %s %s %s %s %s | %s %s',
+        #          type(elem_type), elem_type.__name__, elem_type.__module__, elem_type, issubclass(elem_type, XmrType), id(elem_type), id(XmrType))
+
         # If part of our hierarchy - return the object
         if issubclass(elem_type, XmrType):
             return elem_type
@@ -280,14 +295,13 @@ class Archive(object):
         # Inferred type: need to translate it to the current
         try:
             m = elem_type.__module__
-            if m not in sys.modules:
-                if not m.startswith('apps.monero'):
-                    raise ValueError('Module not allowed: %s' % m)
+            r = import_def(m, cname)
+            sub_test = issubclass(r, XmrType)
+            log.debug(__name__, 'resolved %s, sub: %s, id_e: %s, id_mod: %s', r, sub_test, id(r), id(sys.modules[m]))
+            if not sub_test:
+                log.warning(__name__, 'resolution hierarchy broken')
 
-                log.debug(__name__, 'Importing: from %s import %s', m, cname)
-                __import__(m, None, None, (cname,), 0)
-
-            return getattr(sys.modules[m], cname)
+            return r
 
         except Exception as e:
             raise ValueError('Could not translate elem type: %s %s, exc: %s %s' % (type(elem_type), elem_type, type(e), e))
