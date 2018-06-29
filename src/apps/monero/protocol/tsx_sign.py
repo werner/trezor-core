@@ -36,7 +36,7 @@ class TsxSigner(object):
         :return:
         """
         if self.debug:
-            log.warning(__name__, 'Transaction exception: %s: %s (%s)', type(e), e)
+            log.warning(__name__, 'Transaction exception: %s: %s', type(e), e)
 
         self.err_ctr += 1
         self.purge = True
@@ -63,11 +63,14 @@ class TsxSigner(object):
         self.ctx = ctx
         self.iface = iface.get_iface(ctx)
         gc.collect()
-        
+
         log.debug(__name__, 'sign()')
+        log.debug(__name__, 'Mem Free: {} Allocated: {}'.format(gc.mem_free(), gc.mem_alloc()))
 
         if msg.init:
+            log.debug(__name__, 'setup')
             await self.setup(msg.init)
+            log.debug(__name__, 'sign_init')
             return await self.tsx_init(msg.init.tsx_data)
         elif msg.set_input:
             log.debug(__name__, 'sign_inp')
