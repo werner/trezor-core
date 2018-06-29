@@ -1,6 +1,7 @@
 import gc
 from trezor import log
 import micropython
+from micropython import const
 
 from apps.monero.controller import misc
 from apps.monero.xmr import crypto, common, monero
@@ -11,13 +12,13 @@ class TTransactionBuilder(object):
     Transaction builder
     """
 
-    STEP_INP = 100
-    STEP_PERM = 200
-    STEP_VINI = 300
-    STEP_OUT = 400
-    STEP_ALL_OUT = 500
-    STEP_MLSAG = 600
-    STEP_SIGN = 700
+    STEP_INP = const(100)
+    STEP_PERM = const(200)
+    STEP_VINI = const(300)
+    STEP_OUT = const(400)
+    STEP_ALL_OUT = const(500)
+    STEP_MLSAG = const(600)
+    STEP_SIGN = const(700)
 
     def __init__(self, trezor=None, creds=None, **kwargs):
         from apps.monero.xmr.sub.keccak_hasher import KeccakArchive
