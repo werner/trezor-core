@@ -3,8 +3,7 @@
 # Author: https://github.com/monero-project/mininero
 # Author: Dusan Klinec, ph4r05, 2018
 
-from apps.monero.xmr.serialize_messages.tx_ecdh import EcdhTuple
-from apps.monero.xmr import crypto, monero
+from apps.monero.xmr import crypto
 
 
 def prove_range(amount, last_mask=None, decode=False, backend_impl=True, byte_enc=True):
@@ -46,6 +45,7 @@ def ecdh_encode(unmasked, receiver_pk=None, derivation=None):
     :param derivation:
     :return:
     """
+    from apps.monero.xmr.serialize_messages.tx_ecdh import EcdhTuple
     rv = EcdhTuple()
     if derivation is None:
         esk = crypto.random_scalar()
@@ -69,6 +69,7 @@ def ecdh_decode(masked, receiver_sk=None, derivation=None):
     :param derivation:
     :return:
     """
+    from apps.monero.xmr.serialize_messages.tx_ecdh import EcdhTuple
     rv = EcdhTuple()
 
     if derivation is None:
@@ -101,7 +102,9 @@ def generate_ring_signature(prefix_hash, image, pubs, sec, sec_idx, test=False):
     :return:
     """
     from apps.monero.xmr.common import memcpy
+
     if test:
+        from apps.monero.xmr import monero
         t = crypto.scalarmult_base(sec)
         if not crypto.point_eq(t, pubs[sec_idx]):
             raise ValueError('Invalid sec key')
@@ -211,6 +214,7 @@ def export_key_image(creds, subaddresses, pkey, tx_pub_key, additional_tx_pub_ke
     :param verify:
     :return:
     """
+    from apps.monero.xmr import monero
     r = monero.generate_key_image_helper(creds, subaddresses, pkey, tx_pub_key, additional_tx_pub_keys, out_idx)
     xi, ki, recv_derivation = r[:3]
 
