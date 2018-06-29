@@ -477,14 +477,14 @@ async def dump_tuple(writer, elem, elem_type, params=None, field_archiver=None):
     :param field_archiver:
     :return:
     """
-    if len(elem) != len(elem_type.MFIELDS):
-        raise ValueError('Fixed size tuple has not defined size: %s' % len(elem_type.MFIELDS))
+    if len(elem) != len(elem_type.f_specs()):
+        raise ValueError('Fixed size tuple has not defined size: %s' % len(elem_type.f_specs()))
     await dump_uvarint(writer, len(elem))
 
     field_archiver = field_archiver if field_archiver else dump_field
     elem_fields = params[0] if params else None
     if elem_fields is None:
-        elem_fields = elem_type.MFIELDS
+        elem_fields = elem_type.f_specs()
     for idx, elem in enumerate(elem):
         await field_archiver(writer, elem, elem_fields[idx], params[1:] if params else None)
 
@@ -506,12 +506,12 @@ async def load_tuple(reader, elem_type, params=None, elem=None, field_archiver=N
     c_len = await load_uvarint(reader)
     if elem and c_len != len(elem):
         raise ValueError('Size mismatch')
-    if c_len != len(elem_type.MFIELDS):
+    if c_len != len(elem_type.f_specs()):
         raise ValueError('Tuple size mismatch')
 
     elem_fields = params[0] if params else None
     if elem_fields is None:
-        elem_fields = elem_type.MFIELDS
+        elem_fields = elem_type.f_specs()
 
     res = elem if elem else []
     for i in range(c_len):
@@ -567,7 +567,7 @@ async def dump_message(writer, msg, msg_type=None, field_archiver=None):
     :return:
     """
     mtype = msg.__class__ if msg_type is None else msg_type
-    fields = mtype.MFIELDS
+    fields = mtype.f_specs()
     if hasattr(mtype, 'serialize_archive'):
         raise ValueError('Cannot directly load, has to use archive with %s' % mtype)
 
@@ -587,7 +587,7 @@ async def load_message(reader, msg_type, msg=None, field_archiver=None):
     :return:
     """
     msg = msg_type() if msg is None else msg
-    fields = msg_type.MFIELDS if msg_type else msg.__class__.MFIELDS
+    fields = msg_type.f_specs() if msg_type else msg.__class__.f_specs()
     if hasattr(msg_type, 'serialize_archive'):
         raise ValueError('Cannot directly load, has to use archive with %s' % msg_type)
 
@@ -615,7 +615,7 @@ async def dump_variant(writer, elem, elem_type=None, params=None, field_archiver
         await field_archiver(writer, getattr(elem, elem.variant_elem), elem.variant_elem_type)
 
     else:
-        fdef = elem_type.find_fdef(elem_type.MFIELDS, elem)
+        fdef = elem_type.find_fdef(elem_type.f_specs(), elem)
         await dump_uint(writer, fdef[1].VARIANT_CODE, 1)
         await field_archiver(writer, elem, fdef[1])
 
@@ -639,7 +639,7 @@ async def load_variant(reader, elem_type, params=None, elem=None, wrapped=None, 
 
     field_archiver = field_archiver if field_archiver else load_field
     tag = await load_uint(reader, 1)
-    for field in elem_type.MFIELDS:
+    for field in elem_type.f_specs():
         ftype = field[1]
         if ftype.VARIANT_CODE == tag:
             fvalue = await field_archiver(reader, ftype, field[2:], elem if not is_wrapped else None)

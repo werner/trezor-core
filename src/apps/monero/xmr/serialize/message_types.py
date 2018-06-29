@@ -45,7 +45,6 @@ class VariantType(XmrType):
     Supports also unwrapped value using type system to distinguish variants - simplifies the construction.
     """
     WRAPS_VALUE = False
-    MFIELDS = []
 
     def __init__(self, *args, **kwargs):
         self.variant_elem = None
@@ -53,12 +52,16 @@ class VariantType(XmrType):
 
         fname, fval = None, None
         if len(args) > 0:
-            fname, fval = self.find_fdef(self.MFIELDS, args[0])[0], args[0]
+            fname, fval = self.find_fdef(self.f_specs(), args[0])[0], args[0]
         if len(kwargs) > 0:
             key = list(kwargs.keys())[0]
             fname, fval = key, kwargs[key]
         if fname:
             self.set_variant(fname, fval)
+
+    @staticmethod
+    def f_specs():
+        return ()
 
     @staticmethod
     def find_fdef(fields, elem):
@@ -100,16 +103,12 @@ class ContainerType(XmrType):
 
 
 class TupleType(XmrType):
-    MFIELDS = []  # simple types without file name
-
-    def __init__(self, *args, **kwargs):
-        if 'MFIELDS' in kwargs:
-            self.MFIELDS = kwargs['MFIELDS']
+    @staticmethod
+    def f_specs():
+        return ()
 
 
 class MessageType(XmrType):
-    MFIELDS = []
-
     def __init__(self, **kwargs):
         for kw in kwargs:
             setattr(self, kw, kwargs[kw])
@@ -121,12 +120,17 @@ class MessageType(XmrType):
         dct = slot_obj_dict(self) if hasattr(self, '__slots__') else self.__dict__
         return '<%s: %s>' % (self.__class__.__name__, dct)
 
+    @staticmethod
+    def f_specs():
+        return ()
+
     def _field(self, fname=None, idx=None):
         fld = None
+        specs = self.f_specs()
         if fname is not None:
-            fld = [x for x in self.MFIELDS if x[0] == fname][0]
+            fld = [x for x in specs if x[0] == fname][0]
         elif idx is not None:
-            fld = self.MFIELDS[idx]
+            fld = specs[idx]
         return fld
 
     async def _msg_field(self, ar, fname=None, idx=None, **kwargs):

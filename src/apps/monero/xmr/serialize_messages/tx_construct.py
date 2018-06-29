@@ -9,91 +9,108 @@ from apps.monero.xmr.serialize_messages.tx_src_entry import TxSourceEntry
 
 
 class MultisigOut(MessageType):
-    MFIELDS = [
-        ('c', ContainerType, ECKey),
-    ]
+    @staticmethod
+    def f_specs():
+        return (
+            ('c', ContainerType, ECKey),
+        )
 
 
 class MultisigLR(MessageType):
-    __slots__ = ['L', 'R']
-    MFIELDS = [
-        ('L', ECKey),
-        ('R', ECKey),
-    ]
+    __slots__ = ('L', 'R')
+
+    @staticmethod
+    def f_specs():
+        return (
+            ('L', ECKey),
+            ('R', ECKey),
+        )
 
 
 class MultisigInfo(MessageType):
-    __slots__ = ['signer', 'LR', 'partial_key_images']
-    MFIELDS = [
-        ('signer', ECPublicKey),
-        ('LR', ContainerType, MultisigLR),
-        ('partial_key_images', ContainerType, KeyImage),
-    ]
+    __slots__ = ('signer', 'LR', 'partial_key_images')
+
+    @staticmethod
+    def f_specs():
+        return (
+            ('signer', ECPublicKey),
+            ('LR', ContainerType, MultisigLR),
+            ('partial_key_images', ContainerType, KeyImage),
+        )
 
 
 class MultisigStruct(MessageType):
-    __slots__ = ['sigs', 'ignore', 'used_L', 'signing_keys', 'msout']
-    MFIELDS = [
-        ('sigs', RctSig),
-        ('ignore', ECPublicKey),
-        ('used_L', ContainerType, ECKey),
-        ('signing_keys', ContainerType, ECPublicKey),
-        ('msout', MultisigOut),
-    ]
+    __slots__ = ('sigs', 'ignore', 'used_L', 'signing_keys', 'msout')
+
+    @staticmethod
+    def f_specs():
+        return (
+            ('sigs', RctSig),
+            ('ignore', ECPublicKey),
+            ('used_L', ContainerType, ECKey),
+            ('signing_keys', ContainerType, ECPublicKey),
+            ('msout', MultisigOut),
+        )
 
 
 class TransferDetails(MessageType):
-    MFIELDS = [
-        ('m_block_height', UInt64),
-        ('m_tx', TransactionPrefix),
-        ('m_txid', Hash),
-        ('m_internal_output_index', SizeT),
-        ('m_global_output_index', UInt64),
-        ('m_spent', BoolType),
-        ('m_spent_height', UInt64),
-        ('m_key_image', KeyImage),
-        ('m_mask', ECKey),
-        ('m_amount', UInt64),
-        ('m_rct', BoolType),
-        ('m_key_image_known', BoolType),
-        ('m_pk_index', SizeT),
-        ('m_subaddr_index', SubaddressIndex),
-        ('m_key_image_partial', BoolType),
-        ('m_multisig_k', ContainerType, ECKey),
-        ('m_multisig_info', ContainerType, MultisigInfo),
-    ]
+    @staticmethod
+    def f_specs():
+        return (
+            ('m_block_height', UInt64),
+            ('m_tx', TransactionPrefix),
+            ('m_txid', Hash),
+            ('m_internal_output_index', SizeT),
+            ('m_global_output_index', UInt64),
+            ('m_spent', BoolType),
+            ('m_spent_height', UInt64),
+            ('m_key_image', KeyImage),
+            ('m_mask', ECKey),
+            ('m_amount', UInt64),
+            ('m_rct', BoolType),
+            ('m_key_image_known', BoolType),
+            ('m_pk_index', SizeT),
+            ('m_subaddr_index', SubaddressIndex),
+            ('m_key_image_partial', BoolType),
+            ('m_multisig_k', ContainerType, ECKey),
+            ('m_multisig_info', ContainerType, MultisigInfo),
+        )
 
 
 class TxConstructionData(MessageType):
-    MFIELDS = [
-        ('sources', ContainerType, TxSourceEntry),
-        ('change_dts', TxDestinationEntry),
-        ('splitted_dsts', ContainerType, TxDestinationEntry),
-        ('selected_transfers', ContainerType, SizeT),
-        ('extra', ContainerType, UInt8),
-        ('unlock_time', UInt64),
-        ('use_rct', BoolType),
-        ('dests', ContainerType, TxDestinationEntry),
-        ('subaddr_account', UInt32),
-        ('subaddr_indices', ContainerType, UVarintType),  # original: x.UInt32
-    ]
+    @staticmethod
+    def f_specs():
+        return (
+            ('sources', ContainerType, TxSourceEntry),
+            ('change_dts', TxDestinationEntry),
+            ('splitted_dsts', ContainerType, TxDestinationEntry),
+            ('selected_transfers', ContainerType, SizeT),
+            ('extra', ContainerType, UInt8),
+            ('unlock_time', UInt64),
+            ('use_rct', BoolType),
+            ('dests', ContainerType, TxDestinationEntry),
+            ('subaddr_account', UInt32),
+            ('subaddr_indices', ContainerType, UVarintType),  # original: x.UInt32
+        )
 
 
 class PendingTransaction(MessageType):
-    MFIELDS = [
-        ('tx', Transaction),
-        ('dust', UInt64),
-        ('fee', UInt64),
-        ('dust_added_to_fee', BoolType),
-        ('change_dts', TxDestinationEntry),
-        ('selected_transfers', ContainerType, SizeT),
-        ('key_images', UnicodeType),
-        ('tx_key', SecretKey),
-        ('additional_tx_keys', ContainerType, SecretKey),
-        ('dests', ContainerType, TxDestinationEntry),
-        ('multisig_sigs', ContainerType, MultisigStruct),
-        ('construction_data', TxConstructionData),
-    ]
+    @staticmethod
+    def f_specs():
+        return (
+            ('tx', Transaction),
+            ('dust', UInt64),
+            ('fee', UInt64),
+            ('dust_added_to_fee', BoolType),
+            ('change_dts', TxDestinationEntry),
+            ('selected_transfers', ContainerType, SizeT),
+            ('key_images', UnicodeType),
+            ('tx_key', SecretKey),
+            ('additional_tx_keys', ContainerType, SecretKey),
+            ('dests', ContainerType, TxDestinationEntry),
+            ('multisig_sigs', ContainerType, MultisigStruct),
+            ('construction_data', TxConstructionData),
+        )
 
 
 class PendingTransactionVector(ContainerType):
@@ -101,7 +118,9 @@ class PendingTransactionVector(ContainerType):
 
 
 class MultisigTxSet(MessageType):
-    MFIELDS = [
-        ('m_ptx', PendingTransactionVector),
-        ('m_signers', UnorderedSet, ECPublicKey),
-    ]
+    @staticmethod
+    def f_specs():
+        return (
+            ('m_ptx', PendingTransactionVector),
+            ('m_signers', UnorderedSet, ECPublicKey),
+        )

@@ -15,24 +15,30 @@ from apps.monero.xmr.serialize_messages.tx_sig import Signature, SignatureArray,
 
 
 class MgSig(MessageType):
-    __slots__ = ['ss', 'cc', 'II']
-    MFIELDS = [
-        ('ss', KeyM),
-        ('cc', ECKey),
-    ]
+    __slots__ = ('ss', 'cc', 'II')
+
+    @staticmethod
+    def f_specs():
+        return (
+            ('ss', KeyM),
+            ('cc', ECKey),
+        )
 
 
 class RctSigBase(MessageType):
-    __slots__ = ['type', 'txnFee', 'message', 'mixRing', 'pseudoOuts', 'ecdhInfo', 'outPk']
-    MFIELDS = [
-        ('type', UInt8),
-        ('txnFee', UVarintType),
-        ('message', ECKey),
-        ('mixRing', CtkeyM),
-        ('pseudoOuts', KeyV),
-        ('ecdhInfo', EcdhInfo),
-        ('outPk', CtkeyV),
-    ]
+    __slots__ = ('type', 'txnFee', 'message', 'mixRing', 'pseudoOuts', 'ecdhInfo', 'outPk')
+
+    @staticmethod
+    def f_specs():
+        return (
+            ('type', UInt8),
+            ('txnFee', UVarintType),
+            ('message', ECKey),
+            ('mixRing', CtkeyM),
+            ('pseudoOuts', KeyV),
+            ('ecdhInfo', EcdhInfo),
+            ('outPk', CtkeyV),
+        )
 
     async def serialize_rctsig_base(self, ar, inputs, outputs):
         """
@@ -73,13 +79,16 @@ class RctSigBase(MessageType):
 
 
 class RctSigPrunable(MessageType):
-    __slots__ = ['rangeSigs', 'bulletproofs', 'MGs', 'pseudoOuts']
-    MFIELDS = [
-        ('rangeSigs', ContainerType, RangeSig),
-        ('bulletproofs', ContainerType, Bulletproof),
-        ('MGs', ContainerType, MgSig),
-        ('pseudoOuts', KeyV),
-    ]
+    __slots__ = ('rangeSigs', 'bulletproofs', 'MGs', 'pseudoOuts')
+
+    @staticmethod
+    def f_specs():
+        return (
+            ('rangeSigs', ContainerType, RangeSig),
+            ('bulletproofs', ContainerType, Bulletproof),
+            ('MGs', ContainerType, MgSig),
+            ('pseudoOuts', KeyV),
+        )
 
     async def serialize_rctsig_prunable(self, ar, type, inputs, outputs, mixin):
         """
@@ -153,18 +162,18 @@ class RctSigPrunable(MessageType):
 
 
 class RctSig(RctSigBase):
-    # noinspection PyTypeChecker
-    MFIELDS = RctSigBase.MFIELDS + [
-        ('p', RctSigPrunable),
-    ]
+    @staticmethod
+    def f_specs():
+        return RctSigBase.f_specs() + (('p', RctSigPrunable),)
 
 
 class Transaction(TransactionPrefix):
-    # noinspection PyTypeChecker
-    MFIELDS = TransactionPrefix.MFIELDS + [
-        ('signatures', ContainerType, SignatureArray),
-        ('rct_signatures', RctSig),
-    ]
+    @staticmethod
+    def f_specs():
+        return TransactionPrefix.f_specs() + (
+            ('signatures', ContainerType, SignatureArray),
+            ('rct_signatures', RctSig),
+        )
 
     async def serialize_archive(self, ar):
         """

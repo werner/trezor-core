@@ -37,11 +37,14 @@ class KeyMFix(ContainerType):
 
 
 class CtKey(MessageType):
-    __slots__ = ['dest', 'mask']
-    MFIELDS = [
-        ('dest', ECKey),
-        ('mask', ECKey),
-    ]
+    __slots__ = ('dest', 'mask')
+
+    @staticmethod
+    def f_specs():
+        return (
+            ('dest', ECKey),
+            ('mask', ECKey),
+        )
 
 
 class CtkeyV(ContainerType):

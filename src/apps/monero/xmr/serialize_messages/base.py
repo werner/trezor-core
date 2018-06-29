@@ -19,26 +19,20 @@ _c64 = const(64)
 
 
 class Hash(BlobType):
-    __slots__ = ['data']
+    __slots__ = ('data',)
     DATA_ATTR = 'data'
     FIX_SIZE = _c1
     SIZE = _c32
 
 
 class ECKey(BlobType):
-    __slots__ = ['bytes']
+    __slots__ = ('bytes',)
     DATA_ATTR = 'bytes'
     FIX_SIZE = _c1
     SIZE = _c32
 
 
-class ECPoint(BlobType):
-    __slots__ = ['data']
-    DATA_ATTR = 'data'
-    FIX_SIZE = _c1
-    SIZE = _c32
-
-
+ECPoint = Hash
 SecretKey = ECKey
 ECPublicKey = ECPoint
 KeyImage = ECPoint

@@ -5,13 +5,16 @@ from apps.monero.xmr.serialize.base_types import SizeT, UInt8, UVarintType
 
 
 class TxExtraPadding(MessageType):
-    __slots__ = ['size']
+    __slots__ = ('size',)
     TX_EXTRA_PADDING_MAX_COUNT = 255
 
     VARIANT_CODE = 0x0
-    MFIELDS = [
-        ('size', SizeT),
-    ]
+
+    @staticmethod
+    def f_specs():
+        return (
+            ('size', SizeT),
+        )
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -42,55 +45,72 @@ class TxExtraPadding(MessageType):
 
 
 class TxExtraPubKey(MessageType):
-    __slots__ = ['pub_key']
+    __slots__ = ('pub_key',)
     VARIANT_CODE = 0x1
-    MFIELDS = [
-        ('pub_key', ECPublicKey),
-    ]
+
+    @staticmethod
+    def f_specs():
+        return (
+            ('pub_key', ECPublicKey),
+        )
 
 
 class TxExtraNonce(MessageType):
-    __slots__ = ['nonce']
+    __slots__ = ('nonce',)
     VARIANT_CODE = 0x2
-    MFIELDS = [
-        ('nonce', BlobType),
-    ]
+
+    @staticmethod
+    def f_specs():
+        return (
+            ('nonce', BlobType),
+        )
 
 
 class TxExtraMergeMiningTag(MessageType):
     VARIANT_CODE = 0x3
-    MFIELDS = [
-        ('field_len', UVarintType),
-        ('depth', UVarintType),
-        ('merkle_root', Hash),
-    ]
+
+    @staticmethod
+    def f_specs():
+        return (
+            ('field_len', UVarintType),
+            ('depth', UVarintType),
+            ('merkle_root', Hash),
+        )
 
 
 class TxExtraAdditionalPubKeys(MessageType):
-    __slots__ = ['data']
+    __slots__ = ('data',)
     VARIANT_CODE = 0x4
-    MFIELDS = [
-        ('data', ContainerType, ECPublicKey),
-    ]
+
+    @staticmethod
+    def f_specs():
+        return (
+            ('data', ContainerType, ECPublicKey),
+        )
 
 
 class TxExtraMysteriousMinergate(MessageType):
-    __slots__ = ['data']
+    __slots__ = ('data',)
     VARIANT_CODE = 0xde
-    MFIELDS = [
-        ('data', BlobType),
-    ]
+
+    @staticmethod
+    def f_specs():
+        return (
+            ('data', BlobType),
+        )
 
 
 class TxExtraField(VariantType):
-    MFIELDS = [
-        ('tx_extra_padding', TxExtraPadding),
-        ('tx_extra_pub_key', TxExtraPubKey),
-        ('tx_extra_nonce', TxExtraNonce),
-        ('tx_extra_merge_mining_tag', TxExtraMergeMiningTag),
-        ('tx_extra_additional_pub_keys', TxExtraAdditionalPubKeys),
-        ('tx_extra_mysterious_minergate', TxExtraMysteriousMinergate),
-    ]
+    @staticmethod
+    def f_specs():
+        return (
+            ('tx_extra_padding', TxExtraPadding),
+            ('tx_extra_pub_key', TxExtraPubKey),
+            ('tx_extra_nonce', TxExtraNonce),
+            ('tx_extra_merge_mining_tag', TxExtraMergeMiningTag),
+            ('tx_extra_additional_pub_keys', TxExtraAdditionalPubKeys),
+            ('tx_extra_mysterious_minergate', TxExtraMysteriousMinergate),
+        )
 
 
 class TxExtraFields(ContainerType):

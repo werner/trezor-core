@@ -5,29 +5,35 @@ from apps.monero.xmr.serialize_messages.ct_keys import CtKey
 
 
 class MultisigKLRki(MessageType):
-    MFIELDS = [
-        ('K', ECKey),
-        ('L', ECKey),
-        ('R', ECKey),
-        ('ki', ECKey),
-    ]
+    @staticmethod
+    def f_specs():
+        return (
+            ('K', ECKey),
+            ('L', ECKey),
+            ('R', ECKey),
+            ('ki', ECKey),
+        )
 
 
 class OutputEntry(TupleType):
-    MFIELDS = [
-        UVarintType, CtKey  # original: x.UInt64
-    ]
+    @staticmethod
+    def f_specs():
+        return (
+            UVarintType, CtKey  # original: x.UInt64
+        )
 
 
 class TxSourceEntry(MessageType):
-    MFIELDS = [
-        ('outputs', ContainerType, OutputEntry),
-        ('real_output', SizeT),
-        ('real_out_tx_key', ECPublicKey),
-        ('real_out_additional_tx_keys', ContainerType, ECPublicKey),
-        ('real_output_in_tx_index', UInt64),
-        ('amount', UInt64),
-        ('rct', BoolType),
-        ('mask', ECKey),
-        ('multisig_kLRki', MultisigKLRki),
-    ]
+    @staticmethod
+    def f_specs():
+        return (
+            ('outputs', ContainerType, OutputEntry),
+            ('real_output', SizeT),
+            ('real_out_tx_key', ECPublicKey),
+            ('real_out_additional_tx_keys', ContainerType, ECPublicKey),
+            ('real_output_in_tx_index', UInt64),
+            ('amount', UInt64),
+            ('rct', BoolType),
+            ('mask', ECKey),
+            ('multisig_kLRki', MultisigKLRki),
+        )

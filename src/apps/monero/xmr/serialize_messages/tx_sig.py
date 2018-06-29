@@ -5,11 +5,14 @@ from apps.monero.xmr.serialize_messages.tx_prefix import TxinGen, TxinToScript, 
 
 
 class Signature(MessageType):
-    __slots__ = ['c', 'r']
-    MFIELDS = [
-        ('c', ECKey),
-        ('r', ECKey),
-    ]
+    __slots__ = ('c', 'r')
+
+    @staticmethod
+    def f_specs():
+        return (
+            ('c', ECKey),
+            ('r', ECKey),
+        )
 
     async def serialize_archive(self, ar):
         ar.field(eref(self, 'c'), ECKey)
