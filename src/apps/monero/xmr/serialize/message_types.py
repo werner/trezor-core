@@ -16,16 +16,6 @@ class BlobType(XmrType):
     FIX_SIZE = 0
     SIZE = 0
 
-    def __init__(self, *args, **kwargs):
-        if len(args) > 1:
-            raise ValueError()
-        if len(args) > 0:
-            setattr(self, self.DATA_ATTR, args[0])
-        if 'SIZE' in kwargs:
-            self.SIZE = kwargs['SIZE']
-        if 'FIX_SIZE' in kwargs:
-            self.FIX_SIZE = kwargs['FIX_SIZE']
-
     def __eq__(self, rhs):
         return eq_obj_contents(self, rhs)
 
@@ -46,18 +36,9 @@ class VariantType(XmrType):
     """
     WRAPS_VALUE = False
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self):
         self.variant_elem = None
         self.variant_elem_type = None
-
-        fname, fval = None, None
-        if len(args) > 0:
-            fname, fval = self.find_fdef(self.f_specs(), args[0])[0], args[0]
-        if len(kwargs) > 0:
-            key = list(kwargs.keys())[0]
-            fname, fval = key, kwargs[key]
-        if fname:
-            self.set_variant(fname, fval)
 
     @staticmethod
     def f_specs():
@@ -92,14 +73,6 @@ class ContainerType(XmrType):
     FIX_SIZE = 0
     SIZE = 0
     ELEM_TYPE = None
-
-    def __init__(self, *args, **kwargs):
-        if 'SIZE' in kwargs:
-            self.SIZE = kwargs['SIZE']
-        if 'FIX_SIZE' in kwargs:
-            self.FIX_SIZE = kwargs['FIX_SIZE']
-        if 'ELEM_TYPE' in kwargs:
-            self.ELEM_TYPE = kwargs['ELEM_TYPE']
 
 
 class TupleType(XmrType):
