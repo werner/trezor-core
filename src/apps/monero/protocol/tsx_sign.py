@@ -112,7 +112,7 @@ class TsxSigner(object):
             return await self.tsx_obj.init_transaction(tsxd, self.tsx_ctr)
         except Exception as e:
             await self.tsx_exc_handler(e)
-            return MoneroRespError(exc=exc2str(e))
+            raise
 
     async def tsx_set_input(self, msg):
         """
@@ -131,7 +131,7 @@ class TsxSigner(object):
             return await self.tsx_obj.set_input(src_entr)
         except Exception as e:
             await self.tsx_exc_handler(e)
-            return MoneroRespError(exc=exc2str(e))
+            raise
 
     async def tsx_inputs_permutation(self, msg):
         """
@@ -143,7 +143,7 @@ class TsxSigner(object):
             return await self.tsx_obj.tsx_inputs_permutation(msg.perm)
         except Exception as e:
             await self.tsx_exc_handler(e)
-            return MoneroRespError(exc=exc2str(e))
+            raise
 
     async def tsx_input_vini(self, msg):
         """
@@ -158,7 +158,7 @@ class TsxSigner(object):
             return await self.tsx_obj.input_vini(src_entr, vini, msg.vini_hmac, msg.pseudo_out, msg.pseudo_out_hmac)
         except Exception as e:
             await self.tsx_exc_handler(e)
-            return MoneroRespError(exc=exc2str(e))
+            raise
 
     async def tsx_set_output1(self, msg):
         """
@@ -173,7 +173,7 @@ class TsxSigner(object):
             return await self.tsx_obj.set_out1(dst_entr, msg.dst_entr_hmac)
         except Exception as e:
             await self.tsx_exc_handler(e)
-            return MoneroRespError(exc=exc2str(e))
+            raise
 
     async def tsx_all_out1_set(self, msg=None):
         """
@@ -192,7 +192,7 @@ class TsxSigner(object):
 
         except Exception as e:
             await self.tsx_exc_handler(e)
-            return MoneroRespError(exc=exc2str(e))
+            raise
 
     async def tsx_mlsag_done(self, msg=None):
         """
@@ -204,7 +204,7 @@ class TsxSigner(object):
             return await self.tsx_obj.mlsag_done()
         except Exception as e:
             await self.tsx_exc_handler(e)
-            return MoneroRespError(exc=exc2str(e))
+            raise
 
     async def tsx_sign_input(self, msg):
         """
@@ -219,7 +219,7 @@ class TsxSigner(object):
                                                  msg.pseudo_out, msg.pseudo_out_hmac, msg.alpha)
         except Exception as e:
             await self.tsx_exc_handler(e)
-            return MoneroRespError(exc=exc2str(e))
+            raise
 
     async def tsx_sign_final(self, msg=None):
         """
@@ -232,4 +232,4 @@ class TsxSigner(object):
             return await self.tsx_obj.final_msg()
         except Exception as e:
             await self.tsx_exc_handler(e)
-            return MoneroRespError(exc=exc2str(e))
+            raise
