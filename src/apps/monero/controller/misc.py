@@ -105,4 +105,4 @@ async def dump_msg(msg):
     writer = MemoryReaderWriter()
     ar = xmrserialize.Archive(writer, True)
     await ar.message(msg)
-    return bytes(writer.buffer)
+    return writer.get_buffer()
