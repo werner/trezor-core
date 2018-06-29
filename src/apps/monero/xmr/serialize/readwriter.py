@@ -4,7 +4,7 @@ from trezor import log
 
 class MemoryReaderWriter:
 
-    def __init__(self, buffer=None, read_empty=False, threshold=None, do_gc=False, **kwargs):
+    def __init__(self, buffer=None, read_empty=False, threshold=None, do_gc=False, preallocate=None, **kwargs):
         self.buffer = buffer
         self.nread = 0
         self.nwritten = 0
@@ -17,13 +17,20 @@ class MemoryReaderWriter:
         self.threshold = threshold
         self.do_gc = do_gc
 
-        if self.buffer is None:
+        if preallocate is not None:
+            self.preallocate(preallocate)
+        elif self.buffer is None:
             self.buffer = bytearray(0)
         else:
             self.woffset = len(buffer)
 
     def is_empty(self):
         return self.offset == len(self.buffer)
+
+    def preallocate(self, size):
+        self.buffer = bytearray(size)
+        self.offset = size
+        self.woffset = 0
 
     async def areadinto(self, buf):
         ln = len(buf)
