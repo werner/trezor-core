@@ -349,10 +349,10 @@ class TTransactionBuilder(object):
         await self.compute_sec_keys(tsx_data, tsx_ctr)
 
         # Iterative tx_prefix_hash hash computation
-        await self.tx_prefix_hasher.ar.message_field(self.tx, TransactionPrefix.MFIELDS[0])
-        await self.tx_prefix_hasher.ar.message_field(self.tx, TransactionPrefix.MFIELDS[1])
-        await self.tx_prefix_hasher.ar.container_size(self.num_inputs(), TransactionPrefix.MFIELDS[2][1])
-
+        tx_fields = TransactionPrefix.f_specs()
+        await self.tx_prefix_hasher.ar.message_field(self.tx, tx_fields[0])
+        await self.tx_prefix_hasher.ar.message_field(self.tx, tx_fields[1])
+        await self.tx_prefix_hasher.ar.container_size(self.num_inputs(), tx_fields[2][1])
         # Final message hasher
         self.full_message_hasher.init(self.use_simple_rct)
         await self.full_message_hasher.set_type_fee(self.get_rct_type(), self.get_fee())
@@ -707,7 +707,7 @@ class TTransactionBuilder(object):
 
         # First output - tx prefix hasher - size of the container
         if self.out_idx == 0:
-            await self.tx_prefix_hasher.ar.container_size(self.num_dests(), TransactionPrefix.MFIELDS[3][1])
+            await self.tx_prefix_hasher.ar.container_size(self.num_dests(), TransactionPrefix.f_specs()[3][1])
 
         additional_txkey = None
         additional_txkey_priv = None
@@ -799,7 +799,7 @@ class TTransactionBuilder(object):
                              % (self.summary_inputs_money, self.summary_outs_money))
 
         # Hashing transaction prefix
-        await self.tx_prefix_hasher.ar.message_field(self.tx, TransactionPrefixExtraBlob.MFIELDS[4])  # extra
+        await self.tx_prefix_hasher.ar.message_field(self.tx, TransactionPrefixExtraBlob.f_specs()[4])  # extra
 
         self.tx_prefix_hash = self.tx_prefix_hasher.kwriter.get_digest()
         del self.tx_prefix_hasher

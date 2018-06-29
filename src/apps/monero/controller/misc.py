@@ -71,7 +71,7 @@ def translate_monero_dest_entry(dst_entry: MoneroTxDestinationEntry):
 
 async def translate_tsx_data(tsx_data: MoneroTsxData):
     tsxd = TsxData()
-    for fld in TsxData.MFIELDS:
+    for fld in TsxData.f_specs():
         fname = fld[0]
         if hasattr(tsx_data, fname):
             setattr(tsxd, fname, getattr(tsx_data, fname))

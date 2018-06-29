@@ -34,8 +34,9 @@ class PreMlsagHasher(object):
             raise ValueError('State error')
         self.state = 2
 
-        await self.rtcsig_hasher.ar.message_field(None, field=RctSigBase.MFIELDS[0], fvalue=rv_type)
-        await self.rtcsig_hasher.ar.message_field(None, field=RctSigBase.MFIELDS[1], fvalue=fee)
+        rfields = RctSigBase.f_specs()
+        await self.rtcsig_hasher.ar.message_field(None, field=rfields[0], fvalue=rv_type)
+        await self.rtcsig_hasher.ar.message_field(None, field=rfields[1], fvalue=fee)
 
     async def set_pseudo_out(self, out):
         if self.state != 2 and self.state != 3:
