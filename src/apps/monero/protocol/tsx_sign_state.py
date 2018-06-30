@@ -1,25 +1,34 @@
+from micropython import const
+
+
 class TState(object):
     """
     Transaction state
     """
-    START = 0
-    INIT = 1
-    INP_CNT = 2
-    INPUT = 3
-    INPUT_DONE = 4
-    INPUT_PERM = 5
-    INPUT_VINS = 6
-    OUTPUT = 7
-    OUTPUT_DONE = 8
-    FINAL_MESSAGE = 9
-    SIGNATURE = 10
-    SIGNATURE_DONE = 11
-    FINAL = 12
-    FAIL = 250
+    START = const(0)
+    INIT = const(1)
+    INP_CNT = const(2)
+    INPUT = const(3)
+    INPUT_DONE = const(4)
+    INPUT_PERM = const(5)
+    INPUT_VINS = const(6)
+    OUTPUT = const(7)
+    OUTPUT_DONE = const(8)
+    FINAL_MESSAGE = const(9)
+    SIGNATURE = const(10)
+    SIGNATURE_DONE = const(11)
+    FINAL = const(12)
+    FAIL = const(250)
 
     def __init__(self):
         self.s = self.START
         self.in_mem = False
+
+    def state_save(self):
+        return self.s, self.in_mem
+
+    def state_load(self, x):
+        self.s, self.in_mem = x
 
     def init_tsx(self):
         if self.s != self.START:
