@@ -753,6 +753,8 @@ class TTransactionBuilder(object):
         """
         from apps.monero.xmr import ring_ct
         from apps.monero.xmr.serialize_messages.ct_keys import CtKey
+        rsig = bytearray(32 * (64 + 64 + 64 + 1))
+        rsig_mv = memoryview(rsig)
 
         out_pk = CtKey(dest=dest_pub_key)
         is_last = idx + 1 == self.num_dests()
@@ -767,7 +769,8 @@ class TTransactionBuilder(object):
             raise ValueError('Bulletproof not yet supported')
 
         else:
-            C, mask, rsig = ring_ct.prove_range(amount, last_mask, backend_impl=True, byte_enc=True)
+            C, mask, rsig = ring_ct.prove_range(amount, last_mask, backend_impl=True, byte_enc=True, rsig=rsig_mv)
+            rsig = memoryview(rsig)
 
             self.assrt(crypto.point_eq(C, crypto.point_add(
                 crypto.scalarmult_base(mask),
