@@ -170,13 +170,7 @@ class TTransactionBuilder(object):
         Initializes RCTsig structure (fee, tx prefix hash, type)
         :return:
         """
-        from apps.monero.xmr.serialize_messages.tx_full import RctSig
-
-        rv = RctSig()
-        # rv.p = RctSigPrunable()
-        rv.txnFee = self.get_fee()
-        rv.message = self.tx_prefix_hash
-        rv.type = self.get_rct_type()
+        rv = misc.StdObj(txnFee=self.get_fee(), message=self.tx_prefix_hash, type=self.get_rct_type())
         return rv
 
     def hmac_key_txin(self, idx):
@@ -534,7 +528,7 @@ class TTransactionBuilder(object):
         :return:
         """
         self.state.input_done()
-        del self.subaddresses
+        self.subaddresses = None
 
         if self.inp_idx + 1 != self.num_inputs():
             raise ValueError('Input count mismatch')
@@ -834,6 +828,26 @@ class TTransactionBuilder(object):
                                       out_pk=await misc.dump_msg(out_pk, preallocate=64),
                                       ecdh_info=await misc.dump_msg(ecdh_info, preallocate=64))
 
+    async def all_out1_set_tx_extra(self):
+        from apps.monero.xmr.sub import tsx_helper
+        self.tx.extra = tsx_helper.add_tx_pub_key_to_extra(self.tx.extra, self.r_pub)
+
+        # Not needed to remove - extra is clean
+        # self.tx.extra = await monero.remove_field_from_tx_extra(self.tx.extra, xmrtypes.TxExtraAdditionalPubKeys)
+        if self.need_additional_txkeys:
+            self.tx.extra = await tsx_helper.add_additional_tx_pub_keys_to_extra(self.tx.extra,
+                                                                                 pub_enc=self.additional_tx_public_keys)
+
+    async def all_out1_set_tx_prefix(self):
+        from apps.monero.xmr.serialize_messages.tx_prefix import TransactionPrefixExtraBlob
+        await self.tx_prefix_hasher.ar.message_field(self.tx, TransactionPrefixExtraBlob.f_specs()[4])  # extra
+
+        self.tx_prefix_hash = self.tx_prefix_hasher.kwriter.get_digest()
+        self.tx_prefix_hasher = None
+
+        # Hash message to the final_message
+        await self.full_message_hasher.set_message(self.tx_prefix_hash)
+
     async def all_out1_set(self):
         """
         All outputs were set in this phase. Computes additional public keys (if needed), tx.extra and
@@ -842,8 +856,6 @@ class TTransactionBuilder(object):
 
         :return: tx.extra, tx_prefix_hash
         """
-        from apps.monero.xmr.sub import tsx_helper
-
         self.state.set_output_done()
         await self.trezor.iface.transaction_step(self.STEP_ALL_OUT)
 
@@ -860,43 +872,32 @@ class TTransactionBuilder(object):
 
         # Set public key to the extra
         # Not needed to remove - extra is clean
-        # self.tx.extra = await monero.remove_field_from_tx_extra(self.tx.extra, xmrtypes.TxExtraPubKey)
-        self.tx.extra = tsx_helper.add_tx_pub_key_to_extra(self.tx.extra, self.r_pub)
-
-        # Not needed to remove - extra is clean
-        # self.tx.extra = await monero.remove_field_from_tx_extra(self.tx.extra, xmrtypes.TxExtraAdditionalPubKeys)
-        if self.need_additional_txkeys:
-            self.tx.extra = await tsx_helper.add_additional_tx_pub_keys_to_extra(self.tx.extra, pub_enc=self.additional_tx_public_keys)
+        await self.all_out1_set_tx_extra()
+        self.additional_tx_public_keys = None
+        extra_b = self.tx.extra
+        self.tx = None
+        gc.collect()
 
         if self.summary_outs_money > self.summary_inputs_money:
             raise ValueError('Transaction inputs money (%s) less than outputs money (%s)'
                              % (self.summary_inputs_money, self.summary_outs_money))
 
         # Hashing transaction prefix
-        from apps.monero.xmr.serialize_messages.tx_prefix import TransactionPrefixExtraBlob
-        await self.tx_prefix_hasher.ar.message_field(self.tx, TransactionPrefixExtraBlob.f_specs()[4])  # extra
-
-        self.tx_prefix_hash = self.tx_prefix_hasher.kwriter.get_digest()
-        del self.tx_prefix_hasher
-
-        # Hash message to the final_message
-        await self.full_message_hasher.set_message(self.tx_prefix_hash)
-        rv = self.init_rct_sig()
+        await self.all_out1_set_tx_prefix()
+        gc.collect()
 
         # Txprefix match check for multisig
         if not common.is_empty(self.exp_tx_prefix_hash) and \
                 not common.ct_equal(self.exp_tx_prefix_hash, self.tx_prefix_hash):
             self.state.set_fail()
             raise misc.TrezorTxPrefixHashNotMatchingError('Tx prefix invalid')
+        gc.collect()
 
         from trezor.messages.MoneroRctSig import MoneroRctSig
         from trezor.messages.MoneroTsxAllOutSetResp import MoneroTsxAllOutSetResp
 
+        rv = self.init_rct_sig()
         rv_pb = MoneroRctSig(txn_fee=rv.txnFee, message=rv.message, rv_type=rv.type)
-        extra_b = self.tx.extra
-        del self.tx
-        del self.additional_tx_public_keys
-
         return MoneroTsxAllOutSetResp(extra=extra_b, tx_prefix_hash=self.tx_prefix_hash, rv=rv_pb)
 
     async def tsx_mlsag_ecdh_info(self):
@@ -937,7 +938,7 @@ class TTransactionBuilder(object):
         self.inp_idx = -1
 
         self.full_message = await self.full_message_hasher.get_digest()
-        del self.full_message_hasher
+        self.full_message_hasher = None
 
         return MoneroTsxMlsagDoneResp(full_message_hash=self.full_message)
 
