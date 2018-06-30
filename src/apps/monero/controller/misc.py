@@ -25,6 +25,12 @@ class TrezorTxPrefixHashNotMatchingError(TrezorError):
         super().__init__(*args, **kwargs)
 
 
+class StdObj(object):
+    def __init__(self, **kwargs):
+        for kw in kwargs:
+            setattr(self, kw, kwargs[kw])
+
+
 def compute_tx_key(spend_key_private, tx_prefix_hash, salt=None, rand_mult=None):
     """
 
@@ -101,11 +107,21 @@ async def parse_vini(bts):
     return await parse_msg(bts, TxinToKey())
 
 
-async def dump_msg(msg, preallocate=None):
+async def dump_msg(msg, preallocate=None, msg_type=None):
     from apps.monero.xmr.serialize import xmrserialize
     from apps.monero.xmr.serialize.readwriter import MemoryReaderWriter
 
     writer = MemoryReaderWriter(preallocate=preallocate)
     ar = xmrserialize.Archive(writer, True)
-    await ar.message(msg)
+    await ar.message(msg, msg_type=msg_type)
     return writer.get_buffer()
+
+
+async def dump_msg_gc(msg, preallocate=None, msg_type=None, del_msg=False):
+    b = await dump_msg(msg, preallocate=preallocate, msg_type=msg_type)
+    if del_msg:
+        del msg
+
+    import gc
+    gc.collect()
+    return b
