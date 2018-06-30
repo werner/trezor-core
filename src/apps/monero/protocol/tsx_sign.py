@@ -131,6 +131,8 @@ class TsxSigner(object):
         """
         try:
             src_entr = await misc.parse_src_entry(msg.src_entr)
+            del msg.src_entr
+
             return await self.tsx_obj.set_input(src_entr)
         except Exception as e:
             await self.tsx_exc_handler(e)
@@ -158,6 +160,9 @@ class TsxSigner(object):
         try:
             src_entr = await misc.parse_src_entry(msg.src_entr)
             vini = await misc.parse_vini(msg.vini)
+            del msg.src_entr
+            del msg.vini
+
             return await self.tsx_obj.input_vini(src_entr, vini, msg.vini_hmac, msg.pseudo_out, msg.pseudo_out_hmac)
         except Exception as e:
             await self.tsx_exc_handler(e)
@@ -173,6 +178,8 @@ class TsxSigner(object):
         """
         try:
             dst_entr = await misc.parse_dst_entry(msg.dst_entr)
+            del msg.dst_entr
+
             return await self.tsx_obj.set_out1(dst_entr, msg.dst_entr_hmac)
         except Exception as e:
             await self.tsx_exc_handler(e)
@@ -218,6 +225,9 @@ class TsxSigner(object):
         try:
             src_entr = await misc.parse_src_entry(msg.src_entr)
             vini = await misc.parse_vini(msg.vini)
+            del msg.src_entr
+            del msg.vini
+
             return await self.tsx_obj.sign_input(src_entr, vini, msg.vini_hmac,
                                                  msg.pseudo_out, msg.pseudo_out_hmac, msg.alpha)
         except Exception as e:
