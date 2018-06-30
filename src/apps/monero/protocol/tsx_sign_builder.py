@@ -839,8 +839,8 @@ class TTransactionBuilder(object):
                                                                                  pub_enc=self.additional_tx_public_keys)
 
     async def all_out1_set_tx_prefix(self):
-        from apps.monero.xmr.serialize_messages.tx_prefix import TransactionPrefixExtraBlob
-        await self.tx_prefix_hasher.ar.message_field(self.tx, TransactionPrefixExtraBlob.f_specs()[4])  # extra
+        from apps.monero.xmr.serialize.message_types import BlobType
+        await self.tx_prefix_hasher.ar.message_field(self.tx, ('extra', BlobType))  # extra
 
         self.tx_prefix_hash = self.tx_prefix_hasher.kwriter.get_digest()
         self.tx_prefix_hasher = None
@@ -874,8 +874,6 @@ class TTransactionBuilder(object):
         # Not needed to remove - extra is clean
         await self.all_out1_set_tx_extra()
         self.additional_tx_public_keys = None
-        extra_b = self.tx.extra
-        self.tx = None
         gc.collect()
 
         if self.summary_outs_money > self.summary_inputs_money:
@@ -884,6 +882,8 @@ class TTransactionBuilder(object):
 
         # Hashing transaction prefix
         await self.all_out1_set_tx_prefix()
+        extra_b = self.tx.extra
+        self.tx = None
         gc.collect()
 
         # Txprefix match check for multisig
