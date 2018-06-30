@@ -97,7 +97,6 @@ class TTransactionBuilder(object):
             if attr.startswith('_'):
                 continue
 
-            log.debug(__name__, 'Restoring attr: %s', attr)
             cval = getattr(t, attr)
             if cval is None:
                 setattr(self, attr, cval)
