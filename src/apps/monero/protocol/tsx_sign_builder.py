@@ -687,7 +687,6 @@ class TTransactionBuilder(object):
         """
         from apps.monero.xmr import ring_ct
         from apps.monero.xmr.serialize_messages.ct_keys import CtKey
-        from apps.monero.xmr.serialize_messages.tx_ecdh import EcdhTuple
 
         out_pk = CtKey(dest=dest_pub_key)
         is_last = idx + 1 == self.num_dests()
@@ -719,6 +718,7 @@ class TTransactionBuilder(object):
 
         # ECDH masking
         from apps.monero.xmr.sub.recode import recode_ecdh
+        from apps.monero.xmr.serialize_messages.tx_ecdh import EcdhTuple
         ecdh_info = EcdhTuple(mask=mask, amount=crypto.sc_init(amount))
         ecdh_info = ring_ct.ecdh_encode(ecdh_info, derivation=crypto.encodeint(amount_key))
         recode_ecdh(ecdh_info, encode=True)
