@@ -7,6 +7,14 @@ from apps.monero.controller import misc
 from apps.monero.xmr import crypto, common, monero
 
 
+class TprefixStub(object):
+    __slots__ = ('version', 'unlock_time', 'vin', 'vout', 'extra')
+
+    def __init__(self, **kwargs):
+        for kw in kwargs:
+            setattr(self, kw, kwargs[kw])
+
+
 class TTransactionBuilder(object):
     """
     Transaction builder
@@ -23,7 +31,6 @@ class TTransactionBuilder(object):
     def __init__(self, trezor=None, creds=None, **kwargs):
         from apps.monero.xmr.sub.keccak_hasher import KeccakArchive
         from apps.monero.xmr.sub.mlsag_hasher import PreMlsagHasher
-        from apps.monero.xmr.serialize_messages.tx_prefix import TransactionPrefix
         from apps.monero.protocol.tsx_sign_state import TState
 
         self.trezor = trezor
@@ -61,7 +68,7 @@ class TTransactionBuilder(object):
         self.sumout = crypto.sc_0()
         self.sumpouts_alphas = crypto.sc_0()
         self.subaddresses = {}
-        self.tx = TransactionPrefix(vin=[], vout=[], extra=b'')
+        self.tx = TprefixStub(vin=[], vout=[], extra=b'')
         self.source_permutation = []  # sorted by key images
         self.tx_prefix_hasher = KeccakArchive()
         self.tx_prefix_hash = None
