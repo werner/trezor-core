@@ -4,11 +4,7 @@
 import gc
 from trezor import log
 
-from apps.monero.controller import iface, misc, wrapper
-from apps.monero.controller.wrapper import exc2str
-# from apps.monero.protocol.tsx_sign_builder import TTransactionBuilder
-
-from trezor.messages.MoneroRespError import MoneroRespError
+from apps.monero.controller import misc
 
 
 class TsxSigner(object):
@@ -17,6 +13,8 @@ class TsxSigner(object):
     Provides interface to the host, packages messages.
     """
     def __init__(self):
+        from apps.monero.controller import iface
+
         self.ctx = None
         self.tsx_ctr = 0
         self.err_ctr = 0
@@ -51,6 +49,7 @@ class TsxSigner(object):
         return self.purge or (self.tsx_obj and self.tsx_obj.is_terminal())
 
     async def setup(self, msg):
+        from apps.monero.controller import wrapper
         self.creds = await wrapper.monero_get_creds(self.ctx, msg.address_n or (), msg.network_type)
 
     async def sign(self, ctx, msg):
@@ -60,6 +59,8 @@ class TsxSigner(object):
         :param msg:
         :return:
         """
+        from apps.monero.controller import iface
+
         self.ctx = ctx
         self.iface = iface.get_iface(ctx)
         gc.collect()
@@ -198,6 +199,9 @@ class TsxSigner(object):
 
         except misc.TrezorTxPrefixHashNotMatchingError as e:
             await self.tsx_exc_handler(e)
+
+            from trezor.messages.MoneroRespError import MoneroRespError
+            from apps.monero.controller.wrapper import exc2str
             return MoneroRespError(status=10, exc=exc2str(e))
 
         except Exception as e:
