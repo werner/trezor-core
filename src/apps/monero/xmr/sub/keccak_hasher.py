@@ -3,8 +3,8 @@ from apps.monero.xmr.serialize import xmrserialize
 
 
 class KeccakArchive(object):
-    def __init__(self):
-        self.kwriter = get_keccak_writer()
+    def __init__(self, ctx=None):
+        self.kwriter = get_keccak_writer(ctx=ctx)
         self.ar = xmrserialize.Archive(self.kwriter, True)
 
     def ctx(self):
