@@ -2,17 +2,16 @@
 # -*- coding: utf-8 -*-
 # Author: Dusan Klinec, ph4r05, 2018
 
-from apps.common import seed
-from apps.monero.xmr.sub.creds import AccountCreds
-from apps.monero.xmr import crypto
-from apps.monero.xmr import monero
-from apps.monero.controller import iface
-
 
 MONERO_CURVE = 'ed25519-keccak'
 
 
 async def monero_get_creds(ctx, address_n=None, network_type=None):
+    from apps.common import seed
+    from apps.monero.xmr import crypto
+    from apps.monero.xmr import monero
+    from apps.monero.xmr.sub.creds import AccountCreds
+
     address_n = address_n or ()
     node = await seed.derive_node(ctx, address_n, MONERO_CURVE)
     to_hash = node.chain_code() + node.private_key()
@@ -23,6 +22,7 @@ async def monero_get_creds(ctx, address_n=None, network_type=None):
 
 
 def get_interface(ctx):
+    from apps.monero.controller import iface
     return iface.get_iface(ctx)
 
 
