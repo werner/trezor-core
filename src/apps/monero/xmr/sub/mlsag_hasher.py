@@ -10,14 +10,36 @@ class PreMlsagHasher(object):
     """
     Iterative construction of the pre_mlsag_hash
     """
-    def __init__(self):
+    def __init__(self, state=None):
         from apps.monero.xmr.sub.keccak_hasher import KeccakArchive, HashWrapper
 
-        self.is_simple = None
-        self.state = 0
-        self.kc_master = HashWrapper(crypto.get_keccak())
-        self.rtcsig_hasher = KeccakArchive()
-        self.rsig_hasher = crypto.get_keccak()
+        self.is_simple = state[0] if state else None
+        self.state = state[1] if state else 0
+        self.kc_master = HashWrapper(state[2] if state else crypto.get_keccak())
+        self.rsig_hasher = state[3] if state else crypto.get_keccak()
+        self.rtcsig_hasher = None
+        if state:
+            self.rtcsig_hasher = KeccakArchive(state[4]) if state[4] else None
+        else:
+            self.rtcsig_hasher = KeccakArchive()
+
+    def state_save(self):
+        return (
+            self.is_simple, self.state, self.kc_master.ctx,
+            self.rsig_hasher,
+            self.rtcsig_hasher.ctx() if self.rtcsig_hasher else None,
+        )
+
+    def state_load(self, x):
+        from apps.monero.xmr.sub.keccak_hasher import KeccakArchive, HashWrapper
+        self.is_simple = x[0]
+        self.state = x[1]
+        self.kc_master = HashWrapper(x[2])
+        self.rsig_hasher = x[3]
+        if x[4]:
+            self.rtcsig_hasher = KeccakArchive(x[4])
+        else:
+            self.rtcsig_hasher = None
 
     def init(self, is_simple):
         if self.state != 0:
@@ -66,7 +88,7 @@ class PreMlsagHasher(object):
 
         c_hash = self.rtcsig_hasher.kwriter.get_digest()
         self.kc_master.update(c_hash)
-        del self.rtcsig_hasher
+        self.rtcsig_hasher = None
 
     async def rsig_val(self, p, bulletproof, raw=False):
         if self.state == 8:
@@ -106,7 +128,7 @@ class PreMlsagHasher(object):
         self.state = 8
 
         c_hash = self.rsig_hasher.digest()
-        del self.rsig_hasher
+        self.rsig_hasher = None
 
         self.kc_master.update(c_hash)
         return self.kc_master.digest()
