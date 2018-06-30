@@ -1004,10 +1004,10 @@ class TTransactionBuilder(object):
 
         # Private key correctness test
         self.assrt(crypto.point_eq(crypto.decodepoint(src_entr.outputs[src_entr.real_output][1].dest),
-                                   crypto.scalarmult_base(in_sk.dest)))
+                                   crypto.scalarmult_base(in_sk.dest)), 'a1')
         gc.collect()
         self.assrt(crypto.point_eq(crypto.decodepoint(src_entr.outputs[src_entr.real_output][1].mask),
-                                   crypto.gen_c(in_sk.mask, src_entr.amount)))
+                                   crypto.gen_c(in_sk.mask, src_entr.amount)), 'a2')
         gc.collect()
 
         # RCT signature
