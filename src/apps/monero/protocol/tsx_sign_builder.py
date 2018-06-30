@@ -28,11 +28,7 @@ class TTransactionBuilder(object):
     STEP_MLSAG = const(600)
     STEP_SIGN = const(700)
 
-    def __init__(self, trezor=None, creds=None, **kwargs):
-        from apps.monero.xmr.sub.keccak_hasher import KeccakArchive
-        from apps.monero.xmr.sub.mlsag_hasher import PreMlsagHasher
-        from apps.monero.protocol.tsx_sign_state import TState
-
+    def __init__(self, trezor=None, creds=None, state=None, **kwargs):
         self.trezor = trezor
         self.creds = creds
         self.key_master = None
@@ -41,7 +37,7 @@ class TTransactionBuilder(object):
 
         self.r = None  # txkey
         self.r_pub = None
-        self.state = TState()
+        self.state = None
 
         self.multi_sig = False
         self.need_additional_txkeys = False
@@ -68,13 +64,85 @@ class TTransactionBuilder(object):
         self.sumout = crypto.sc_0()
         self.sumpouts_alphas = crypto.sc_0()
         self.subaddresses = {}
-        self.tx = TprefixStub(vin=[], vout=[], extra=b'')
+        self.tx = None
         self.source_permutation = []  # sorted by key images
-        self.tx_prefix_hasher = KeccakArchive()
+        self.tx_prefix_hasher = None
         self.tx_prefix_hash = None
-        self.full_message_hasher = PreMlsagHasher()
+        self.full_message_hasher = None
         self.full_message = None
         self.exp_tx_prefix_hash = None
+
+        if state is None:
+            self._init()
+        else:
+            self.state_load(state)
+
+    def _init(self):
+        from apps.monero.xmr.sub.keccak_hasher import KeccakArchive
+        from apps.monero.xmr.sub.mlsag_hasher import PreMlsagHasher
+        from apps.monero.protocol.tsx_sign_state import TState
+
+        self.state = TState()
+        self.tx = TprefixStub(vin=[], vout=[], extra=b'')
+        self.tx_prefix_hasher = KeccakArchive()
+        self.full_message_hasher = PreMlsagHasher()
+
+    def state_load(self, t):
+        from apps.monero.xmr.sub.keccak_hasher import KeccakArchive
+        from apps.monero.xmr.sub.mlsag_hasher import PreMlsagHasher
+        from apps.monero.protocol.tsx_sign_state import TState
+        self._log_trace(t.state)
+
+        for attr in t.__dict__:
+            if attr.startswith('_'):
+                continue
+
+            log.debug(__name__, 'Restoring attr: %s', attr)
+            cval = getattr(t, attr)
+            if cval is None:
+                setattr(self, attr, cval)
+                continue
+
+            if attr == 'state':
+                self.state = TState()
+                self.state.state_load(t.state)
+            elif attr == 'tx_prefix_hasher':
+                self.tx_prefix_hasher = KeccakArchive(ctx=t.tx_prefix_hasher)
+            elif attr == 'full_message_hasher':
+                self.full_message_hasher = PreMlsagHasher(state=t.full_message_hasher)
+            else:
+                setattr(self, attr, cval)
+
+    def state_save(self):
+        from apps.monero.protocol.tsx_sign_state_holder import TsxSignStateHolder
+        t = TsxSignStateHolder()
+
+        for attr in self.__dict__:
+            if attr.startswith('_'):
+                continue
+
+            log.debug(__name__, 'Saving attr: %s', attr)
+            cval = getattr(self, attr)
+            if cval is None:
+                setattr(t, attr, cval)
+                continue
+
+            if attr == 'state':
+                t.state = self.state.state_save()
+            elif attr in ['trezor']:
+                continue
+            elif attr.startswith('STEP'):
+                continue
+            elif attr == 'tx_prefix_hasher':
+                t.tx_prefix_hasher = self.tx_prefix_hasher.ctx()
+            elif attr == 'full_message_hasher':
+                t.full_message_hasher = self.full_message_hasher.state_save()
+            else:
+                setattr(t, attr, cval)
+        return t
+
+    def _log_trace(self, x=None):
+        log.debug(__name__, 'Log trace %s, ... %s %s', x, gc.mem_free(), gc.mem_alloc())
 
     def assrt(self, condition, msg=None):
         """
@@ -438,7 +506,7 @@ class TTransactionBuilder(object):
         :param indices:
         :return:
         """
-        monero.compute_subaddresses(self.trezor.creds, account, indices, self.subaddresses)
+        monero.compute_subaddresses(self.creds, account, indices, self.subaddresses)
 
     async def set_input(self, src_entr):
         """
@@ -474,7 +542,7 @@ class TTransactionBuilder(object):
         tx_key = crypto.decodepoint(src_entr.real_out_tx_key)
         additional_keys = [crypto.decodepoint(x) for x in src_entr.real_out_additional_tx_keys]
 
-        secs = monero.generate_key_image_helper(self.trezor.creds, self.subaddresses, out_key,
+        secs = monero.generate_key_image_helper(self.creds, self.subaddresses, out_key,
                                                 tx_key,
                                                 additional_keys,
                                                 src_entr.real_output_in_tx_index)
