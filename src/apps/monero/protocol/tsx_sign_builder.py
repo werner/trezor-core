@@ -305,6 +305,14 @@ class TTransactionBuilder(object):
         hmac_tsxdest = crypto.compute_hmac(hmac_key, kwriter.get_digest())
         return hmac_tsxdest
 
+    async def _tprefix_update(self):
+        from apps.monero.xmr.serialize_messages.tx_prefix import TransactionPrefix
+        tx_fields = TransactionPrefix.f_specs()
+        await self.tx_prefix_hasher.ar.message_field(self.tx, tx_fields[0])
+        await self.tx_prefix_hasher.ar.message_field(self.tx, tx_fields[1])
+        await self.tx_prefix_hasher.ar.container_size(self.num_inputs(), tx_fields[2][1])
+        log.debug(__name__, '### 5Mem Free: {} Allocated: {}'.format(gc.mem_free(), gc.mem_alloc()))
+
     async def init_transaction(self, tsx_data, tsx_ctr):
         """
         Initializes a new transaction.
@@ -313,7 +321,6 @@ class TTransactionBuilder(object):
         :param tsx_ctr:
         :return:
         """
-        from apps.monero.xmr.serialize_messages.tx_prefix import TransactionPrefix
         from apps.monero.xmr.sub.addr import classify_subaddresses
 
         log.debug(__name__, '### BLD 0Mem Free: {} Allocated: {}'.format(gc.mem_free(), gc.mem_alloc()))
@@ -367,13 +374,12 @@ class TTransactionBuilder(object):
         self.tx.unlock_time = tsx_data.unlock_time
         await self.process_payment_id(tsx_data)
         await self.compute_sec_keys(tsx_data, tsx_ctr)
+        gc.collect()
 
         # Iterative tx_prefix_hash hash computation
-        tx_fields = TransactionPrefix.f_specs()
-        await self.tx_prefix_hasher.ar.message_field(self.tx, tx_fields[0])
-        await self.tx_prefix_hasher.ar.message_field(self.tx, tx_fields[1])
-        await self.tx_prefix_hasher.ar.container_size(self.num_inputs(), tx_fields[2][1])
-        log.debug(__name__, '### 5Mem Free: {} Allocated: {}'.format(gc.mem_free(), gc.mem_alloc()))
+        await self._tprefix_update()
+        gc.collect()
+
         # Final message hasher
         self.full_message_hasher.init(self.use_simple_rct)
         await self.full_message_hasher.set_type_fee(self.get_rct_type(), self.get_fee())
