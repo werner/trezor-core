@@ -120,7 +120,6 @@ class TTransactionBuilder(object):
             if attr.startswith('_'):
                 continue
 
-            log.debug(__name__, 'Saving attr: %s', attr)
             cval = getattr(self, attr)
             if cval is None:
                 setattr(t, attr, cval)
@@ -141,7 +140,7 @@ class TTransactionBuilder(object):
         return t
 
     def _log_trace(self, x=None):
-        log.debug(__name__, 'Log trace %s, ... %s %s', x, gc.mem_free(), gc.mem_alloc())
+        log.debug(__name__, 'Log trace %s, ... F: %s A: %s, S: %s', x, gc.mem_free(), gc.mem_alloc(), micropython.stack_use())
 
     def assrt(self, condition, msg=None):
         """
