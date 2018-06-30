@@ -956,10 +956,6 @@ class TTransactionBuilder(object):
         tuple as returned from the Trezor
         :return: Generated signature MGs[i]
         """
-        from apps.monero.xmr.serialize_messages.ct_keys import CtKey
-        from trezor.messages.MoneroTsxSignInputResp import MoneroTsxSignInputResp
-        from apps.monero.xmr.enc import chacha_poly
-
         self.state.set_signature()
         await self.trezor.iface.transaction_step(self.STEP_SIGN)
 
@@ -985,6 +981,7 @@ class TTransactionBuilder(object):
             if not common.ct_equal(pseudo_out_hmac_comp, pseudo_out_hmac):
                 raise ValueError('HMAC is not correct')
 
+            from apps.monero.xmr.enc import chacha_poly
             alpha_c = chacha_poly.decrypt_pack(self.enc_key_txin_alpha(inv_idx), bytes(alpha))
             alpha_c = crypto.decodeint(alpha_c)
             pseudo_out_c = crypto.decodepoint(pseudo_out)
@@ -998,6 +995,7 @@ class TTransactionBuilder(object):
             pseudo_out_c = None
 
         # Basic setup, sanity check
+        from apps.monero.xmr.serialize_messages.ct_keys import CtKey
         index = src_entr.real_output
         in_sk = CtKey(dest=self.input_secrets[self.inp_idx], mask=crypto.decodeint(src_entr.mask))
         kLRki = src_entr.multisig_kLRki if self.multi_sig else None
@@ -1047,7 +1045,9 @@ class TTransactionBuilder(object):
             self.state.set_signature_done()
             await self.trezor.iface.transaction_signed()
 
-        return MoneroTsxSignInputResp(signature=await misc.dump_msg(mgs[0], preallocate=488), cout=cout)
+        gc.collect()
+        from trezor.messages.MoneroTsxSignInputResp import MoneroTsxSignInputResp
+        return MoneroTsxSignInputResp(signature=await misc.dump_msg_gc(mgs[0], preallocate=488, del_msg=True), cout=cout)
 
     async def final_msg(self, *args, **kwargs):
         """
