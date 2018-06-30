@@ -976,11 +976,13 @@ class TTransactionBuilder(object):
         if not common.ct_equal(hmac_vini_comp, hmac_vini):
             raise ValueError('HMAC is not correct')
 
+        gc.collect()
         if self.use_simple_rct and not self.in_memory():
             pseudo_out_hmac_comp = crypto.compute_hmac(self.hmac_key_txin_comm(inv_idx), pseudo_out)
             if not common.ct_equal(pseudo_out_hmac_comp, pseudo_out_hmac):
                 raise ValueError('HMAC is not correct')
 
+            gc.collect()
             from apps.monero.xmr.enc import chacha_poly
             alpha_c = chacha_poly.decrypt_pack(self.enc_key_txin_alpha(inv_idx), bytes(alpha))
             alpha_c = crypto.decodeint(alpha_c)
@@ -994,6 +996,7 @@ class TTransactionBuilder(object):
             alpha_c = None
             pseudo_out_c = None
 
+        gc.collect()
         # Basic setup, sanity check
         index = src_entr.real_output
         in_sk = misc.StdObj(dest=self.input_secrets[self.inp_idx], mask=crypto.decodeint(src_entr.mask))
@@ -1002,8 +1005,10 @@ class TTransactionBuilder(object):
         # Private key correctness test
         self.assrt(crypto.point_eq(crypto.decodepoint(src_entr.outputs[src_entr.real_output][1].dest),
                                    crypto.scalarmult_base(in_sk.dest)))
+        gc.collect()
         self.assrt(crypto.point_eq(crypto.decodepoint(src_entr.outputs[src_entr.real_output][1].mask),
                                    crypto.gen_c(in_sk.mask, src_entr.amount)))
+        gc.collect()
 
         # RCT signature
         gc.collect()
@@ -1030,11 +1035,13 @@ class TTransactionBuilder(object):
             mg, msc = mlsag2.prove_rct_mg(self.full_message, mix_ring,
                                           [in_sk], self.output_sk, self.output_pk, kLRki, None, index, txn_fee_key)
 
+        gc.collect()
         # Encode
         from apps.monero.xmr.sub.recode import recode_msg
         mgs = recode_msg([mg])
         cout = None
 
+        gc.collect()
         # Multisig values returned encrypted, keys returned after finished successfully.
         if self.multi_sig:
             from apps.monero.xmr.enc import chacha_poly
