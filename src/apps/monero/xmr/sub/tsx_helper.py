@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Author: Dusan Klinec, ph4r05, 2018
+from apps.monero.xmr import crypto
 from apps.monero.xmr.serialize.readwriter import MemoryReaderWriter
 from apps.monero.xmr.serialize_messages.tx_extra import TxExtraField, TxExtraAdditionalPubKeys
 from apps.monero.xmr.serialize_messages.addr import AccountPublicAddress
 from apps.monero.xmr.serialize import xmrserialize
-from apps.monero.xmr import crypto
 
 
 async def parse_extra_fields(extra_buff):
@@ -15,7 +15,7 @@ async def parse_extra_fields(extra_buff):
     :return:
     """
     extras = []
-    rw = MemoryReaderWriter(list(extra_buff))
+    rw = MemoryReaderWriter(extra_buff)
     ar2 = xmrserialize.Archive(rw, False)
     while len(rw.get_buffer()) > 0:
         extras.append(await ar2.variant(elem_type=TxExtraField))
@@ -103,7 +103,7 @@ def get_destination_view_key_pub(destinations, change_addr=None):
         if dest.addr == addr:
             continue
         if count > 0:
-            return [0]*32
+            return bytearray(32)
         addr = dest.addr
         count += 1
     return addr.m_view_public_key
@@ -119,8 +119,9 @@ def encrypt_payment_id(payment_id, public_key, secret_key):
     :return:
     """
     derivation_p = crypto.generate_key_derivation(public_key, secret_key)
-    derivation = crypto.encodepoint(derivation_p)
-    derivation += b'\x8b'
+    derivation = bytearray(33)
+    derivation = crypto.encodepoint_into(derivation_p, derivation)
+    derivation[32] += 0x8b
     hash = crypto.cn_fast_hash(derivation)
     pm_copy = bytearray(payment_id)
     for i in range(8):
@@ -175,8 +176,10 @@ def add_tx_pub_key_to_extra(tx_extra, pub_key):
     :param pub_key:
     :return:
     """
-    tx_extra += b'\x01' + crypto.encodepoint(pub_key)  # TX_EXTRA_TAG_PUBKEY
-    return tx_extra
+    to_add = bytearray(33)
+    to_add[0] = 1
+    crypto.encodepoint_into(pub_key, memoryview(to_add)[1:])  # TX_EXTRA_TAG_PUBKEY
+    return tx_extra + to_add
 
 
 async def add_additional_tx_pub_keys_to_extra(tx_extra, additional_pub_keys=None, pub_enc=None):
