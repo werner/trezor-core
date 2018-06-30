@@ -3,43 +3,36 @@
 # Author: Dusan Klinec, ph4r05, 2018
 
 import gc
+import sys
 import micropython
 from trezor import log
 
 
-TX_STATE = None
-
-
-async def layout_sign_tx(ctx, msg):
-    log.debug(__name__, '### Mem Free: {} Allocated: {}'.format(gc.mem_free(), gc.mem_alloc()))
-
-    from trezor.messages.MoneroRespError import MoneroRespError
-    from apps.monero.protocol.tsx_sign import TsxSigner
-
-    log.debug(__name__, '### Mem Free: {} Allocated: {}'.format(gc.mem_free(), gc.mem_alloc()))
-
-    global TX_STATE
-
-    log.debug(__name__, '\n\n\ntxsign: %s', TX_STATE)
-
+async def layout_sign_tx(state, ctx, msg):
+    gc.threshold(gc.mem_free() // 4 + gc.mem_alloc())
+    log.debug(__name__, '############################ TSX. Free: {} Allocated: {} thr: {}'.format(gc.mem_free(), gc.mem_alloc(), gc.mem_free() // 4 + gc.mem_alloc()))
     gc.collect()
     micropython.mem_info()
-    micropython.mem_info(1)
-    log.debug(__name__, '### Mem Free: {} Allocated: {}'.format(gc.mem_free(), gc.mem_alloc()))
 
-    if TX_STATE is None or msg.init:
-        TX_STATE = TsxSigner()
+    from apps.monero.protocol.tsx_sign import TsxSigner
+    log.debug(__name__, 'TsxSigner. Free: {} Allocated: {}'.format(gc.mem_free(), gc.mem_alloc()))
+    log.debug(__name__, 'TsxState: %s', state.ctx_sign)
+    gc.collect()
 
     try:
-        res = await TX_STATE.sign(ctx, msg)
-        if await TX_STATE.should_purge():
-            TX_STATE = None
+        signer = TsxSigner()
+        res = await signer.sign(ctx, state.ctx_sign, msg)
+        if await signer.should_purge():
+            state.ctx_sign = None
+        else:
+            state.ctx_sign = await signer.state_save()
 
         return res
 
     except Exception as e:
-        TX_STATE = None
-        return MoneroRespError(exc=str(e))
+        state.ctx_sign = None
+        log.error(__name__, 'Tsx exception: %s %s', type(e), e)
+        raise
 
 
 

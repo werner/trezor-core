@@ -4,13 +4,17 @@ from trezor.messages.wire_types import \
 
 
 import gc
-import micropython
 from trezor import log
 
-# persistent state objects
-from apps.monero.sign_tx import layout_sign_tx
-from apps.monero.key_image_sync import layout_key_image_sync
 
+# persistent state objects
+class Holder(object):
+    def __init__(self):
+        self.ctx_sign = None
+        self.ctx_ki = None
+
+
+STATE = Holder()
 
 
 def dispatch_MoneroGetAddress(*args, **kwargs):
@@ -29,11 +33,13 @@ def dispatch_MoneroGetKey(*args, **kwargs):
 
 
 def dispatch_MoneroTsxSign(*args, **kwargs):
-    return layout_sign_tx(*args, **kwargs)
+    from apps.monero.sign_tx import layout_sign_tx
+    return layout_sign_tx(STATE, *args, **kwargs)
 
 
 def dispatch_MoneroKeyImageSync(*args, **kwargs):
-    return layout_key_image_sync(*args, **kwargs)
+    from apps.monero.key_image_sync import layout_key_image_sync
+    return layout_key_image_sync(STATE, *args, **kwargs)
 
 
 def boot():
