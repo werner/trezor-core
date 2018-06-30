@@ -6,7 +6,7 @@
 from apps.monero.xmr import crypto
 
 
-def prove_range(amount, last_mask=None, decode=False, backend_impl=True, byte_enc=True):
+def prove_range(amount, last_mask=None, decode=False, backend_impl=True, byte_enc=True, rsig=None):
     """
     Range proof generator.
     In order to minimize the memory consumption and CPU usage during transaction generation the returned values
@@ -17,6 +17,7 @@ def prove_range(amount, last_mask=None, decode=False, backend_impl=True, byte_en
     :param backend_impl: backend implementation, if available
     :param decode: decodes output
     :param byte_enc: byte encoded
+    :param rsig: buffer for rsig
     :return:
     """
     if not backend_impl or not byte_enc or decode:
@@ -24,9 +25,12 @@ def prove_range(amount, last_mask=None, decode=False, backend_impl=True, byte_en
 
     C, a, R = None, None, None
     try:
+        if rsig is None:
+            rsig = bytearray(32 * (64 + 64 + 64 + 1))
+
         buf_ai = bytearray(4*9*64)
         buf_alpha = bytearray(4*9*64)
-        C, a, R = crypto.prove_range(amount, last_mask, buf_ai, buf_alpha)  # backend returns encoded
+        C, a, R = crypto.prove_range(rsig, amount, last_mask, buf_ai, buf_alpha)  # backend returns encoded
 
     finally:
         import gc
