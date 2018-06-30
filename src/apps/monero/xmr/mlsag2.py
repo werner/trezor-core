@@ -84,7 +84,13 @@ def hasher_message(message):
     from apps.monero.xmr.sub.keccak_hasher import HashWrapper
     ctx = HashWrapper(crypto.get_keccak())
     ctx.update(message)
+    ctx.zbuff = bytearray(32)
     return ctx
+
+
+def hash_point(hasher, point):
+    crypto.encodepoint_into(point, hasher.zbuff)
+    hasher.update(hasher.zbuff)
 
 
 def gen_mlsag_assert(pk, xx, kLRki, mscout, index, dsRows):
@@ -148,8 +154,8 @@ def gen_mlsag_rows(message, rv, pk, xx, kLRki, index, dsRows, rows, cols):
         if kLRki:
             alpha[i] = kLRki.k
             rv.II[i] = kLRki.ki
-            hasher.update(crypto.encodepoint(kLRki.L))
-            hasher.update(crypto.encodepoint(kLRki.R))
+            hash_point(hasher, kLRki.L)
+            hash_point(hasher, kLRki.R)
 
         else:
             Hi = crypto.hash_to_ec(crypto.encodepoint(pk[index][i]))  # originally hashToPoint()
@@ -157,16 +163,16 @@ def gen_mlsag_rows(message, rv, pk, xx, kLRki, index, dsRows, rows, cols):
             aGi = crypto.scalarmult_base(alpha[i])
             aHPi = crypto.scalarmult(Hi, alpha[i])
             rv.II[i] = crypto.scalarmult(Hi, xx[i])
-            hasher.update(crypto.encodepoint(aGi))
-            hasher.update(crypto.encodepoint(aHPi))
+            hash_point(hasher, aGi)
+            hash_point(hasher, aHPi)
 
         Ip[i] = crypto.precomp(rv.II[i])
 
     for i in range(dsRows, rows):
         alpha[i] = crypto.random_scalar()
         aGi = crypto.scalarmult_base(alpha[i])
-        hasher.update(crypto.encodepoint(pk[index][i]))
-        hasher.update(crypto.encodepoint(aGi))
+        hash_point(hasher, pk[index][i])
+        hash_point(hasher, aGi)
 
     c_old = hasher.digest()
     c_old = crypto.sc_reduce32(crypto.decodeint(c_old))
@@ -207,14 +213,14 @@ def gen_mlsag_ext(message, pk, xx, kLRki, mscout, index, dsRows):
             L = crypto.add_keys2(rv.ss[i][j], c_old, pk[i][j])
             Hi = crypto.hash_to_ec(crypto.encodepoint(pk[i][j]))  # originally hashToPoint()
             R = crypto.add_keys3(rv.ss[i][j], Hi, c_old, Ip[j])
-            hasher.update(crypto.encodepoint(pk[i][j]))
-            hasher.update(crypto.encodepoint(L))
-            hasher.update(crypto.encodepoint(R))
+            hash_point(hasher, pk[i][j])
+            hash_point(hasher, L)
+            hash_point(hasher, R)
 
         for j in range(dsRows, rows):
             L = crypto.add_keys2(rv.ss[i][j], c_old, pk[i][j])
-            hasher.update(crypto.encodepoint(pk[i][j]))
-            hasher.update(crypto.encodepoint(L))
+            hash_point(hasher, pk[i][j])
+            hash_point(hasher, L)
 
         c = crypto.sc_reduce32(crypto.decodeint(hasher.digest()))
         c_old = c
