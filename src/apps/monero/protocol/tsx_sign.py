@@ -84,7 +84,7 @@ class TsxSigner(object):
         if msg.init:
             log.debug(__name__, 'setup')
             await self.setup(msg.init)
-        await self.restore(state)
+        await self.restore(state if not msg.init else None)
 
         if msg.init:
             log.debug(__name__, 'sign_init')
