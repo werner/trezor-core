@@ -995,9 +995,8 @@ class TTransactionBuilder(object):
             pseudo_out_c = None
 
         # Basic setup, sanity check
-        from apps.monero.xmr.serialize_messages.ct_keys import CtKey
         index = src_entr.real_output
-        in_sk = CtKey(dest=self.input_secrets[self.inp_idx], mask=crypto.decodeint(src_entr.mask))
+        in_sk = misc.StdObj(dest=self.input_secrets[self.inp_idx], mask=crypto.decodeint(src_entr.mask))
         kLRki = src_entr.multisig_kLRki if self.multi_sig else None
 
         # Private key correctness test
