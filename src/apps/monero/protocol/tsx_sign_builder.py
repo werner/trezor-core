@@ -710,11 +710,9 @@ class TTransactionBuilder(object):
         else:
             C, mask, rsig = ring_ct.prove_range(amount, last_mask, backend_impl=True, byte_enc=True)
 
-            # noinspection PyUnreachableCode
-            if __debug__:
-                self.assrt(crypto.point_eq(C, crypto.point_add(
-                    crypto.scalarmult_base(mask),
-                    crypto.scalarmult_h(amount))))
+            self.assrt(crypto.point_eq(C, crypto.point_add(
+                crypto.scalarmult_base(mask),
+                crypto.scalarmult_h(amount))), 'rproof')
 
             # Incremental hashing
             await self.full_message_hasher.rsig_val(rsig, self.use_bulletproof, raw=True)
