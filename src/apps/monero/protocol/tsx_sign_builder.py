@@ -1037,6 +1037,7 @@ class TTransactionBuilder(object):
 
         # Multisig values returned encrypted, keys returned after finished successfully.
         if self.multi_sig:
+            from apps.monero.xmr.enc import chacha_poly
             cout = chacha_poly.encrypt_pack(self.enc_key_cout(), crypto.encodeint(msc))
 
         # Final state transition
