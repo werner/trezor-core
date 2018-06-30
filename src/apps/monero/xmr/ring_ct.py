@@ -22,7 +22,18 @@ def prove_range(amount, last_mask=None, decode=False, backend_impl=True, byte_en
     if not backend_impl or not byte_enc or decode:
         raise ValueError('Unsupported params')
 
-    C, a, R = crypto.prove_range(amount, last_mask)  # backend returns encoded
+    C, a, R = None, None, None
+    try:
+        buf_ai = bytearray(4*9*64)
+        buf_alpha = bytearray(4*9*64)
+        C, a, R = crypto.prove_range(amount, last_mask, buf_ai, buf_alpha)  # backend returns encoded
+
+    finally:
+        import gc
+        buf_ai = None
+        buf_alpha = None
+        gc.collect()
+
     return C, a, R
 
 

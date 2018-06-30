@@ -583,7 +583,7 @@ def derive_secret_key(derivation, output_index, base):
     return tcry.xmr_derive_private_key(derivation, output_index, base)
 
 
-def prove_range(amount, last_mask=None):
+def prove_range(amount, last_mask=None, *args, **kwargs):
     """
     Range proof provided by the backend. Implemented in C for speed.
 
@@ -591,7 +591,7 @@ def prove_range(amount, last_mask=None):
     :param last_mask:
     :return:
     """
-    C, a, R = tcry.gen_range_proof(amount, last_mask)
+    C, a, R = tcry.gen_range_proof(amount, last_mask, *args, **kwargs)
 
     # Trezor micropython extmod returns byte-serialized/flattened rsig
     return C, a, R
