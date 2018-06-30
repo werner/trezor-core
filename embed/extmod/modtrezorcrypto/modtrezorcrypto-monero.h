@@ -848,37 +848,47 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_monero_xmr_gen_c_obj
 /// def
 STATIC mp_obj_t mod_trezorcrypto_monero_gen_range_proof(size_t n_args, const mp_obj_t *args) {
     uint64_t amount;
-    xmr_range_sig_t rsig;
     ge25519 C;
     bignum256modm mask;
 
+    if (sizeof(xmr_range_sig_t) != RSIG_SIZE){
+        mp_raise_ValueError("rsize invalid");
+    }
+
+    mp_buffer_info_t rsig_buff;
+    mp_get_buffer_raise(args[0], &rsig_buff, MP_BUFFER_WRITE);
+    if (rsig_buff.len < RSIG_SIZE){
+        mp_raise_ValueError("rsize buff too small");
+    }
+
+    xmr_range_sig_t * rsig = (xmr_range_sig_t*)rsig_buff.buf;
     bignum256modm * last_mask = NULL;
-    amount = mp_obj_get_uint64(args[0]);
-    if (n_args > 1 && MP_OBJ_IS_SCALAR(args[1])){
-        last_mask = &MP_OBJ_SCALAR(args[1]);
+    amount = mp_obj_get_uint64(args[1]);
+    if (n_args > 2 && MP_OBJ_IS_SCALAR(args[2])){
+        last_mask = &MP_OBJ_SCALAR(args[2]);
     }
 
-    if (n_args > 3){
-      mp_buffer_info_t buf_ai, buf_alpha;
-      mp_get_buffer_raise(args[2], &buf_ai, MP_BUFFER_WRITE);
-      mp_get_buffer_raise(args[3], &buf_alpha, MP_BUFFER_WRITE);
-      if (buf_ai.len < 4*9*64 || buf_alpha.len < 4*9*64) {
-        mp_raise_ValueError("Buffer too small");
-      }
+    if (n_args > 4){
+        const size_t mem_limit = sizeof(bignum256modm)*64;
+        mp_buffer_info_t buf_ai, buf_alpha;
+        mp_get_buffer_raise(args[3], &buf_ai, MP_BUFFER_WRITE);
+        mp_get_buffer_raise(args[4], &buf_alpha, MP_BUFFER_WRITE);
+        if (buf_ai.len < mem_limit || buf_alpha.len < mem_limit) {
+            mp_raise_ValueError("Buffer too small");
+        }
 
-      xmr_gen_range_sig_ex(&rsig, &C, mask, amount, last_mask, buf_ai.buf, buf_alpha.buf);
+        xmr_gen_range_sig_ex(rsig, &C, mask, amount, last_mask, buf_ai.buf, buf_alpha.buf);
     } else {
-      xmr_gen_range_sig(&rsig, &C, mask, amount, last_mask);
+        xmr_gen_range_sig(rsig, &C, mask, amount, last_mask);
     }
-
-    rsig_union rsigun = (rsig_union)rsig;
+    
     mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(3, NULL));
     tuple->items[0] = mp_obj_from_ge25519(&C);
     tuple->items[1] = mp_obj_from_scalar(mask);
-    tuple->items[2] = mp_obj_new_bytes(rsigun.d, RSIG_SIZE);
+    tuple->items[2] = args[0];
     return MP_OBJ_FROM_PTR(tuple);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_monero_gen_range_proof_obj, 1, 4, mod_trezorcrypto_monero_gen_range_proof);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_monero_gen_range_proof_obj, 2, 5, mod_trezorcrypto_monero_gen_range_proof);
 
 
 /// def
