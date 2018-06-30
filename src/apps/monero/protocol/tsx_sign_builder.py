@@ -534,6 +534,8 @@ class TTransactionBuilder(object):
         :return:
         """
         self.state.input_done()
+        del self.subaddresses
+
         if self.inp_idx + 1 != self.num_inputs():
             raise ValueError('Input count mismatch')
 
@@ -732,6 +734,10 @@ class TTransactionBuilder(object):
 
         return rsig, out_pk, ecdh_info
 
+    async def _set_out1_prefix(self):
+        from apps.monero.xmr.serialize_messages.tx_prefix import TransactionPrefix
+        await self.tx_prefix_hasher.ar.container_size(self.num_dests(), TransactionPrefix.f_specs()[3][1])
+
     async def set_out1(self, dst_entr, dst_entr_hmac):
         """
         Set destination entry one by one.
@@ -742,11 +748,7 @@ class TTransactionBuilder(object):
         :param dst_entr_hmac
         :return:
         """
-        from trezor.messages.MoneroTsxSetOutputResp import MoneroTsxSetOutputResp
         from apps.monero.xmr.serialize import xmrserialize
-        from apps.monero.xmr.serialize_messages.tx_prefix import TransactionPrefix
-        from apps.monero.xmr.serialize_messages.tx_prefix import TxoutToKey
-        from apps.monero.xmr.serialize_messages.tx_prefix import TxOut
 
         await self.trezor.iface.transaction_step(self.STEP_OUT, self.out_idx + 1)
 
@@ -764,11 +766,13 @@ class TTransactionBuilder(object):
         dst_entr_hmac_computed = await self.gen_hmac_tsxdest(dst_entr, self.out_idx)
         if not common.ct_equal(dst_entr_hmac, dst_entr_hmac_computed):
             raise ValueError('HMAC invalid')
+        gc.collect()
 
         # First output - tx prefix hasher - size of the container
         self.tx_prefix_hasher.refresh(xser=xmrserialize)
         if self.out_idx == 0:
-            await self.tx_prefix_hasher.ar.container_size(self.num_dests(), TransactionPrefix.f_specs()[3][1])
+            await self._set_out1_prefix()
+        gc.collect()
 
         additional_txkey = None
         additional_txkey_priv = None
@@ -795,20 +799,27 @@ class TTransactionBuilder(object):
             deriv_priv = additional_txkey_priv if dst_entr.is_subaddress and self.need_additional_txkeys else self.r
             derivation = monero.generate_key_derivation(crypto.decodepoint(dst_entr.addr.m_view_public_key), deriv_priv)
 
+        gc.collect()
         amount_key = crypto.derivation_to_scalar(derivation, self.out_idx)
         tx_out_key = crypto.derive_public_key(derivation, self.out_idx, crypto.decodepoint(dst_entr.addr.m_spend_public_key))
+
+        from apps.monero.xmr.serialize_messages.tx_prefix import TxoutToKey
+        from apps.monero.xmr.serialize_messages.tx_prefix import TxOut
         tk = TxoutToKey(key=crypto.encodepoint(tx_out_key))
         tx_out = TxOut(amount=0, target=tk)
         self.summary_outs_money += dst_entr.amount
 
         # Tx header prefix hashing
         await self.tx_prefix_hasher.ar.field(tx_out, TxOut)
+        gc.collect()
 
         # Hmac dest_entr.
         hmac_vouti = await self.gen_hmac_vouti(dst_entr, tx_out, self.out_idx)
+        gc.collect()
 
         # Range proof, out_pk, ecdh_info
         rsig, out_pk, ecdh_info = await self.range_proof(self.out_idx, dest_pub_key=tk.key, amount=dst_entr.amount, amount_key=amount_key)
+        gc.collect()
 
         # Incremental hashing of the ECDH info.
         # RctSigBase allows to hash only one of the (ecdh, out_pk) as they are serialized
@@ -818,6 +829,8 @@ class TTransactionBuilder(object):
         # Output_pk is stored to the state as it is used during the signature and hashed to the
         # RctSigBase later.
         self.output_pk.append(out_pk)
+        gc.collect()
+        from trezor.messages.MoneroTsxSetOutputResp import MoneroTsxSetOutputResp
         return MoneroTsxSetOutputResp(tx_out=await misc.dump_msg(tx_out, preallocate=34),
                                       vouti_hmac=hmac_vouti, rsig=rsig,  # rsig is already byte-encoded
                                       out_pk=await misc.dump_msg(out_pk, preallocate=64),
@@ -882,7 +895,11 @@ class TTransactionBuilder(object):
         from trezor.messages.MoneroTsxAllOutSetResp import MoneroTsxAllOutSetResp
 
         rv_pb = MoneroRctSig(txn_fee=rv.txnFee, message=rv.message, rv_type=rv.type)
-        return MoneroTsxAllOutSetResp(extra=self.tx.extra, tx_prefix_hash=self.tx_prefix_hash, rv=rv_pb)
+        extra_b = self.tx.extra
+        del self.tx
+        del self.additional_tx_public_keys
+
+        return MoneroTsxAllOutSetResp(extra=extra_b, tx_prefix_hash=self.tx_prefix_hash, rv=rv_pb)
 
     async def tsx_mlsag_ecdh_info(self):
         """
