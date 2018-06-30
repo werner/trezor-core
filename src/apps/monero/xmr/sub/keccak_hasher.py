@@ -28,10 +28,7 @@ class HashWrapper(object):
     def update(self, buf):
         if len(buf) == 0:
             return
-        if isinstance(buf, bytearray):
-            self.ctx.update(buf)
-        else:
-            self.ctx.update(buf)
+        self.ctx.update(buf)
 
     def digest(self):
         return self.ctx.digest()
