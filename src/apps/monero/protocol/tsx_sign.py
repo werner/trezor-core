@@ -52,10 +52,23 @@ class TsxSigner(object):
         from apps.monero.controller import wrapper
         self.creds = await wrapper.monero_get_creds(self.ctx, msg.address_n or (), msg.network_type)
 
-    async def sign(self, ctx, msg):
+    async def restore(self, state):
+        from apps.monero.protocol.tsx_sign_builder import TTransactionBuilder
+        self.tsx_obj = TTransactionBuilder(self, creds=self.creds, state=state)
+
+    async def state_save(self):
+        try:
+            s = self.tsx_obj.state_save()
+            self.tsx_obj = None
+        finally:
+            gc.collect()
+        return s
+
+    async def sign(self, ctx, state, msg):
         """
         Main multiplex point
         :param ctx:
+        :param state:
         :param msg:
         :return:
         """
@@ -71,6 +84,9 @@ class TsxSigner(object):
         if msg.init:
             log.debug(__name__, 'setup')
             await self.setup(msg.init)
+        await self.restore(state)
+
+        if msg.init:
             log.debug(__name__, 'sign_init')
             return await self.tsx_init(msg.init.tsx_data)
         elif msg.set_input:
@@ -106,9 +122,7 @@ class TsxSigner(object):
         :param tsx_data:
         :return:
         """
-        from apps.monero.protocol.tsx_sign_builder import TTransactionBuilder
         self.tsx_ctr += 1
-        self.tsx_obj = TTransactionBuilder(self, creds=self.creds)
         try:
             tsxd = await misc.translate_tsx_data(tsx_data)
             del tsx_data
