@@ -1181,4 +1181,7 @@ class TTransactionBuilder(object):
         key_buff = crypto.encodeint(self.r) + b''.join([crypto.encodeint(x) for x in self.additional_tx_private_keys])
         tx_enc_keys = chacha_poly.encrypt_pack(tx_key, key_buff)
 
+        await self.trezor.iface.transaction_finished()
+        gc.collect()
+
         return MoneroTsxFinalResp(cout_key=cout_key, salt=salt, rand_mult=rand_mult, tx_enc_keys=tx_enc_keys)
