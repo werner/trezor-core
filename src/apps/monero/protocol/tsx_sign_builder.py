@@ -371,7 +371,7 @@ class TTransactionBuilder(object):
         await self.tx_prefix_hasher.ar.message_field(self.tx, tx_fields[0])
         await self.tx_prefix_hasher.ar.message_field(self.tx, tx_fields[1])
         await self.tx_prefix_hasher.ar.container_size(self.num_inputs(), tx_fields[2][1])
-        log.debug(__name__, '### 5Mem Free: {} Allocated: {}'.format(gc.mem_free(), gc.mem_alloc()))
+        self._log_trace(10)
 
     async def init_transaction(self, tsx_data, tsx_ctr):
         """
@@ -383,11 +383,9 @@ class TTransactionBuilder(object):
         """
         from apps.monero.xmr.sub.addr import classify_subaddresses
 
-        log.debug(__name__, '### BLD 0Mem Free: {} Allocated: {}'.format(gc.mem_free(), gc.mem_alloc()))
         self.gen_r()
         self.state.init_tsx()
-
-        log.debug(__name__, '### 1Mem Free: {} Allocated: {}'.format(gc.mem_free(), gc.mem_alloc()))
+        self._log_trace(1)
 
         # Ask for confirmation
         confirmation = await self.trezor.iface.confirm_transaction(tsx_data, self.creds)
@@ -396,8 +394,7 @@ class TTransactionBuilder(object):
             return MoneroRespError(reason='rejected')
 
         gc.collect()
-        log.debug(__name__, '### 3Mem Free: {} Allocated: {}'.format(gc.mem_free(), gc.mem_alloc()))
-        micropython.mem_info(1)
+        self._log_trace(3)
 
         # Basic transaction parameters
         self.input_count = tsx_data.num_inputs
@@ -428,7 +425,8 @@ class TTransactionBuilder(object):
             self.r_pub = crypto.ge_scalarmult(self.r, crypto.decodepoint(single_dest_subaddress.m_spend_public_key))
 
         self.need_additional_txkeys = num_subaddresses > 0 and (num_stdaddresses > 0 or num_subaddresses > 1)
-        log.debug(__name__, '### 4Mem Free: {} Allocated: {}'.format(gc.mem_free(), gc.mem_alloc()))
+        self._log_trace(4)
+
         # Extra processing, payment id
         self.tx.version = 2
         self.tx.unlock_time = tsx_data.unlock_time
