@@ -143,6 +143,15 @@ async def light_on():
     loop.schedule(slide)
 
 
+@ui.layout
+async def ui_text(text, tm=None) -> None:
+    from trezor import loop
+    text.render()
+
+    if tm is not None:
+        await loop.sleep(tm)
+
+
 async def simple_text(text, tm=None) -> None:
     from trezor import loop
     from trezor.ui import display
