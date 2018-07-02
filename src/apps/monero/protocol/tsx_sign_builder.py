@@ -752,11 +752,11 @@ class TTransactionBuilder(object):
         :return:
         """
         from apps.monero.xmr import ring_ct
-        from apps.monero.xmr.serialize_messages.ct_keys import CtKey
+
         rsig = bytearray(32 * (64 + 64 + 64 + 1))
         rsig_mv = memoryview(rsig)
 
-        out_pk = CtKey(dest=dest_pub_key)
+        out_pk = misc.StdObj(dest=dest_pub_key, mask=None)
         is_last = idx + 1 == self.num_dests()
         last_mask = None if not is_last or not self.use_simple_rct else crypto.sc_sub(self.sumpouts_alphas, self.sumout)
 
@@ -784,7 +784,7 @@ class TTransactionBuilder(object):
         # Mask sum
         out_pk.mask = crypto.encodepoint(C)
         self.sumout = crypto.sc_add(self.sumout, mask)
-        self.output_sk.append(CtKey(mask=mask))
+        self.output_sk.append(misc.StdObj(mask=mask))
 
         # ECDH masking
         from apps.monero.xmr.sub.recode import recode_ecdh
@@ -904,10 +904,11 @@ class TTransactionBuilder(object):
 
         self._log_trace(10)
         from trezor.messages.MoneroTsxSetOutputResp import MoneroTsxSetOutputResp
-        self._log_trace(11)
+        from apps.monero.xmr.serialize_messages.ct_keys import CtKey
+
         return MoneroTsxSetOutputResp(tx_out=await misc.dump_msg(tx_out, preallocate=34),
                                       vouti_hmac=hmac_vouti, rsig=rsig,  # rsig is already byte-encoded
-                                      out_pk=await misc.dump_msg(out_pk, preallocate=64),
+                                      out_pk=await misc.dump_msg(out_pk, preallocate=64, msg_type=CtKey),
                                       ecdh_info=await misc.dump_msg(ecdh_info, preallocate=64))
 
     async def all_out1_set_tx_extra(self):
