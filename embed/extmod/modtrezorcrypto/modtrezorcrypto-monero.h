@@ -55,17 +55,21 @@ STATIC const mp_obj_type_t mod_trezorcrypto_monero_hasher_type;
 
 
 static uint64_t mp_obj_uint64_get_checked(mp_const_obj_t self_in) {
+#if MICROPY_LONGINT_IMPL != MICROPY_LONGINT_IMPL_MPZ
+#  error "MPZ supported only"
+#endif
+
     if (MP_OBJ_IS_SMALL_INT(self_in)) {
         return MP_OBJ_SMALL_INT_VALUE(self_in);
-    } else {  // TODO: LONGLONG IMPL IFDEF
+    } else {
         byte buff[8];
         uint64_t res = 0;
         mp_obj_t * o = MP_OBJ_TO_PTR(self_in);
 
-        mp_obj_int_to_bytes_impl(MP_OBJ_FROM_PTR(o), false, 8, buff);
+        mp_obj_int_to_bytes_impl(o, true, 8, buff);
         for (int i = 0; i<8; i++){
-            res <<= i*8;
-            res |= buff[i] & 0xff;
+            res <<= i > 0 ? 8 : 0;
+            res |= (uint64_t)(buff[i] & 0xff);
         }
         return res;
     }
