@@ -525,7 +525,7 @@ class TTransactionBuilder(object):
         self.state.input()
         self.inp_idx += 1
 
-        await self.trezor.iface.transaction_step(self.STEP_INP, self.inp_idx)
+        await self.trezor.iface.transaction_step(self.STEP_INP, self.inp_idx, self.num_inputs())
 
         if self.inp_idx >= self.num_inputs():
             raise ValueError('Too many inputs')
@@ -667,7 +667,7 @@ class TTransactionBuilder(object):
         :return:
         """
         from trezor.messages.MoneroTsxInputViniResp import MoneroTsxInputViniResp
-        await self.trezor.iface.transaction_step(self.STEP_VINI, self.inp_idx + 1)
+        await self.trezor.iface.transaction_step(self.STEP_VINI, self.inp_idx + 1, self.num_inputs())
 
         if self.in_memory():
             return
@@ -810,7 +810,7 @@ class TTransactionBuilder(object):
         """
         from apps.monero.xmr.serialize import xmrserialize
 
-        await self.trezor.iface.transaction_step(self.STEP_OUT, self.out_idx + 1)
+        await self.trezor.iface.transaction_step(self.STEP_OUT, self.out_idx + 1, self.num_dests())
         self._log_trace(1)
 
         if self.state.is_input_vins() and self.inp_idx + 1 != self.num_inputs():
@@ -1047,7 +1047,7 @@ class TTransactionBuilder(object):
         :return: Generated signature MGs[i]
         """
         self.state.set_signature()
-        await self.trezor.iface.transaction_step(self.STEP_SIGN)
+        await self.trezor.iface.transaction_step(self.STEP_SIGN, self.inp_idx + 1, self.num_inputs())
 
         self.inp_idx += 1
         if self.inp_idx >= self.num_inputs():

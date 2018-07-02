@@ -1,5 +1,4 @@
-from apps.common.confirm import confirm, require_confirm, require_hold_to_confirm
-from apps.wallet.get_public_key import _show_pubkey
+from apps.common.confirm import require_confirm, require_hold_to_confirm
 from trezor import ui
 from trezor.messages import ButtonRequestType
 from trezor.ui.text import Text
@@ -57,6 +56,7 @@ async def tx_dialog(ctx, code, content, cancel_btn, confirm_btn, cancel_style, c
 
 
 async def require_confirm_tx(ctx, to, value):
+    from trezor import loop
     len_addr = (len(to) + 15) // 16
     if len_addr <= 2:
         return await require_confirm_tx_plain(ctx, to, value)
@@ -114,6 +114,7 @@ async def require_confirm_tx(ctx, to, value):
             elif cur_step + 1 < npages and reaction == CONFIRMED:
                 cur_step += 1
             elif cur_step + 1 >= npages and reaction == CONFIRMED:
+                await loop.sleep(1000 * 1000)
                 return
             elif reaction == CANCELLED:
                 cur_step -= 1
@@ -128,6 +129,29 @@ async def require_confirm_fee(ctx, value, fee):
                    ui.BOLD, format_amount(fee),
                    icon_color=ui.GREEN)
     await require_hold_to_confirm(ctx, content, ButtonRequestType.ConfirmOutput)
+
+
+@ui.layout
+async def simple_wait(tm):
+    from trezor import loop
+    await loop.sleep(tm)
+
+
+async def light_on():
+    from trezor import loop
+    slide = await ui.backlight_slide(ui.BACKLIGHT_NORMAL, delay=0)
+    loop.schedule(slide)
+
+
+async def simple_text(text, tm=None) -> None:
+    from trezor import loop
+    from trezor.ui import display
+
+    display.clear()
+    text.render()
+
+    if tm is not None:
+        await loop.sleep(tm)
 
 
 def format_amount(value):

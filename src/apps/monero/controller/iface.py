@@ -33,6 +33,8 @@ class TrezorInterface(object):
 
             await layout.require_confirm_tx(self.gctx(ctx), addr.decode('ascii'), dst.amount)
 
+        from trezor import loop
+        await loop.sleep(1 * 1000 * 1000)
         return True
 
     async def transaction_error(self, *args, **kwargs):
@@ -40,6 +42,17 @@ class TrezorInterface(object):
         Transaction error
         :return:
         """
+        from trezor import loop
+        from trezor import ui
+        from trezor.ui.text import Text
+        from apps.monero import layout
+
+        text = Text(
+            'Error', ui.ICON_SEND,
+            'Transaction failed',
+            icon_color=ui.RED)
+
+        await layout.simple_text(text, tm=3 * 1000 * 1000)
 
     async def transaction_signed(self, ctx=None):
         """
@@ -52,14 +65,53 @@ class TrezorInterface(object):
         Notifies the transaction has been completed (all data were sent)
         :return:
         """
+        from trezor import loop
+        from trezor import ui
+        from trezor.ui.text import Text
+        from apps.monero import layout
+        text = Text(
+            'Error', ui.ICON_SEND,
+            'Transaction failed',
+            icon_color=ui.RED)
 
-    async def transaction_step(self, step, sub_step=None):
+        await layout.simple_text(text, tm=3 * 1000 * 1000)
+
+    async def transaction_step(self, step, sub_step=None, sub_step_total=None):
         """
         Transaction progress
         :param step:
         :param sub_step:
+        :param sub_step_total:
         :return:
         """
+        from trezor import loop
+        from trezor import ui
+        from trezor.ui.text import Text
+        from apps.monero import layout
+
+        info = []
+        if step == 100:
+            info = ['Processing inputs', '%d/%d' % (sub_step, sub_step_total)]
+        elif step == 200:
+            info = ['Sorting']
+        elif step == 300:
+            info = ['Processing inputs', 'phase 2', '%d/%d' % (sub_step, sub_step_total)]
+        elif step == 400:
+            info = ['Processing outputs', '%d/%d' % (sub_step, sub_step_total)]
+        elif step == 500:
+            info = ['Postprocessing...']
+        elif step == 600:
+            info = ['Postprocessing...']
+        elif step == 700:
+            info = ['Signing inputs', '%d/%d' % (sub_step, sub_step_total)]
+        else:
+            info = ['Processing...']
+
+        text = Text(
+            'Signing transaction', ui.ICON_SEND,
+            *info,
+            icon_color=ui.BLUE)
+        await layout.simple_text(text, tm=100 * 1000)
 
     async def confirm_ki_sync(self, init_msg, ctx=None):
         """
