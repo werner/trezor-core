@@ -1,6 +1,6 @@
 from trezor.wire import register, protobuf_workflow
 from trezor.messages.wire_types import \
-    MoneroGetAddress, MoneroGetWatchKey, MoneroGetKey, MoneroTsxSign, MoneroKeyImageSync
+    MoneroGetAddress, MoneroGetWatchKey, MoneroGetKey, MoneroTsxSign, MoneroKeyImageSync, MoneroDiag
 
 
 import gc
@@ -42,9 +42,17 @@ def dispatch_MoneroKeyImageSync(*args, **kwargs):
     return layout_key_image_sync(STATE, *args, **kwargs)
 
 
+def dispatch_MoneroDiag(*args, **kwargs):
+    log.debug(__name__, '----diagnostics')
+    gc.collect()
+    from apps.monero.diag import dispatch_diag
+    return dispatch_diag(*args, **kwargs)
+
+
 def boot():
     register(MoneroGetAddress, protobuf_workflow, dispatch_MoneroGetAddress)
     register(MoneroGetWatchKey, protobuf_workflow, dispatch_MoneroGetWatchKey)
     register(MoneroGetKey, protobuf_workflow, dispatch_MoneroGetKey)
     register(MoneroTsxSign, protobuf_workflow, dispatch_MoneroTsxSign)
     register(MoneroKeyImageSync, protobuf_workflow, dispatch_MoneroKeyImageSync)
+    register(MoneroDiag, protobuf_workflow, dispatch_MoneroDiag)
