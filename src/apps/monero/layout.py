@@ -121,19 +121,6 @@ async def require_confirm_tx(ctx, to, value):
                 cur_step += 1
 
 
-async def require_confirm_public_key(ctx, public_key):
-    return await _show_pubkey(ctx, public_key)
-
-
-async def require_confirm_multisig(ctx, multisignature):
-    content = Text('Confirm transaction', ui.ICON_SEND,
-                   ('Keys group length: %s' % len(multisignature.keys_group)),
-                   ('Life time: %s' % multisignature.life_time),
-                   ('Min: %s' % multisignature.min),
-                   icon_color=ui.GREEN)
-    return await require_confirm(ctx, content, ButtonRequestType.SignTx)
-
-
 async def require_confirm_fee(ctx, value, fee):
     content = Text('Confirm transaction', ui.ICON_SEND,
                    ui.BOLD, format_amount(value),
