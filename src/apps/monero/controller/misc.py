@@ -15,11 +15,6 @@ class TrezorSecurityError(TrezorError):
         super().__init__(*args, **kwargs)
 
 
-class TrezorInvalidStateError(TrezorError):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-
 class TrezorTxPrefixHashNotMatchingError(TrezorError):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
