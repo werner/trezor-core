@@ -445,13 +445,16 @@ class TTransactionBuilder(object):
         # Sub address precomputation
         if tsx_data.account is not None and tsx_data.minor_indices:
             self.precompute_subaddr(tsx_data.account, tsx_data.minor_indices)
+        self._log_trace(5)
 
         # HMAC outputs - pinning
         hmacs = []
         for idx in range(self.num_dests()):
             c_hmac = await self.gen_hmac_tsxdest(tsx_data.outputs[idx], idx)
             hmacs.append(c_hmac)
-        log.debug(__name__, '### 6Mem Free: {} Allocated: {}'.format(gc.mem_free(), gc.mem_alloc()))
+            gc.collect()
+
+        self._log_trace(6)
 
         from trezor.messages.MoneroTsxInitResp import MoneroTsxInitResp
         return MoneroTsxInitResp(in_memory=self.in_memory(), hmacs=hmacs)
