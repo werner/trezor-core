@@ -1069,7 +1069,7 @@ class TTransactionBuilder(object):
 
         return MoneroTsxMlsagDoneResp(full_message_hash=self.full_message)
 
-    async def sign_input(self, src_entr, vini, hmac_vini, pseudo_out, pseudo_out_hmac, alpha_enc, spend_ec):
+    async def sign_input(self, src_entr, vini, hmac_vini, pseudo_out, pseudo_out_hmac, alpha_enc, spend_enc):
         """
         Generates a signature for one input.
 
@@ -1082,7 +1082,7 @@ class TTransactionBuilder(object):
         :param pseudo_out_hmac:
         :param alpha_enc: alpha mask for the current input. Only in memory offloaded scenario,
         tuple as returned from the Trezor
-        :param spend_ec:
+        :param spend_enc:
         :return: Generated signature MGs[i]
         """
         self.state.set_signature()
@@ -1131,7 +1131,7 @@ class TTransactionBuilder(object):
         # Spending secret
         if self.many_inputs():
             from apps.monero.xmr.enc import chacha_poly
-            input_secret = crypto.decodeint(chacha_poly.decrypt_pack(self.enc_key_spend(inv_idx), bytes(spend_ec)))
+            input_secret = crypto.decodeint(chacha_poly.decrypt_pack(self.enc_key_spend(inv_idx), bytes(spend_enc)))
         else:
             input_secret = self.input_secrets[self.inp_idx]
 
