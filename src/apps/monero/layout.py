@@ -45,11 +45,11 @@ async def require_confirm_tx_plain(ctx, to, value):
 
 @ui.layout
 async def tx_dialog(ctx, code, content, cancel_btn, confirm_btn, cancel_style, confirm_style):
-    from trezor.messages import wire_types
+    from trezor.messages import MessageType
     from trezor.messages.ButtonRequest import ButtonRequest
     from trezor.ui.confirm import ConfirmDialog
 
-    await ctx.call(ButtonRequest(code=code), wire_types.ButtonAck)
+    await ctx.call(ButtonRequest(code=code), MessageType.ButtonAck)
     dialog = ConfirmDialog(content, cancel=cancel_btn, confirm=confirm_btn,
                            cancel_style=cancel_style, confirm_style=confirm_style)
     return await ctx.wait(dialog)
@@ -64,7 +64,6 @@ async def require_confirm_tx(ctx, to, value):
     else:
         to_chunks = list(split_address(to))
         from trezor import res, wire
-        from trezor.messages import wire_types
         from trezor.messages.ButtonRequest import ButtonRequest
         from trezor.ui.confirm import CONFIRMED, CANCELLED, ConfirmDialog, DEFAULT_CANCEL, DEFAULT_CONFIRM
 
