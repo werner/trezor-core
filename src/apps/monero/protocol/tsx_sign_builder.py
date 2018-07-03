@@ -471,7 +471,10 @@ class TTransactionBuilder(object):
         self._log_trace(6)
 
         from trezor.messages.MoneroTsxInitResp import MoneroTsxInitResp
-        return MoneroTsxInitResp(in_memory=self.in_memory(), hmacs=hmacs)
+        return MoneroTsxInitResp(in_memory=self.in_memory(),
+                                 many_inputs=self.many_inputs(),
+                                 many_outputs=self.many_outputs(),
+                                 hmacs=hmacs)
 
     async def process_payment_id(self, tsx_data):
         """
