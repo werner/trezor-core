@@ -247,7 +247,8 @@ class TsxSigner(object):
             del msg.vini
 
             return await self.tsx_obj.sign_input(src_entr, vini, msg.vini_hmac,
-                                                 msg.pseudo_out, msg.pseudo_out_hmac, msg.alpha)
+                                                 msg.pseudo_out, msg.pseudo_out_hmac,
+                                                 msg.alpha_enc, msg.spend_enc)
         except Exception as e:
             await self.tsx_exc_handler(e)
             raise

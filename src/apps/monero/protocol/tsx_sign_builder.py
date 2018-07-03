@@ -1048,7 +1048,7 @@ class TTransactionBuilder(object):
 
         return MoneroTsxMlsagDoneResp(full_message_hash=self.full_message)
 
-    async def sign_input(self, src_entr, vini, hmac_vini, pseudo_out, pseudo_out_hmac, alpha):
+    async def sign_input(self, src_entr, vini, hmac_vini, pseudo_out, pseudo_out_hmac, alpha_enc, spend_ec):
         """
         Generates a signature for one input.
 
@@ -1059,8 +1059,9 @@ class TTransactionBuilder(object):
         :param pseudo_out: pedersen commitment for the current input, uses alpha as the mask.
         Only in memory offloaded scenario. Tuple containing HMAC, as returned from the Trezor.
         :param pseudo_out_hmac:
-        :param alpha: alpha mask for the current input. Only in memory offloaded scenario,
+        :param alpha_enc: alpha mask for the current input. Only in memory offloaded scenario,
         tuple as returned from the Trezor
+        :param spend_ec:
         :return: Generated signature MGs[i]
         """
         self.state.set_signature()
@@ -1069,7 +1070,7 @@ class TTransactionBuilder(object):
         self.inp_idx += 1
         if self.inp_idx >= self.num_inputs():
             raise ValueError('Invalid ins')
-        if self.use_simple_rct and (not self.in_memory() and alpha is None):
+        if self.use_simple_rct and (not self.in_memory() and alpha_enc is None):
             raise ValueError('Inconsistent1')
         if self.use_simple_rct and (not self.in_memory() and pseudo_out is None):
             raise ValueError('Inconsistent2')
@@ -1095,7 +1096,7 @@ class TTransactionBuilder(object):
             self._log_trace(2)
 
             from apps.monero.xmr.enc import chacha_poly
-            alpha_c = chacha_poly.decrypt_pack(self.enc_key_txin_alpha(inv_idx), bytes(alpha))
+            alpha_c = chacha_poly.decrypt_pack(self.enc_key_txin_alpha(inv_idx), bytes(alpha_enc))
             alpha_c = crypto.decodeint(alpha_c)
             pseudo_out_c = crypto.decodepoint(pseudo_out)
 
