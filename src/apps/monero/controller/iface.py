@@ -10,6 +10,10 @@ class TrezorInterface(object):
     def gctx(self, ctx):
         return ctx if ctx is not None else self.ctx
 
+    async def restore_default(self):
+        from trezor import workflow
+        workflow.restartdefault()
+
     async def confirm_transaction(self, tsx_data, creds=None, ctx=None):
         """
         Ask for confirmation from user
@@ -33,8 +37,37 @@ class TrezorInterface(object):
 
             await layout.require_confirm_tx(self.gctx(ctx), addr.decode('ascii'), dst.amount)
 
+        from trezor.ui.text import Text
+        from trezor import ui
         from trezor import loop
-        await loop.sleep(1 * 1000 * 1000)
+        from trezor import log
+        from trezor import workflow
+        from trezor.ui import display
+        from trezor.ui import BACKLIGHT_DIM, BACKLIGHT_NORMAL
+
+        await ui.backlight_slide(BACKLIGHT_DIM)
+        slide = ui.backlight_slide(BACKLIGHT_NORMAL)
+        #await ui.backlight_slide(BACKLIGHT_NORMAL)
+
+        text = Text(
+            'Signing transaction', ui.ICON_SEND,
+            'Signing...',
+            icon_color=ui.BLUE)
+
+        try:
+            layout = await layout.simple_text(text, tm=1000)
+            log.debug(__name__, 'layout: %s', layout)
+            workflow.closedefault()
+            workflow.onlayoutstart(layout)
+            loop.schedule(slide)
+            #display.clear()
+
+        finally:
+            pass
+            # loop.close(slide)
+            # workflow.onlayoutclose(layout)
+
+        await loop.sleep(500 * 1000)
         return True
 
     async def transaction_error(self, *args, **kwargs):
@@ -52,6 +85,7 @@ class TrezorInterface(object):
             icon_color=ui.RED)
 
         await layout.ui_text(text, tm=3 * 1000 * 1000)
+        await self.restore_default()
 
     async def transaction_signed(self, ctx=None):
         """
@@ -73,6 +107,7 @@ class TrezorInterface(object):
             icon_color=ui.GREEN)
 
         await layout.ui_text(text, tm=3 * 1000 * 1000)
+        await self.restore_default()
 
     async def transaction_step(self, step, sub_step=None, sub_step_total=None):
         """
@@ -108,7 +143,7 @@ class TrezorInterface(object):
             'Signing transaction', ui.ICON_SEND,
             *info,
             icon_color=ui.BLUE)
-        await layout.simple_text(text, tm=100 * 1000)
+        await layout.simple_text(text, tm=10 * 1000)
 
     async def confirm_ki_sync(self, init_msg, ctx=None):
         """
