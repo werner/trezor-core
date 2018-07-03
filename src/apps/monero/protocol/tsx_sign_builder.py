@@ -192,6 +192,20 @@ class TTransactionBuilder(object):
         """
         return False and self.input_count <= 1
 
+    def many_inputs(self):
+        """
+        Returns true if number of inputs > 10 (secret spending key offloaded)
+        :return:
+        """
+        return self.input_count >= 10
+
+    def many_outputs(self):
+        """
+        Returns true if number of outputs > 10 (increases number of roundtrips of the protocol)
+        :return:
+        """
+        return self.output_count >= 10
+
     def num_inputs(self):
         """
         Number of inputs
