@@ -15,6 +15,8 @@ class MoneroTsxInitResp(p.MessageType):
         2: ('status', p.UVarintType, 0),
         3: ('in_memory', p.BoolType, 0),
         4: ('hmacs', p.BytesType, p.FLAG_REPEATED),
+        5: ('many_inputs', p.BoolType, 0),
+        6: ('many_outputs', p.BoolType, 0),
     }
 
     def __init__(
@@ -23,8 +25,12 @@ class MoneroTsxInitResp(p.MessageType):
         status: int = None,
         in_memory: bool = None,
         hmacs: List[bytes] = None,
+        many_inputs: bool = None,
+        many_outputs: bool = None,
     ) -> None:
         self.version = version
         self.status = status
         self.in_memory = in_memory
         self.hmacs = hmacs if hmacs is not None else []
+        self.many_inputs = many_inputs
+        self.many_outputs = many_outputs
