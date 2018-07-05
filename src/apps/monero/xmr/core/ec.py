@@ -403,7 +403,7 @@ def ge_frombytes_vartime_check(point):
     #     raise ValueError('Point check failed')
     #
     # return 0
-    tcry.ge25519_fromfe_check(point)
+    tcry.ge25519_check(point)
     return 0
 
 

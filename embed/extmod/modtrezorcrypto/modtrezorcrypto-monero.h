@@ -447,16 +447,6 @@ STATIC mp_obj_t mod_trezorcrypto_monero_ge25519_check(const mp_obj_t arg){
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_monero_ge25519_check_obj, mod_trezorcrypto_monero_ge25519_check);
 
-//int ge25519_fromfe_check(const ge25519 *r);
-STATIC mp_obj_t mod_trezorcrypto_monero_ge25519_fromfe_check(const mp_obj_t arg){
-  assert_ge25519(arg);
-  if (ge25519_fromfe_check(&MP_OBJ_C_GE25519(arg)) != 1){
-    mp_raise_ValueError("Invalid ed25519 point");
-  }
-  return mp_const_none;
-}
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_monero_ge25519_fromfe_check_obj, mod_trezorcrypto_monero_ge25519_fromfe_check);
-
 //int ge25519_eq(const ge25519 *a, const ge25519 *b);
 STATIC mp_obj_t mod_trezorcrypto_monero_ge25519_eq(const mp_obj_t a, const mp_obj_t b){
     assert_ge25519(a);
@@ -1011,7 +1001,6 @@ STATIC const mp_rom_map_elem_t mod_trezorcrypto_monero_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR_ge25519_pack_into), MP_ROM_PTR(&mod_trezorcrypto_monero_ge25519_pack_into_obj) },
     { MP_ROM_QSTR(MP_QSTR_ge25519_unpack_vartime), MP_ROM_PTR(&mod_trezorcrypto_monero_ge25519_unpack_vartime_obj) },
     { MP_ROM_QSTR(MP_QSTR_ge25519_check), MP_ROM_PTR(&mod_trezorcrypto_monero_ge25519_check_obj) },
-    { MP_ROM_QSTR(MP_QSTR_ge25519_fromfe_check), MP_ROM_PTR(&mod_trezorcrypto_monero_ge25519_fromfe_check_obj) },
     { MP_ROM_QSTR(MP_QSTR_ge25519_eq), MP_ROM_PTR(&mod_trezorcrypto_monero_ge25519_eq_obj) },
     { MP_ROM_QSTR(MP_QSTR_ge25519_norm), MP_ROM_PTR(&mod_trezorcrypto_monero_ge25519_norm_obj) },
     { MP_ROM_QSTR(MP_QSTR_ge25519_add), MP_ROM_PTR(&mod_trezorcrypto_monero_ge25519_add_obj) },
