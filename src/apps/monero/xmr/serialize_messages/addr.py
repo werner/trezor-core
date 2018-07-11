@@ -1,6 +1,6 @@
-from apps.monero.xmr.serialize_messages.base import ECPublicKey
-from apps.monero.xmr.serialize.message_types import MessageType
 from apps.monero.xmr.serialize.base_types import UInt32
+from apps.monero.xmr.serialize.message_types import MessageType
+from apps.monero.xmr.serialize_messages.base import ECPublicKey
 
 
 class AccountPublicAddress(MessageType):

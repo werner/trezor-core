@@ -4,9 +4,10 @@
 
 import gc
 import sys
-import micropython
-from trezor import log
 
+import micropython
+
+from trezor import log
 
 PREV_MEM = gc.mem_free()
 CUR_MES = 0

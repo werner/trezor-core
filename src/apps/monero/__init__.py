@@ -1,10 +1,9 @@
-from trezor.wire import register, protobuf_workflow
+import gc
+
+from trezor import log
 from trezor.messages.MessageType import \
     MoneroGetAddress, MoneroGetWatchKey, MoneroTsxSign, MoneroKeyImageSync, MoneroDiag
-
-
-import gc
-from trezor import log
+from trezor.wire import register, protobuf_workflow
 
 
 # persistent state objects

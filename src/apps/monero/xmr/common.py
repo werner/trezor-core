@@ -3,8 +3,8 @@
 # Author: Dusan Klinec, ph4r05, 2018
 
 
-from trezor.crypto import random
 from trezor.crypto import monero
+from trezor.crypto import random
 
 
 class XmrException(Exception):

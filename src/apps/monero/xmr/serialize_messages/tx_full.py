@@ -1,9 +1,8 @@
 
-from apps.monero.xmr.serialize.erefs import eref
 from apps.monero.xmr.serialize.base_types import UVarintType, UInt8
+from apps.monero.xmr.serialize.erefs import eref
 from apps.monero.xmr.serialize.message_types import MessageType, ContainerType
 from apps.monero.xmr.serialize_messages.base import ECKey
-
 from apps.monero.xmr.serialize_messages.ct_keys import KeyM, KeyV, CtkeyM, CtkeyV, CtKey
 from apps.monero.xmr.serialize_messages.tx_ecdh import EcdhTuple, EcdhInfo
 from apps.monero.xmr.serialize_messages.tx_prefix import TxinToKey, \

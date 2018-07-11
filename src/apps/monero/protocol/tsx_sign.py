@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 # Author: Dusan Klinec, ph4r05, 2018
 import gc
-from trezor import log
 
 from apps.monero.controller import misc
+from trezor import log
 
 
 class TsxSigner(object):

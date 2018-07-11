@@ -12,9 +12,9 @@
 import ubinascii as binascii
 
 from trezor.crypto import hmac
-from trezor.crypto import random
 from trezor.crypto import monero as tcry
 from trezor.crypto import pbkdf2 as tpbkdf2
+from trezor.crypto import random
 from trezor.crypto.hashlib import sha3_256
 
 # py constants

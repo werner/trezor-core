@@ -1,5 +1,5 @@
-from apps.monero.controller import wrapper
 from apps.common.display_address import show_qr, show_address
+from apps.monero.controller import wrapper
 from trezor.messages.MoneroAddress import MoneroAddress
 
 

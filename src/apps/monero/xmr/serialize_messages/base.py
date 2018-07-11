@@ -5,8 +5,8 @@ XMR types
 '''
 
 from micropython import const
-from apps.monero.xmr.serialize.message_types import BlobType, ContainerType
 
+from apps.monero.xmr.serialize.message_types import BlobType, ContainerType
 
 _c0 = const(0)
 _c1 = const(1)

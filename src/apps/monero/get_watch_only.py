@@ -1,7 +1,6 @@
+from apps.monero import layout
 from apps.monero.controller import wrapper
 from apps.monero.xmr import crypto
-from apps.monero import layout
-
 from trezor.messages.MoneroGetWatchKey import MoneroGetWatchKey
 from trezor.messages.MoneroWatchKey import MoneroWatchKey
 

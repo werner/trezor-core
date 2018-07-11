@@ -1,9 +1,9 @@
 from apps.monero.xmr import crypto
 from apps.monero.xmr.serialize_messages.base import ECKey
 from apps.monero.xmr.serialize_messages.ct_keys import KeyV
+from apps.monero.xmr.serialize_messages.tx_ecdh import EcdhInfo
 from apps.monero.xmr.serialize_messages.tx_full import RctSigBase
 from apps.monero.xmr.serialize_messages.tx_rsig import RctType
-from apps.monero.xmr.serialize_messages.tx_ecdh import EcdhInfo
 
 
 class PreMlsagHasher(object):

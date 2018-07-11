@@ -3,7 +3,9 @@
 # Author: Dusan Klinec, ph4r05, 2018
 
 import gc
+
 import micropython
+
 from trezor import log
 
 

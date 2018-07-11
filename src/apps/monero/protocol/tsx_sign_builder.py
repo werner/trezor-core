@@ -1,10 +1,11 @@
 import gc
-from trezor import log
+
 import micropython
 from micropython import const
 
 from apps.monero.controller import misc
 from apps.monero.xmr import crypto, common, monero
+from trezor import log
 
 
 class TprefixStub(object):

@@ -8,7 +8,6 @@ from micropython import const
 from apps.monero.xmr import common
 from apps.monero.xmr import crypto
 
-
 DISPLAY_DECIMAL_POINT = const(12)
 
 

@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 # Author: Dusan Klinec, ph4r05, 2018
 from apps.monero.xmr import crypto
-from apps.monero.xmr.serialize.readwriter import MemoryReaderWriter
-from apps.monero.xmr.serialize_messages.tx_extra import TxExtraField, TxExtraAdditionalPubKeys
-from apps.monero.xmr.serialize_messages.addr import AccountPublicAddress
 from apps.monero.xmr.serialize import xmrserialize
+from apps.monero.xmr.serialize.readwriter import MemoryReaderWriter
+from apps.monero.xmr.serialize_messages.addr import AccountPublicAddress
+from apps.monero.xmr.serialize_messages.tx_extra import TxExtraField, TxExtraAdditionalPubKeys
 
 
 async def parse_extra_fields(extra_buff):

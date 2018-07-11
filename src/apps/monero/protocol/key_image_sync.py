@@ -2,10 +2,8 @@
 # -*- coding: utf-8 -*-
 # Author: Dusan Klinec, ph4r05, 2018
 
-from trezor import log
-
-
 from apps.monero.controller import wrapper as twrap
+from trezor import log
 
 
 class KeyImageSync(object):
