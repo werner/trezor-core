@@ -36,6 +36,7 @@ def compute_tx_key(spend_key_private, tx_prefix_hash, salt=None, rand_mult=None)
     :return:
     """
     from apps.monero.xmr import crypto
+
     if not salt:
         salt = crypto.random_bytes(32)
 
@@ -58,13 +59,16 @@ def translate_monero_dest_entry(dst_entry):
     d = TxDestinationEntry()
     d.amount = dst_entry.amount
     d.is_subaddress = dst_entry.is_subaddress
-    d.addr = AccountPublicAddress(m_spend_public_key=dst_entry.addr.spend_public_key,
-                                  m_view_public_key=dst_entry.addr.view_public_key)
+    d.addr = AccountPublicAddress(
+        m_spend_public_key=dst_entry.addr.spend_public_key,
+        m_view_public_key=dst_entry.addr.view_public_key,
+    )
     return d
 
 
 async def translate_tsx_data(tsx_data):
     from apps.monero.xmr.tsx_data import TsxData
+
     tsxd = TsxData()
     for fld in TsxData.f_specs():
         fname = fld[0]
@@ -89,16 +93,19 @@ async def parse_msg(bts, msg):
 
 async def parse_src_entry(bts):
     from apps.monero.xmr.serialize_messages.tx_src_entry import TxSourceEntry
+
     return await parse_msg(bts, TxSourceEntry())
 
 
 async def parse_dst_entry(bts):
     from apps.monero.xmr.serialize_messages.tx_dest_entry import TxDestinationEntry
+
     return await parse_msg(bts, TxDestinationEntry())
 
 
 async def parse_vini(bts):
     from apps.monero.xmr.serialize_messages.tx_prefix import TxinToKey
+
     return await parse_msg(bts, TxinToKey())
 
 
@@ -118,5 +125,6 @@ async def dump_msg_gc(msg, preallocate=None, msg_type=None, del_msg=False):
         del msg
 
     import gc
+
     gc.collect()
     return b

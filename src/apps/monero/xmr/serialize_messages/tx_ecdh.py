@@ -3,14 +3,11 @@ from apps.monero.xmr.serialize_messages.base import ECKey
 
 
 class EcdhTuple(MessageType):
-    __slots__ = ('mask', 'amount')
+    __slots__ = ("mask", "amount")
 
     @staticmethod
     def f_specs():
-        return (
-            ('mask', ECKey),
-            ('amount', ECKey),
-        )
+        return (("mask", ECKey), ("amount", ECKey))
 
 
 class EcdhInfo(ContainerType):

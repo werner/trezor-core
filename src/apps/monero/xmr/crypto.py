@@ -102,7 +102,7 @@ def pbkdf2(inp, salt, length=32, count=1000, prf=None):
     :param prf:
     :return:
     """
-    return tpbkdf2('hmac-sha256', inp, salt).key()
+    return tpbkdf2("hmac-sha256", inp, salt).key()
 
 
 #
@@ -176,6 +176,7 @@ def point_norm(P):
 # Zmod(order), scalar values field
 #
 
+
 def sc_0():
     """
     Sets 0 to the scalar value Zmod(m)
@@ -190,7 +191,7 @@ def sc_init(x):
     :return:
     """
     if x >= (1 << 64):
-        raise ValueError('Initialization works up to 64-bit only')
+        raise ValueError("Initialization works up to 64-bit only")
     return tcry.init256_modm(x)
 
 
@@ -221,7 +222,7 @@ def check_sc(key):
     :return:
     """
     if sc_check(key) != 0:
-        raise ValueError('Invalid scalar value')
+        raise ValueError("Invalid scalar value")
 
 
 def sc_reduce32(data):
@@ -651,7 +652,7 @@ def check_signature(data, c, r, pub):
     c = sc_reduce32(c)
     r = sc_reduce32(r)
     if sc_check(c) != 0 or sc_check(r) != 0:
-        raise ValueError('Signature error')
+        raise ValueError("Signature error")
 
     tmp2 = point_add(scalarmult(pub, c), scalarmult_base(r))
     buff = data + encodepoint(pub) + encodepoint(tmp2)

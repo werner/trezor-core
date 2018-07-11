@@ -3,7 +3,7 @@
 # Author: Dusan Klinec, ph4r05, 2018
 
 
-MONERO_CURVE = 'secp256k1'  # 'ed25519-keccak'
+MONERO_CURVE = "secp256k1"  # 'ed25519-keccak'
 
 
 async def monero_get_creds(ctx, address_n=None, network_type=None):
@@ -16,7 +16,9 @@ async def monero_get_creds(ctx, address_n=None, network_type=None):
     node = await seed.derive_node(ctx, address_n, MONERO_CURVE)
 
     key_seed = crypto.cn_fast_hash(node.private_key())
-    keys = monero.generate_monero_keys(key_seed)  # spend_sec, spend_pub, view_sec, view_pub
+    keys = monero.generate_monero_keys(
+        key_seed
+    )  # spend_sec, spend_pub, view_sec, view_pub
 
     creds = AccountCreds.new_wallet(keys[2], keys[0], network_type)
     return creds
@@ -24,6 +26,7 @@ async def monero_get_creds(ctx, address_n=None, network_type=None):
 
 def get_interface(ctx):
     from apps.monero.controller import iface
+
     return iface.get_iface(ctx)
 
 

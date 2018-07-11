@@ -2,8 +2,15 @@ import gc
 
 
 class MemoryReaderWriter:
-
-    def __init__(self, buffer=None, read_empty=False, threshold=None, do_gc=False, preallocate=None, **kwargs):
+    def __init__(
+        self,
+        buffer=None,
+        read_empty=False,
+        threshold=None,
+        do_gc=False,
+        preallocate=None,
+        **kwargs
+    ):
         self.buffer = buffer
         self.nread = 0
         self.nwritten = 0
@@ -86,4 +93,4 @@ class MemoryReaderWriter:
 
     def get_buffer(self):
         mv = memoryview(self.buffer)
-        return mv[self.offset:self.woffset]
+        return mv[self.offset : self.woffset]

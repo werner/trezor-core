@@ -10,18 +10,15 @@ from apps.monero.xmr.serialize_messages.tx_prefix import (
 
 
 class Signature(MessageType):
-    __slots__ = ('c', 'r')
+    __slots__ = ("c", "r")
 
     @staticmethod
     def f_specs():
-        return (
-            ('c', ECKey),
-            ('r', ECKey),
-        )
+        return (("c", ECKey), ("r", ECKey))
 
     async def serialize_archive(self, ar):
-        ar.field(eref(self, 'c'), ECKey)
-        ar.field(eref(self, 'r'), ECKey)
+        ar.field(eref(self, "c"), ECKey)
+        ar.field(eref(self, "r"), ECKey)
         return self
 
 
@@ -41,4 +38,4 @@ def get_signature_size(msg):
     elif isinstance(msg, TxinToKey):
         return len(msg.key_offsets)
     else:
-        raise ValueError('Unknown tx in')
+        raise ValueError("Unknown tx in")

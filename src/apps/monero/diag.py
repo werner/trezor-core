@@ -18,7 +18,12 @@ def check_mem(x):
     gc.collect()
     free = gc.mem_free()
     diff = PREV_MEM - free
-    log.debug(__name__, '======= {} {} Diff: {} Free: {} Allocated: {}'.format(CUR_MES, x, diff, free, gc.mem_alloc()))
+    log.debug(
+        __name__,
+        "======= {} {} Diff: {} Free: {} Allocated: {}".format(
+            CUR_MES, x, diff, free, gc.mem_alloc()
+        ),
+    )
     micropython.mem_info()
     gc.collect()
     CUR_MES += 1
@@ -27,6 +32,7 @@ def check_mem(x):
 
 def retit(**kwargs):
     from trezor.messages.MoneroRespError import MoneroRespError
+
     return MoneroRespError(**kwargs)
 
 
@@ -41,9 +47,9 @@ async def dispatch_diag(ctx, msg, **kwargs):
         return retit()
 
     elif msg.ins == 2:
-        log.debug(__name__, '_____________________________________________')
-        log.debug(__name__, '_____________________________________________')
-        log.debug(__name__, '_____________________________________________')
+        log.debug(__name__, "_____________________________________________")
+        log.debug(__name__, "_____________________________________________")
+        log.debug(__name__, "_____________________________________________")
         return retit()
 
     elif msg.ins == 3:
@@ -54,11 +60,11 @@ async def dispatch_diag(ctx, msg, **kwargs):
         monero = 0
 
         for k, v in sys.modules.items():
-            log.info(__name__, 'Mod[%s]: %s', k, v)
+            log.info(__name__, "Mod[%s]: %s", k, v)
             total += 1
-            if k.startswith('apps.monero'):
+            if k.startswith("apps.monero"):
                 monero += 1
-        log.info(__name__, 'Total modules: %s, Monero modules: %s', total, monero)
+        log.info(__name__, "Total modules: %s, Monero modules: %s", total, monero)
         return retit()
 
     return retit()

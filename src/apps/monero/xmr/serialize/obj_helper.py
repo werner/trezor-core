@@ -20,7 +20,7 @@ def eq_obj_contents(l, r):
     """
     if l.__class__ is not r.__class__:
         return False
-    if hasattr(l, '__slots__'):
+    if hasattr(l, "__slots__"):
         return eq_obj_slots(l, r)
     else:
         return l.__dict__ == r.__dict__
@@ -46,7 +46,7 @@ def is_type(x, types, full=False):
     :param full:
     :return:
     """
-    types = types if isinstance(types, tuple) else (types, )
+    types = types if isinstance(types, tuple) else (types,)
     ins = isinstance(x, types)
     sub = False
     try:

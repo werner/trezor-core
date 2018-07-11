@@ -23,28 +23,33 @@ STATE = Holder()
 
 def dispatch_MoneroGetAddress(*args, **kwargs):
     from apps.monero.get_address import layout_monero_get_address
+
     return layout_monero_get_address(*args, **kwargs)
 
 
 def dispatch_MoneroGetWatchKey(*args, **kwargs):
     from apps.monero.get_watch_only import layout_monero_get_watch_only
+
     return layout_monero_get_watch_only(*args, **kwargs)
 
 
 def dispatch_MoneroTsxSign(*args, **kwargs):
     from apps.monero.sign_tx import layout_sign_tx
+
     return layout_sign_tx(STATE, *args, **kwargs)
 
 
 def dispatch_MoneroKeyImageSync(*args, **kwargs):
     from apps.monero.key_image_sync import layout_key_image_sync
+
     return layout_key_image_sync(STATE, *args, **kwargs)
 
 
 def dispatch_MoneroDiag(*args, **kwargs):
-    log.debug(__name__, '----diagnostics')
+    log.debug(__name__, "----diagnostics")
     gc.collect()
     from apps.monero.diag import dispatch_diag
+
     return dispatch_diag(*args, **kwargs)
 
 

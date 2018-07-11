@@ -5,6 +5,7 @@ class TsxSignStateHolder(object):
     Moreover the state contains stripped down attributes, i.e., instead of heavy hashers only sha3 context
     is preserved and hashers are re-initialized on the next protocol step.
     """
+
     def __init__(self, **kwargs):
         self.creds = None
         self.key_master = None

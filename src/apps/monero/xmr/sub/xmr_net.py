@@ -36,7 +36,11 @@ def net_version(network_type=NetworkTypes.MAINNET, is_subaddr=False):
     elif network_type == NetworkTypes.STAGENET:
         c_net = StageNet
     else:
-        raise ValueError('Unknown network type: %s' % network_type)
+        raise ValueError("Unknown network type: %s" % network_type)
 
-    prefix = c_net.PUBLIC_ADDRESS_BASE58_PREFIX if not is_subaddr else c_net.PUBLIC_SUBADDRESS_BASE58_PREFIX
+    prefix = (
+        c_net.PUBLIC_ADDRESS_BASE58_PREFIX
+        if not is_subaddr
+        else c_net.PUBLIC_SUBADDRESS_BASE58_PREFIX
+    )
     return bytes([prefix])

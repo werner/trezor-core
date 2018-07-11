@@ -19,7 +19,7 @@ def encrypt(key, plaintext, associated_data=None):
         cipher.auth(associated_data)
     ciphertext = cipher.encrypt(plaintext)
     tag = cipher.finish()
-    return nonce, ciphertext + tag, b''
+    return nonce, ciphertext + tag, b""
 
 
 def decrypt(key, iv, ciphertext, tag=None, associated_data=None):
@@ -39,7 +39,7 @@ def decrypt(key, iv, ciphertext, tag=None, associated_data=None):
     plaintext = cipher.decrypt(ciphertext)
     tag = cipher.finish()
     if not monero.ct_equals(tag, exp_tag):
-        raise ValueError('tag invalid')
+        raise ValueError("tag invalid")
 
     return plaintext
 

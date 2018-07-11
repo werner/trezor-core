@@ -1,11 +1,11 @@
 class ElemRefObj:
     def __repr__(self):
-        return 'RefObj'
+        return "RefObj"
 
 
 class ElemRefArr:
     def __repr__(self):
-        return 'RefAssoc'
+        return "RefAssoc"
 
 
 def is_elem_ref(elem_ref):
@@ -15,8 +15,12 @@ def is_elem_ref(elem_ref):
     :param elem_ref:
     :return:
     """
-    return elem_ref and isinstance(elem_ref, tuple) and len(elem_ref) == 3 \
+    return (
+        elem_ref
+        and isinstance(elem_ref, tuple)
+        and len(elem_ref) == 3
         and (elem_ref[0] == ElemRefObj or elem_ref[0] == ElemRefArr)
+    )
 
 
 def has_elem(elem_ref):

@@ -13,6 +13,7 @@ class TsxSigner(object):
     Monero Transaction signer.
     Provides interface to the host, packages messages.
     """
+
     def __init__(self):
         from apps.monero.controller import iface
 
@@ -35,7 +36,7 @@ class TsxSigner(object):
         :return:
         """
         if self.debug:
-            log.warning(__name__, 'Transaction exception: %s: %s', type(e), e)
+            log.warning(__name__, "Transaction exception: %s: %s", type(e), e)
 
         self.err_ctr += 1
         self.purge = True
@@ -51,10 +52,14 @@ class TsxSigner(object):
 
     async def setup(self, msg):
         from apps.monero.controller import wrapper
-        self.creds = await wrapper.monero_get_creds(self.ctx, msg.address_n or (), msg.network_type)
+
+        self.creds = await wrapper.monero_get_creds(
+            self.ctx, msg.address_n or (), msg.network_type
+        )
 
     async def restore(self, state):
         from apps.monero.protocol.tsx_sign_builder import TTransactionBuilder
+
         self.tsx_obj = TTransactionBuilder(self, creds=self.creds, state=state)
 
     async def state_save(self):
@@ -79,43 +84,45 @@ class TsxSigner(object):
         self.iface = iface.get_iface(ctx)
         gc.collect()
 
-        log.debug(__name__, 'sign()')
-        log.debug(__name__, 'Mem Free: {} Allocated: {}'.format(gc.mem_free(), gc.mem_alloc()))
+        log.debug(__name__, "sign()")
+        log.debug(
+            __name__, "Mem Free: {} Allocated: {}".format(gc.mem_free(), gc.mem_alloc())
+        )
 
         if msg.init:
-            log.debug(__name__, 'setup')
+            log.debug(__name__, "setup")
             await self.setup(msg.init)
         await self.restore(state if not msg.init else None)
 
         if msg.init:
-            log.debug(__name__, 'sign_init')
+            log.debug(__name__, "sign_init")
             return await self.tsx_init(msg.init.tsx_data)
         elif msg.set_input:
-            log.debug(__name__, 'sign_inp')
+            log.debug(__name__, "sign_inp")
             return await self.tsx_set_input(msg.set_input)
         elif msg.input_permutation:
-            log.debug(__name__, 'sign_perm')
+            log.debug(__name__, "sign_perm")
             return await self.tsx_inputs_permutation(msg.input_permutation)
         elif msg.input_vini:
-            log.debug(__name__, 'sign_vin')
+            log.debug(__name__, "sign_vin")
             return await self.tsx_input_vini(msg.input_vini)
         elif msg.set_output:
-            log.debug(__name__, 'sign_out')
+            log.debug(__name__, "sign_out")
             return await self.tsx_set_output1(msg.set_output)
         elif msg.all_out_set:
-            log.debug(__name__, 'sign_out_set')
+            log.debug(__name__, "sign_out_set")
             return await self.tsx_all_out1_set(msg.all_out_set)
         elif msg.mlsag_done:
-            log.debug(__name__, 'sign_done')
+            log.debug(__name__, "sign_done")
             return await self.tsx_mlsag_done()
         elif msg.sign_input:
-            log.debug(__name__, 'sign_sinp')
+            log.debug(__name__, "sign_sinp")
             return await self.tsx_sign_input(msg.sign_input)
         elif msg.final_msg:
-            log.debug(__name__, 'sign_final')
+            log.debug(__name__, "sign_final")
             return await self.tsx_sign_final(msg.final_msg)
         else:
-            raise ValueError('Unknown message')
+            raise ValueError("Unknown message")
 
     async def tsx_init(self, tsx_data):
         """
@@ -179,7 +186,9 @@ class TsxSigner(object):
             del msg.src_entr
             del msg.vini
 
-            return await self.tsx_obj.input_vini(src_entr, vini, msg.vini_hmac, msg.pseudo_out, msg.pseudo_out_hmac)
+            return await self.tsx_obj.input_vini(
+                src_entr, vini, msg.vini_hmac, msg.pseudo_out, msg.pseudo_out_hmac
+            )
         except Exception as e:
             await self.tsx_exc_handler(e)
             raise
@@ -217,6 +226,7 @@ class TsxSigner(object):
 
             from trezor.messages.MoneroRespError import MoneroRespError
             from apps.monero.controller.wrapper import exc2str
+
             return MoneroRespError(status=10, exc=exc2str(e))
 
         except Exception as e:
@@ -247,9 +257,15 @@ class TsxSigner(object):
             del msg.src_entr
             del msg.vini
 
-            return await self.tsx_obj.sign_input(src_entr, vini, msg.vini_hmac,
-                                                 msg.pseudo_out, msg.pseudo_out_hmac,
-                                                 msg.alpha_enc, msg.spend_enc)
+            return await self.tsx_obj.sign_input(
+                src_entr,
+                vini,
+                msg.vini_hmac,
+                msg.pseudo_out,
+                msg.pseudo_out_hmac,
+                msg.alpha_enc,
+                msg.spend_enc,
+            )
         except Exception as e:
             await self.tsx_exc_handler(e)
             raise

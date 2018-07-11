@@ -9,26 +9,41 @@ class TsxData(MessageType):
     TsxData, initial input to the transaction processing.
     Serialization structure for easy hashing.
     """
-    __slots__ = ('version', 'payment_id', 'unlock_time', 'outputs', 'change_dts', 'num_inputs', 'mixin', 'fee',
-                 'account', 'minor_indices', 'is_multisig', 'exp_tx_prefix_hash', 'use_tx_keys', 'is_bulletproof')
+
+    __slots__ = (
+        "version",
+        "payment_id",
+        "unlock_time",
+        "outputs",
+        "change_dts",
+        "num_inputs",
+        "mixin",
+        "fee",
+        "account",
+        "minor_indices",
+        "is_multisig",
+        "exp_tx_prefix_hash",
+        "use_tx_keys",
+        "is_bulletproof",
+    )
 
     @staticmethod
     def f_specs():
         return (
-            ('version', UVarintType),
-            ('payment_id', BlobType),
-            ('unlock_time', UVarintType),
-            ('outputs', ContainerType, TxDestinationEntry),
-            ('change_dts', TxDestinationEntry),
-            ('num_inputs', UVarintType),
-            ('mixin', UVarintType),
-            ('fee', UVarintType),
-            ('account', UVarintType),
-            ('minor_indices', ContainerType, UVarintType),
-            ('is_multisig', BoolType),
-            ('exp_tx_prefix_hash', BlobType),                    # expected prefix hash, bail on error
-            ('use_tx_keys', ContainerType, SecretKey),  # use this secret key, multisig
-            ('is_bulletproof', BoolType),
+            ("version", UVarintType),
+            ("payment_id", BlobType),
+            ("unlock_time", UVarintType),
+            ("outputs", ContainerType, TxDestinationEntry),
+            ("change_dts", TxDestinationEntry),
+            ("num_inputs", UVarintType),
+            ("mixin", UVarintType),
+            ("fee", UVarintType),
+            ("account", UVarintType),
+            ("minor_indices", ContainerType, UVarintType),
+            ("is_multisig", BoolType),
+            ("exp_tx_prefix_hash", BlobType),  # expected prefix hash, bail on error
+            ("use_tx_keys", ContainerType, SecretKey),  # use this secret key, multisig
+            ("is_bulletproof", BoolType),
         )
 
     def __init__(self, payment_id=None, outputs=None, change_dts=None, **kwargs):
@@ -42,5 +57,5 @@ class TsxData(MessageType):
         self.outputs = outputs if outputs else []  # type: list[TxDestinationEntry]
         self.is_multisig = False
         self.is_bulletproof = False
-        self.exp_tx_prefix_hash = b''
+        self.exp_tx_prefix_hash = b""
         self.use_tx_keys = []

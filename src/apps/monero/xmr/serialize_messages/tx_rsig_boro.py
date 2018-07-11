@@ -4,23 +4,16 @@ from apps.monero.xmr.serialize_messages.ct_keys import Key64
 
 
 class BoroSig(MessageType):
-    __slots__ = ('s0', 's1', 'ee')
+    __slots__ = ("s0", "s1", "ee")
 
     @staticmethod
     def f_specs():
-        return (
-            ('s0', Key64),
-            ('s1', Key64),
-            ('ee', ECKey),
-        )
+        return (("s0", Key64), ("s1", Key64), ("ee", ECKey))
 
 
 class RangeSig(MessageType):
-    __slots__ = ('asig', 'Ci')
+    __slots__ = ("asig", "Ci")
 
     @staticmethod
     def f_specs():
-        return (
-            ('asig', BoroSig),
-            ('Ci', Key64),
-        )
+        return (("asig", BoroSig), ("Ci", Key64))

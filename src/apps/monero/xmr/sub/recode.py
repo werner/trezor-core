@@ -36,7 +36,7 @@ def recode_msg(mgs, encode=True):
 
     for idx in range(len(mgs)):
         mgs[idx].cc = recode_int(mgs[idx].cc)
-        if hasattr(mgs[idx], 'II') and mgs[idx].II:
+        if hasattr(mgs[idx], "II") and mgs[idx].II:
             for i in range(len(mgs[idx].II)):
                 mgs[idx].II[i] = recode_point(mgs[idx].II[i])
 

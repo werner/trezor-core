@@ -58,9 +58,9 @@ def get_encrypted_payment_id_from_tx_extra_nonce(extra_nonce):
     :return:
     """
     if 9 != len(extra_nonce):
-        raise ValueError('Nonce size mismatch')
+        raise ValueError("Nonce size mismatch")
     if 0x1 != extra_nonce[0]:
-        raise ValueError('Nonce payment type invalid')
+        raise ValueError("Nonce payment type invalid")
     return extra_nonce[1:]
 
 
@@ -70,7 +70,7 @@ def set_payment_id_to_tx_extra_nonce(payment_id):
     :param payment_id:
     :return:
     """
-    return b'\x00' + payment_id
+    return b"\x00" + payment_id
 
 
 def absolute_output_offsets_to_relative(off):
@@ -96,7 +96,9 @@ def get_destination_view_key_pub(destinations, change_addr=None):
     :param change_addr:
     :return:
     """
-    addr = AccountPublicAddress(m_spend_public_key=crypto.NULL_KEY_ENC, m_view_public_key=crypto.NULL_KEY_ENC)
+    addr = AccountPublicAddress(
+        m_spend_public_key=crypto.NULL_KEY_ENC, m_view_public_key=crypto.NULL_KEY_ENC
+    )
     count = 0
     for dest in destinations:
         if dest.amount == 0:
@@ -133,7 +135,7 @@ def encrypt_payment_id(payment_id, public_key, secret_key):
 
 
 def set_encrypted_payment_id_to_tx_extra_nonce(payment_id):
-    return b'\x01' + payment_id
+    return b"\x01" + payment_id
 
 
 async def remove_field_from_tx_extra(extra, mtype):
@@ -167,8 +169,8 @@ def add_extra_nonce_to_tx_extra(extra, extra_nonce):
     :return:
     """
     if len(extra_nonce) > 255:
-        raise ValueError('Nonce could be 255 bytes max')
-    extra += b'\x02' + len(extra_nonce).to_bytes(1, byteorder='big') + extra_nonce
+        raise ValueError("Nonce could be 255 bytes max")
+    extra += b"\x02" + len(extra_nonce).to_bytes(1, byteorder="big") + extra_nonce
     return extra
 
 
@@ -185,7 +187,9 @@ def add_tx_pub_key_to_extra(tx_extra, pub_key):
     return tx_extra + to_add
 
 
-async def add_additional_tx_pub_keys_to_extra(tx_extra, additional_pub_keys=None, pub_enc=None):
+async def add_additional_tx_pub_keys_to_extra(
+    tx_extra, additional_pub_keys=None, pub_enc=None
+):
     """
     Adds all pubkeys to the extra
     :param tx_extra:
@@ -193,7 +197,11 @@ async def add_additional_tx_pub_keys_to_extra(tx_extra, additional_pub_keys=None
     :param pub_enc: None
     :return:
     """
-    pubs_msg = TxExtraAdditionalPubKeys(data=pub_enc if pub_enc else [crypto.encodepoint(x) for x in additional_pub_keys])
+    pubs_msg = TxExtraAdditionalPubKeys(
+        data=pub_enc
+        if pub_enc
+        else [crypto.encodepoint(x) for x in additional_pub_keys]
+    )
 
     rw = MemoryReaderWriter()
     ar = xmrserialize.Archive(rw, True)

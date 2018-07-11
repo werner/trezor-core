@@ -32,6 +32,7 @@ def ct_equal(a, b):
 
 def memcpy(dst, dst_from, src, src_from, length):
     from trezor.utils import memcpy
+
     return memcpy(dst, dst_from, src, src_from, length)
 
 
@@ -43,7 +44,7 @@ def check_permutation(permutation):
     """
     for n in range(len(permutation)):
         if n not in permutation:
-            raise ValueError('Invalid permutation')
+            raise ValueError("Invalid permutation")
 
 
 def apply_permutation(permutation, swapper):
@@ -126,7 +127,7 @@ def defvalkeys(js, key, default=None):
     if js is None:
         return default
     if not isinstance(key, (tuple, list)):
-        key = key.split('.')
+        key = key.split(".")
     try:
         cur = js
         for ckey in key:
@@ -141,7 +142,7 @@ def chunk(arr, size=1):
     res = []
     idx = 0
     while True:
-        c = arr[idx:idx + size]
+        c = arr[idx : idx + size]
         res.append(c)
         idx += size
         if len(c) != size:

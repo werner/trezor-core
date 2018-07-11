@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-'''
+"""
 XMR types
-'''
+"""
 
 from micropython import const
 
@@ -19,15 +19,15 @@ _c64 = const(64)
 
 
 class Hash(BlobType):
-    __slots__ = ('data',)
-    DATA_ATTR = 'data'
+    __slots__ = ("data",)
+    DATA_ATTR = "data"
     FIX_SIZE = _c1
     SIZE = _c32
 
 
 class ECKey(BlobType):
-    __slots__ = ('bytes',)
-    DATA_ATTR = 'bytes'
+    __slots__ = ("bytes",)
+    DATA_ATTR = "bytes"
     FIX_SIZE = _c1
     SIZE = _c32
 

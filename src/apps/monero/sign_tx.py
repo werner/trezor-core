@@ -10,13 +10,22 @@ from trezor import log
 
 async def layout_sign_tx(state, ctx, msg):
     gc.threshold(gc.mem_free() // 4 + gc.mem_alloc())
-    log.debug(__name__, '############################ TSX. Free: {} Allocated: {} thr: {}'.format(gc.mem_free(), gc.mem_alloc(), gc.mem_free() // 4 + gc.mem_alloc()))
+    log.debug(
+        __name__,
+        "############################ TSX. Free: {} Allocated: {} thr: {}".format(
+            gc.mem_free(), gc.mem_alloc(), gc.mem_free() // 4 + gc.mem_alloc()
+        ),
+    )
     gc.collect()
     micropython.mem_info()
 
     from apps.monero.protocol.tsx_sign import TsxSigner
-    log.debug(__name__, 'TsxSigner. Free: {} Allocated: {}'.format(gc.mem_free(), gc.mem_alloc()))
-    log.debug(__name__, 'TsxState: %s', state.ctx_sign)
+
+    log.debug(
+        __name__,
+        "TsxSigner. Free: {} Allocated: {}".format(gc.mem_free(), gc.mem_alloc()),
+    )
+    log.debug(__name__, "TsxState: %s", state.ctx_sign)
     gc.collect()
 
     try:
@@ -31,5 +40,5 @@ async def layout_sign_tx(state, ctx, msg):
 
     except Exception as e:
         state.ctx_sign = None
-        log.error(__name__, 'Tsx exception: %s %s', type(e), e)
+        log.error(__name__, "Tsx exception: %s %s", type(e), e)
         raise

@@ -12,6 +12,7 @@ class TrezorInterface(object):
 
     async def restore_default(self):
         from trezor import workflow
+
         workflow.restartdefault()
 
     async def confirm_transaction(self, tsx_data, creds=None, ctx=None):
@@ -32,20 +33,31 @@ class TrezorInterface(object):
         outs = tsx_data.outputs
         change_idx = None
         for idx, dst in enumerate(outs):
-            if change_coord and change_coord[0] and change_coord == (dst.amount, dst.addr):
+            if (
+                change_coord
+                and change_coord[0]
+                and change_coord == (dst.amount, dst.addr)
+            ):
                 change_idx = idx
 
         if change_idx is not None:
-            outs = [x for i, x in enumerate(outs) if i != change_idx] + [outs[change_idx]]
+            outs = [x for i, x in enumerate(outs) if i != change_idx] + [
+                outs[change_idx]
+            ]
             change_idx = len(outs) - 1
 
         from apps.monero import layout
+
         for idx, dst in enumerate(outs):
-            addr = encode_addr(net_version(creds.network_type),
-                               dst.addr.m_spend_public_key,
-                               dst.addr.m_view_public_key)
+            addr = encode_addr(
+                net_version(creds.network_type),
+                dst.addr.m_spend_public_key,
+                dst.addr.m_view_public_key,
+            )
             is_change = change_idx and idx == change_idx
-            await layout.require_confirm_tx(self.gctx(ctx), addr.decode('ascii'), dst.amount, is_change)
+            await layout.require_confirm_tx(
+                self.gctx(ctx), addr.decode("ascii"), dst.amount, is_change
+            )
 
         await layout.require_confirm_fee(self.gctx(ctx), tsx_data.fee)
 
@@ -60,12 +72,12 @@ class TrezorInterface(object):
         slide = ui.backlight_slide(BACKLIGHT_NORMAL)
         # await ui.backlight_slide(BACKLIGHT_NORMAL)
 
-        text = Text('Signing transaction', ui.ICON_SEND, icon_color=ui.BLUE)
-        text.normal('Signing...')
+        text = Text("Signing transaction", ui.ICON_SEND, icon_color=ui.BLUE)
+        text.normal("Signing...")
 
         try:
             layout = await layout.simple_text(text, tm=1000)
-            log.debug(__name__, 'layout: %s', layout)
+            log.debug(__name__, "layout: %s", layout)
             workflow.closedefault()
             workflow.onlayoutstart(layout)
             loop.schedule(slide)
@@ -88,8 +100,8 @@ class TrezorInterface(object):
         from trezor.ui.text import Text
         from apps.monero import layout
 
-        text = Text('Error', ui.ICON_SEND, icon_color=ui.RED)
-        text.normal('Transaction failed')
+        text = Text("Error", ui.ICON_SEND, icon_color=ui.RED)
+        text.normal("Transaction failed")
 
         await layout.ui_text(text, tm=3 * 1000 * 1000)
         await self.restore_default()
@@ -108,8 +120,9 @@ class TrezorInterface(object):
         from trezor import ui
         from trezor.ui.text import Text
         from apps.monero import layout
-        text = Text('Success', ui.ICON_SEND, icon_color=ui.GREEN)
-        text.normal('Transaction signed')
+
+        text = Text("Success", ui.ICON_SEND, icon_color=ui.GREEN)
+        text.normal("Transaction signed")
 
         await layout.ui_text(text, tm=3 * 1000 * 1000)
         await self.restore_default()
@@ -128,23 +141,27 @@ class TrezorInterface(object):
 
         info = []
         if step == 100:
-            info = ['Processing inputs', '%d/%d' % (sub_step + 1, sub_step_total)]
+            info = ["Processing inputs", "%d/%d" % (sub_step + 1, sub_step_total)]
         elif step == 200:
-            info = ['Sorting']
+            info = ["Sorting"]
         elif step == 300:
-            info = ['Processing inputs', 'phase 2', '%d/%d' % (sub_step + 1, sub_step_total)]
+            info = [
+                "Processing inputs",
+                "phase 2",
+                "%d/%d" % (sub_step + 1, sub_step_total),
+            ]
         elif step == 400:
-            info = ['Processing outputs', '%d/%d' % (sub_step + 1, sub_step_total)]
+            info = ["Processing outputs", "%d/%d" % (sub_step + 1, sub_step_total)]
         elif step == 500:
-            info = ['Postprocessing...']
+            info = ["Postprocessing..."]
         elif step == 600:
-            info = ['Postprocessing...']
+            info = ["Postprocessing..."]
         elif step == 700:
-            info = ['Signing inputs', '%d/%d' % (sub_step + 1, sub_step_total)]
+            info = ["Signing inputs", "%d/%d" % (sub_step + 1, sub_step_total)]
         else:
-            info = ['Processing...']
+            info = ["Processing..."]
 
-        text = Text('Signing transaction', ui.ICON_SEND, icon_color=ui.BLUE)
+        text = Text("Signing transaction", ui.ICON_SEND, icon_color=ui.BLUE)
         text.normal(*info)
 
         await layout.simple_text(text, tm=10 * 1000)
@@ -156,6 +173,7 @@ class TrezorInterface(object):
         :return:
         """
         from apps.monero import layout
+
         await layout.require_confirm_keyimage_sync(self.gctx(ctx))
         return True
 
