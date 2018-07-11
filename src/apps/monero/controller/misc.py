@@ -58,8 +58,8 @@ def translate_monero_dest_entry(dst_entry):
     d = TxDestinationEntry()
     d.amount = dst_entry.amount
     d.is_subaddress = dst_entry.is_subaddress
-    d.addr = AccountPublicAddress(m_spend_public_key=dst_entry.addr.m_spend_public_key,
-                                  m_view_public_key=dst_entry.addr.m_view_public_key)
+    d.addr = AccountPublicAddress(m_spend_public_key=dst_entry.addr.spend_public_key,
+                                  m_view_public_key=dst_entry.addr.view_public_key)
     return d
 
 
