@@ -6,40 +6,22 @@ from trezor.utils import chunks
 
 
 async def require_confirm_watchkey(ctx):
-    content = Text('Confirm export', ui.ICON_SEND,
-                   'Do you really want to',
-                   'export watch-only',
-                   'credentials?',
-                   ui.BOLD,
-                   icon_color=ui.GREEN)
-    return await require_confirm(ctx, content, ButtonRequestType.SignTx)
-
-
-async def require_confirm_keys(ctx):
-    content = Text('Confirm export', ui.ICON_WIPE,
-                   'Do you really want to',
-                   'export', ui.BOLD, 
-                   'private wallet keys?',
-                   ui.BOLD,
-                   icon_color=ui.RED)
+    content = Text('Confirm export', ui.ICON_SEND, icon_color=ui.GREEN)
+    content.normal(*['Do you really want to', 'export watch-only', 'credentials?'])
     return await require_confirm(ctx, content, ButtonRequestType.SignTx)
 
 
 async def require_confirm_keyimage_sync(ctx):
-    content = Text('Confirm ki sync', ui.ICON_SEND,
-                   'Do you really want to',
-                   'sync key images?',
-                   ui.BOLD,
-                   icon_color=ui.GREEN)
+    content = Text('Confirm ki sync', ui.ICON_SEND, icon_color=ui.GREEN)
+    content.normal(*['Do you really want to', 'sync key images?'])
     return await require_confirm(ctx, content, ButtonRequestType.SignTx)
 
 
 async def require_confirm_tx_plain(ctx, to, value):
-    content = Text('Confirm sending', ui.ICON_SEND,
-                   ui.BOLD, format_amount(value),
-                   ui.NORMAL, 'to',
-                   ui.MONO, *split_address(to),
-                   icon_color=ui.GREEN)
+    content = Text('Confirm sending', ui.ICON_SEND, icon_color=ui.GREEN)
+    content.bold(format_amount(value))
+    content.normal('to')
+    content.mono(*split_address(to))
     return await require_confirm(ctx, content, code=ButtonRequestType.SignTx)
 
 
@@ -102,9 +84,8 @@ async def require_confirm_tx(ctx, to, value):
                 confirm_btn = DEFAULT_CONFIRM
                 confirm_style = ui.BTN_CONFIRM
 
-            content = Text('Confirm send %d/%d' % (cur_step+1, npages), ui.ICON_SEND,
-                           *text,
-                           icon_color=ui.GREEN)
+            content = Text('Confirm send %d/%d' % (cur_step+1, npages), ui.ICON_SEND, icon_color=ui.GREEN)
+            content.normal(*text)
 
             reaction = await tx_dialog(ctx, code, content, cancel_btn, confirm_btn, cancel_style, confirm_style)
 
@@ -122,11 +103,10 @@ async def require_confirm_tx(ctx, to, value):
 
 
 async def require_confirm_fee(ctx, value, fee):
-    content = Text('Confirm transaction', ui.ICON_SEND,
-                   ui.BOLD, format_amount(value),
-                   ui.NORMAL, 'fee:',
-                   ui.BOLD, format_amount(fee),
-                   icon_color=ui.GREEN)
+    content = Text('Confirm transaction', ui.ICON_SEND, icon_color=ui.GREEN)
+    content.bold(format_amount(value))
+    content.normal('fee: ')
+    content.bold(format_amount(fee))
     await require_hold_to_confirm(ctx, content, ButtonRequestType.ConfirmOutput)
 
 

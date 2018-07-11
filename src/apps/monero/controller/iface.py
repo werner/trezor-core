@@ -49,10 +49,8 @@ class TrezorInterface(object):
         slide = ui.backlight_slide(BACKLIGHT_NORMAL)
         #await ui.backlight_slide(BACKLIGHT_NORMAL)
 
-        text = Text(
-            'Signing transaction', ui.ICON_SEND,
-            'Signing...',
-            icon_color=ui.BLUE)
+        text = Text('Signing transaction', ui.ICON_SEND, icon_color=ui.BLUE)
+        text.normal('Signing...')
 
         try:
             layout = await layout.simple_text(text, tm=1000)
@@ -79,10 +77,8 @@ class TrezorInterface(object):
         from trezor.ui.text import Text
         from apps.monero import layout
 
-        text = Text(
-            'Error', ui.ICON_SEND,
-            'Transaction failed',
-            icon_color=ui.RED)
+        text = Text('Error', ui.ICON_SEND, icon_color=ui.RED)
+        text.normal('Transaction failed')
 
         await layout.ui_text(text, tm=3 * 1000 * 1000)
         await self.restore_default()
@@ -101,10 +97,8 @@ class TrezorInterface(object):
         from trezor import ui
         from trezor.ui.text import Text
         from apps.monero import layout
-        text = Text(
-            'Success', ui.ICON_SEND,
-            'Transaction signed',
-            icon_color=ui.GREEN)
+        text = Text('Success', ui.ICON_SEND, icon_color=ui.GREEN)
+        text.normal('Transaction signed')
 
         await layout.ui_text(text, tm=3 * 1000 * 1000)
         await self.restore_default()
@@ -139,10 +133,9 @@ class TrezorInterface(object):
         else:
             info = ['Processing...']
 
-        text = Text(
-            'Signing transaction', ui.ICON_SEND,
-            *info,
-            icon_color=ui.BLUE)
+        text = Text('Signing transaction', ui.ICON_SEND, icon_color=ui.BLUE)
+        text.normal(*info)
+
         await layout.simple_text(text, tm=10 * 1000)
 
     async def confirm_ki_sync(self, init_msg, ctx=None):
