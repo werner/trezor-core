@@ -4,7 +4,7 @@ import protobuf as p
 
 
 class MoneroKeyImageSyncFinalResp(p.MessageType):
-    MESSAGE_WIRE_TYPE = 322
+    MESSAGE_WIRE_TYPE = 522
     FIELDS = {
         1: ('enc_key', p.BytesType, 0),
     }

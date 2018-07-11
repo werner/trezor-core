@@ -5,7 +5,7 @@ from .MoneroRctSig import MoneroRctSig
 
 
 class MoneroTsxAllOutSetResp(p.MessageType):
-    MESSAGE_WIRE_TYPE = 307
+    MESSAGE_WIRE_TYPE = 507
     FIELDS = {
         1: ('extra', p.BytesType, 0),
         2: ('tx_prefix_hash', p.BytesType, 0),

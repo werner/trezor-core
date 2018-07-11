@@ -4,7 +4,7 @@ import protobuf as p
 
 
 class MoneroRespError(p.MessageType):
-    MESSAGE_WIRE_TYPE = 300
+    MESSAGE_WIRE_TYPE = 500
     FIELDS = {
         1: ('status', p.UVarintType, 0),
         2: ('reason', p.UnicodeType, 0),

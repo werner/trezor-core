@@ -4,7 +4,7 @@ import protobuf as p
 
 
 class MoneroTsxFinalResp(p.MessageType):
-    MESSAGE_WIRE_TYPE = 310
+    MESSAGE_WIRE_TYPE = 510
     FIELDS = {
         1: ('cout_key', p.BytesType, 0),
         2: ('salt', p.BytesType, 0),

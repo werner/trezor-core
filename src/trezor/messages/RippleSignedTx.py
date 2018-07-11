@@ -3,17 +3,17 @@
 import protobuf as p
 
 
-class MoneroTsxSignInputResp(p.MessageType):
-    MESSAGE_WIRE_TYPE = 509
+class RippleSignedTx(p.MessageType):
+    MESSAGE_WIRE_TYPE = 403
     FIELDS = {
         1: ('signature', p.BytesType, 0),
-        2: ('cout', p.BytesType, 0),
+        2: ('serialized_tx', p.BytesType, 0),
     }
 
     def __init__(
         self,
         signature: bytes = None,
-        cout: bytes = None,
+        serialized_tx: bytes = None,
     ) -> None:
         self.signature = signature
-        self.cout = cout
+        self.serialized_tx = serialized_tx

@@ -8,17 +8,17 @@ if __debug__:
         List = None  # type: ignore
 
 
-class MoneroGetKey(p.MessageType):
-    MESSAGE_WIRE_TYPE = 334
+class RippleGetAddress(p.MessageType):
+    MESSAGE_WIRE_TYPE = 400
     FIELDS = {
         1: ('address_n', p.UVarintType, p.FLAG_REPEATED),
-        2: ('network_type', p.UVarintType, 0),
+        2: ('show_display', p.BoolType, 0),
     }
 
     def __init__(
         self,
         address_n: List[int] = None,
-        network_type: int = None,
+        show_display: bool = None,
     ) -> None:
         self.address_n = address_n if address_n is not None else []
-        self.network_type = network_type
+        self.show_display = show_display
