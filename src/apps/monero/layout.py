@@ -17,8 +17,8 @@ async def require_confirm_keyimage_sync(ctx):
     return await require_confirm(ctx, content, ButtonRequestType.SignTx)
 
 
-async def require_confirm_tx_plain(ctx, to, value):
-    content = Text('Confirm sending', ui.ICON_SEND, icon_color=ui.GREEN)
+async def require_confirm_tx_plain(ctx, to, value, is_change=False):
+    content = Text('Confirm ' + ('sending' if not is_change else 'change'), ui.ICON_SEND, icon_color=ui.GREEN)
     content.bold(format_amount(value))
     content.normal('to')
     content.mono(*split_address(to))
@@ -37,11 +37,11 @@ async def tx_dialog(ctx, code, content, cancel_btn, confirm_btn, cancel_style, c
     return await ctx.wait(dialog)
 
 
-async def require_confirm_tx(ctx, to, value):
+async def require_confirm_tx(ctx, to, value, is_change=False):
     from trezor import loop
     len_addr = (len(to) + 15) // 16
     if len_addr <= 2:
-        return await require_confirm_tx_plain(ctx, to, value)
+        return await require_confirm_tx_plain(ctx, to, value, is_change)
 
     else:
         to_chunks = list(split_address(to))
@@ -83,7 +83,8 @@ async def require_confirm_tx(ctx, to, value):
                 confirm_btn = DEFAULT_CONFIRM
                 confirm_style = ui.BTN_CONFIRM
 
-            content = Text('Confirm send %d/%d' % (cur_step + 1, npages), ui.ICON_SEND, icon_color=ui.GREEN)
+            conf_text = 'Confirm send' if not is_change else 'Con. change'
+            content = Text('%s %d/%d' % (conf_text, cur_step + 1, npages), ui.ICON_SEND, icon_color=ui.GREEN)
             content.normal(*text)
 
             reaction = await tx_dialog(ctx, code, content, cancel_btn, confirm_btn, cancel_style, confirm_style)
@@ -101,10 +102,9 @@ async def require_confirm_tx(ctx, to, value):
                 cur_step += 1
 
 
-async def require_confirm_fee(ctx, value, fee):
-    content = Text('Confirm transaction', ui.ICON_SEND, icon_color=ui.GREEN)
-    content.bold(format_amount(value))
-    content.normal('fee: ')
+async def require_confirm_fee(ctx, fee):
+    content = Text('Confirm fee', ui.ICON_SEND, icon_color=ui.GREEN)
+    content.normal('Fee: ')
     content.bold(format_amount(fee))
     await require_hold_to_confirm(ctx, content, ButtonRequestType.ConfirmOutput)
 

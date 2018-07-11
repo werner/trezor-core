@@ -29,13 +29,25 @@ class TrezorInterface(object):
         if tsx_data.change_dts:
             change_coord = tsx_data.change_dts.amount, tsx_data.change_dts.addr
 
+        outs = tsx_data.outputs
+        change_idx = None
+        for idx, dst in enumerate(outs):
+            if change_coord and change_coord[0] and change_coord == (dst.amount, dst.addr):
+                change_idx = idx
+
+        if change_idx is not None:
+            outs = [x for i, x in enumerate(outs) if i != change_idx] + [outs[change_idx]]
+            change_idx = len(outs) - 1
+
         from apps.monero import layout
-        for dst in tsx_data.outputs:
+        for idx, dst in enumerate(outs):
             addr = encode_addr(net_version(creds.network_type),
                                dst.addr.m_spend_public_key,
                                dst.addr.m_view_public_key)
+            is_change = change_idx and idx == change_idx
+            await layout.require_confirm_tx(self.gctx(ctx), addr.decode('ascii'), dst.amount, is_change)
 
-            await layout.require_confirm_tx(self.gctx(ctx), addr.decode('ascii'), dst.amount)
+        await layout.require_confirm_fee(self.gctx(ctx), tsx_data.fee)
 
         from trezor.ui.text import Text
         from trezor import ui
