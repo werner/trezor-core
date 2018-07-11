@@ -237,7 +237,7 @@ class TsxSigner(object):
     async def tsx_sign_input(self, msg):
         """
         Generates a signature for one input.
-        
+
         :return:
         """
         try:

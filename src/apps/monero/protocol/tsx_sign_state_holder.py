@@ -41,4 +41,3 @@ class TsxSignStateHolder(object):
         self.full_message_hasher = None
         self.full_message = None
         self.exp_tx_prefix_hash = None
-
