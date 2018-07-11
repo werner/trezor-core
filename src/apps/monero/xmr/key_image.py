@@ -9,63 +9,6 @@ from apps.monero.xmr.serialize.message_types import MessageType, ContainerType, 
 from apps.monero.xmr.serialize_messages.base import ECPublicKey, Hash
 
 
-class SubAddrIndicesList(MessageType):
-    __slots__ = ('account', 'minor_indices')
-
-    @staticmethod
-    def f_specs():
-        return (
-            ('account', UVarintType),
-            ('minor_indices', ContainerType, UVarintType),
-        )
-
-
-class KeyImageExportInit(MessageType):
-    """
-    Initializes key image sync. Commitment
-    """
-    __slots__ = ('num', 'hash', 'subs')
-
-    @staticmethod
-    def f_specs():
-        return (
-            ('num', UVarintType),  # number of outputs to gen
-            ('hash', Hash),  # aggregate hash commitment
-            ('subs', ContainerType, SubAddrIndicesList),  # aggregated sub addresses indices
-        )
-
-
-class TransferDetails(MessageType):
-    """
-    Transfer details for key image sync needs
-    """
-    __slots__ = ('out_key', 'tx_pub_key', 'additional_tx_pub_keys', 'm_internal_output_index')
-
-    @staticmethod
-    def f_specs():
-        return (
-            ('out_key', ECPublicKey),
-            ('tx_pub_key', ECPublicKey),
-            ('additional_tx_pub_keys', ContainerType, ECPublicKey),
-            ('m_internal_output_index', UVarintType),
-        )
-
-
-class ExportedKeyImage(MessageType):
-    """
-    Exported key image
-    """
-    __slots__ = ('iv', 'tag', 'blob')
-
-    @staticmethod
-    def f_specs():
-        return (
-            ('iv', BlobType),   # enc IV
-            ('tag', BlobType),  # enc tag
-            ('blob', BlobType),  # encrypted ki || sig
-        )
-
-
 def compute_hash(rr):
     """
     Hash over output to ki-sync
@@ -78,7 +21,7 @@ def compute_hash(rr):
     buff += rr.tx_pub_key
     if rr.additional_tx_pub_keys:
         buff += b''.join(rr.additional_tx_pub_keys)
-    buff += dump_uvarint_b(rr.m_internal_output_index)
+    buff += dump_uvarint_b(rr.internal_output_index)
 
     return crypto.cn_fast_hash(buff)
 
@@ -98,6 +41,6 @@ async def export_key_image(creds, subaddresses, td):
         additional_tx_pub_keys = [crypto.decodepoint(x) for x in td.additional_tx_pub_keys]
 
     ki, sig = ring_ct.export_key_image(creds, subaddresses, out_key, tx_pub_key,
-                                       additional_tx_pub_keys, td.m_internal_output_index)
+                                       additional_tx_pub_keys, td.internal_output_index)
 
     return ki, sig
