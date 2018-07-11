@@ -1,4 +1,4 @@
-from apps.monero.xmr.serialize.message_types import MessageType, ContainerType
+from apps.monero.xmr.serialize.message_types import ContainerType, MessageType
 from apps.monero.xmr.serialize_messages.base import ECKey
 
 

@@ -1,5 +1,6 @@
-from apps.monero.xmr.sub.xmr_net import NetworkTypes, net_version
 from trezor.crypto import monero as tcry
+
+from apps.monero.xmr.sub.xmr_net import NetworkTypes, net_version
 
 
 def addr_to_hash(addr):

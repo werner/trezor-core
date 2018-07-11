@@ -3,8 +3,9 @@
 # Author: Dusan Klinec, ph4r05, 2018
 import gc
 
-from apps.monero.controller import misc
 from trezor import log
+
+from apps.monero.controller import misc
 
 
 class TsxSigner(object):

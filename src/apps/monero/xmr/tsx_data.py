@@ -1,5 +1,5 @@
-from apps.monero.xmr.serialize.base_types import UVarintType, BoolType
-from apps.monero.xmr.serialize.message_types import MessageType, BlobType, ContainerType
+from apps.monero.xmr.serialize.base_types import BoolType, UVarintType
+from apps.monero.xmr.serialize.message_types import BlobType, ContainerType, MessageType
 from apps.monero.xmr.serialize_messages.base import SecretKey
 from apps.monero.xmr.serialize_messages.tx_dest_entry import TxDestinationEntry
 

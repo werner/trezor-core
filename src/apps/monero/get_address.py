@@ -1,6 +1,7 @@
-from apps.common.display_address import show_qr, show_address
-from apps.monero.controller import wrapper
 from trezor.messages.MoneroAddress import MoneroAddress
+
+from apps.common.display_address import show_address, show_qr
+from apps.monero.controller import wrapper
 
 
 async def layout_monero_get_address(ctx, msg):

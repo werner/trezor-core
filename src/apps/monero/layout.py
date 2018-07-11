@@ -1,8 +1,9 @@
-from apps.common.confirm import require_confirm, require_hold_to_confirm
 from trezor import ui
 from trezor.messages import ButtonRequestType
 from trezor.ui.text import Text
 from trezor.utils import chunks
+
+from apps.common.confirm import require_confirm, require_hold_to_confirm
 
 
 async def require_confirm_watchkey(ctx):

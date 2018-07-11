@@ -1,7 +1,25 @@
-from apps.monero.xmr.serialize.base_types import BoolType, UVarintType, SizeT, UInt64, UInt8, UInt32
-from apps.monero.xmr.serialize.message_types import MessageType, ContainerType, UnicodeType
+from apps.monero.xmr.serialize.base_types import (
+    BoolType,
+    SizeT,
+    UInt8,
+    UInt32,
+    UInt64,
+    UVarintType,
+)
+from apps.monero.xmr.serialize.message_types import (
+    ContainerType,
+    MessageType,
+    UnicodeType,
+)
 from apps.monero.xmr.serialize_messages.addr import SubaddressIndex
-from apps.monero.xmr.serialize_messages.base import ECKey, ECPublicKey, KeyImage, Hash, SecretKey, UnorderedSet
+from apps.monero.xmr.serialize_messages.base import (
+    ECKey,
+    ECPublicKey,
+    Hash,
+    KeyImage,
+    SecretKey,
+    UnorderedSet,
+)
 from apps.monero.xmr.serialize_messages.tx_dest_entry import TxDestinationEntry
 from apps.monero.xmr.serialize_messages.tx_full import RctSig, Transaction
 from apps.monero.xmr.serialize_messages.tx_prefix import TransactionPrefix

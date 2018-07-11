@@ -2,9 +2,7 @@
 # -*- coding: utf-8 -*-
 # Author: Dusan Klinec, ph4r05, 2018
 
-from trezor.crypto import chacha20poly1305 as ChaCha20Poly1305
-from trezor.crypto import monero
-from trezor.crypto import random
+from trezor.crypto import chacha20poly1305 as ChaCha20Poly1305, monero, random
 
 
 def encrypt(key, plaintext, associated_data=None):

@@ -3,9 +3,8 @@
 # Author: Dusan Klinec, ph4r05, 2018
 
 import gc
-import sys
-
 import micropython
+import sys
 
 from trezor import log
 

@@ -35,13 +35,22 @@ required:
 
 import sys
 
-from apps.monero.xmr.serialize.base_types import UVarintType, IntType, XmrType
-from apps.monero.xmr.serialize.erefs import get_elem, set_elem, eref
-from apps.monero.xmr.serialize.int_serialize import load_uint, dump_uint
-from apps.monero.xmr.serialize.message_types import BlobType, UnicodeType, VariantType, ContainerType, TupleType, \
-    MessageType, container_elem_type, gen_elem_array
-from protobuf import load_uvarint, dump_uvarint
+from protobuf import dump_uvarint, load_uvarint
 from trezor import log
+
+from apps.monero.xmr.serialize.base_types import IntType, UVarintType, XmrType
+from apps.monero.xmr.serialize.erefs import eref, get_elem, set_elem
+from apps.monero.xmr.serialize.int_serialize import dump_uint, load_uint
+from apps.monero.xmr.serialize.message_types import (
+    BlobType,
+    ContainerType,
+    MessageType,
+    TupleType,
+    UnicodeType,
+    VariantType,
+    container_elem_type,
+    gen_elem_array,
+)
 
 
 def import_def(module, name):

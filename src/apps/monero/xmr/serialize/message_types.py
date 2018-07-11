@@ -1,5 +1,5 @@
 from apps.monero.xmr.serialize.base_types import XmrType
-from apps.monero.xmr.serialize.obj_helper import eq_obj_contents, slot_obj_dict, is_type
+from apps.monero.xmr.serialize.obj_helper import eq_obj_contents, is_type, slot_obj_dict
 
 
 class BlobType(XmrType):

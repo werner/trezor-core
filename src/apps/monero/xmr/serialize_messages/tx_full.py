@@ -1,16 +1,19 @@
 
-from apps.monero.xmr.serialize.base_types import UVarintType, UInt8
+from apps.monero.xmr.serialize.base_types import UInt8, UVarintType
 from apps.monero.xmr.serialize.erefs import eref
-from apps.monero.xmr.serialize.message_types import MessageType, ContainerType
+from apps.monero.xmr.serialize.message_types import ContainerType, MessageType
 from apps.monero.xmr.serialize_messages.base import ECKey
-from apps.monero.xmr.serialize_messages.ct_keys import KeyM, KeyV, CtkeyM, CtkeyV, CtKey
-from apps.monero.xmr.serialize_messages.tx_ecdh import EcdhTuple, EcdhInfo
-from apps.monero.xmr.serialize_messages.tx_prefix import TxinToKey, \
-    TransactionPrefix
+from apps.monero.xmr.serialize_messages.ct_keys import CtKey, CtkeyM, CtkeyV, KeyM, KeyV
+from apps.monero.xmr.serialize_messages.tx_ecdh import EcdhInfo, EcdhTuple
+from apps.monero.xmr.serialize_messages.tx_prefix import TransactionPrefix, TxinToKey
 from apps.monero.xmr.serialize_messages.tx_rsig import RctType
 from apps.monero.xmr.serialize_messages.tx_rsig_boro import RangeSig
 from apps.monero.xmr.serialize_messages.tx_rsig_bulletproof import Bulletproof
-from apps.monero.xmr.serialize_messages.tx_sig import Signature, SignatureArray, get_signature_size
+from apps.monero.xmr.serialize_messages.tx_sig import (
+    Signature,
+    SignatureArray,
+    get_signature_size,
+)
 
 
 class MgSig(MessageType):
