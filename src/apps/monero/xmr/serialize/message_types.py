@@ -128,7 +128,9 @@ def gen_elem_array(size, elem_type=None):
     if elem_type is None or not callable(elem_type):
         return [elem_type] * size
     if is_type(elem_type, ContainerType):
-        elem_type = lambda: []
+        def elem_type():
+            return []
+
     res = []
     for _ in range(size):
         res.append(elem_type())

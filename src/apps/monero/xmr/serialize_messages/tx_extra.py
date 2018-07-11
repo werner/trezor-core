@@ -30,7 +30,7 @@ class TxExtraPadding(MessageType):
         else:
             self.size = 0
             buffer = bytearray(1)
-            for i in range(self.TX_EXTRA_PADDING_MAX_COUNT+1):
+            for i in range(self.TX_EXTRA_PADDING_MAX_COUNT + 1):
                 self.size += 1
                 try:
                     nread = await ar.iobj.areadinto(buffer)

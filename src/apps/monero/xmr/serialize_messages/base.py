@@ -41,4 +41,3 @@ KeyDerivation = ECPoint
 
 class UnorderedSet(ContainerType):
     pass
-

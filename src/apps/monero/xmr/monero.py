@@ -256,4 +256,3 @@ def generate_monero_keys(seed):
     hash = crypto.cn_fast_hash(crypto.encodeint(spend_sec))
     view_sec, view_pub = generate_keys(crypto.decodeint(hash))
     return spend_sec, spend_pub, view_sec, view_pub
-

@@ -54,6 +54,3 @@ def encrypt_pack(key, plaintext, associated_data=None):
 def decrypt_pack(key, ciphertext):
     cp = memoryview(ciphertext)
     return decrypt(key, cp[:12], cp[12:], None)
-
-
-

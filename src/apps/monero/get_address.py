@@ -15,4 +15,3 @@ async def layout_monero_get_address(ctx, msg):
                 break
 
     return MoneroAddress(address=creds.address)
-

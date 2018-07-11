@@ -10,7 +10,6 @@
 # https://github.com/monero-project/research-lab
 
 import ubinascii as binascii
-from micropython import const
 
 from trezor.crypto import hmac
 from trezor.crypto import random
@@ -551,7 +550,7 @@ def derivation_to_scalar(derivation, output_index):
     :return:
     """
     check_ed25519point(derivation)
-    return tcry.xmr_derivation_to_scalar(derivation, output_index);
+    return tcry.xmr_derivation_to_scalar(derivation, output_index)
 
 
 def derive_public_key(derivation, output_index, base):
@@ -662,5 +661,3 @@ def check_signature(data, c, r, pub):
     tmp_c = hash_to_scalar(buff)
     res = sc_sub(tmp_c, c)
     return not sc_isnonzero(res)
-
-

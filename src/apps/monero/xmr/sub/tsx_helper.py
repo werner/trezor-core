@@ -80,8 +80,8 @@ def absolute_output_offsets_to_relative(off):
     if len(off) == 0:
         return off
     res = sorted(off)
-    for i in range(len(off)-1, 0, -1):
-        res[i] -= res[i-1]
+    for i in range(len(off) - 1, 0, -1):
+        res[i] -= res[i - 1]
     return res
 
 
@@ -199,4 +199,3 @@ async def add_additional_tx_pub_keys_to_extra(tx_extra, additional_pub_keys=None
     await ar.variant(pubs_msg, TxExtraField)
     tx_extra += bytes(rw.get_buffer())
     return tx_extra
-

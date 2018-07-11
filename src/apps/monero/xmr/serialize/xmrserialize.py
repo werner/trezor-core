@@ -719,5 +719,3 @@ async def dump_field(writer, elem, elem_type, params=None):
 
 async def load_field(reader, elem_type, params=None, elem=None):
     raise TypeError('type')
-
-

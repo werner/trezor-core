@@ -335,4 +335,3 @@ def prove_rct_mg_simple(message, pubs, in_sk, a, cout, kLRki, mscout, index):
         M[i][1] = crypto.point_sub(crypto.decodepoint(pubs[i].mask), cout)
 
     return gen_mlsag_ext(message, M, sk, kLRki, mscout, index, rows)
-

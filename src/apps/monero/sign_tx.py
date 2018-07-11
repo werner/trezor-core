@@ -3,7 +3,6 @@
 # Author: Dusan Klinec, ph4r05, 2018
 
 import gc
-import sys
 import micropython
 from trezor import log
 
@@ -33,6 +32,3 @@ async def layout_sign_tx(state, ctx, msg):
         state.ctx_sign = None
         log.error(__name__, 'Tsx exception: %s %s', type(e), e)
         raise
-
-
-

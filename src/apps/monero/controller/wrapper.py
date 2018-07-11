@@ -28,4 +28,3 @@ def get_interface(ctx):
 
 def exc2str(e):
     return str(e)
-

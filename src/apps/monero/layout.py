@@ -46,8 +46,7 @@ async def require_confirm_tx(ctx, to, value):
     else:
         to_chunks = list(split_address(to))
         from trezor import res, wire
-        from trezor.messages.ButtonRequest import ButtonRequest
-        from trezor.ui.confirm import CONFIRMED, CANCELLED, ConfirmDialog, DEFAULT_CANCEL, DEFAULT_CONFIRM
+        from trezor.ui.confirm import CONFIRMED, CANCELLED, DEFAULT_CANCEL, DEFAULT_CONFIRM
 
         npages = 1 + ((len_addr - 2) + 3) // 4
         cur_step = 0
@@ -62,9 +61,9 @@ async def require_confirm_tx(ctx, to, value):
                         ui.NORMAL, 'to',
                         ui.MONO, ] + to_chunks[:2]
             else:
-                off = 4*(cur_step - 1)
-                cur_chunks = to_chunks[2+off:2+off+4]
-                ctext = [list(x) for x in zip([ui.MONO]*len(cur_chunks), cur_chunks)]
+                off = 4 * (cur_step - 1)
+                cur_chunks = to_chunks[2 + off:2 + off + 4]
+                ctext = [list(x) for x in zip([ui.MONO] * len(cur_chunks), cur_chunks)]
                 for x in ctext:
                     text += x
 
@@ -84,7 +83,7 @@ async def require_confirm_tx(ctx, to, value):
                 confirm_btn = DEFAULT_CONFIRM
                 confirm_style = ui.BTN_CONFIRM
 
-            content = Text('Confirm send %d/%d' % (cur_step+1, npages), ui.ICON_SEND, icon_color=ui.GREEN)
+            content = Text('Confirm send %d/%d' % (cur_step + 1, npages), ui.ICON_SEND, icon_color=ui.GREEN)
             content.normal(*text)
 
             reaction = await tx_dialog(ctx, code, content, cancel_btn, confirm_btn, cancel_style, confirm_style)

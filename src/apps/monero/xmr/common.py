@@ -133,7 +133,7 @@ def defvalkeys(js, key, default=None):
         for ckey in key:
             cur = cur[ckey]
         return cur
-    except:
+    except Exception:
         pass
     return default
 
@@ -142,11 +142,9 @@ def chunk(arr, size=1):
     res = []
     idx = 0
     while True:
-        c = arr[idx:idx+size]
+        c = arr[idx:idx + size]
         res.append(c)
         idx += size
         if len(c) != size:
             break
     return res
-
-

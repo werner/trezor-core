@@ -121,6 +121,6 @@ def dump_uint_b_into(n, width, buffer, offset=0):
     :return:
     """
     for idx in range(width):
-        buffer[idx+offset] = n & 0xff
+        buffer[idx + offset] = n & 0xff
         n >>= 8
     return buffer

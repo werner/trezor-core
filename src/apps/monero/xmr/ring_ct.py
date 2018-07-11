@@ -28,8 +28,8 @@ def prove_range(amount, last_mask=None, decode=False, backend_impl=True, byte_en
         if rsig is None:
             rsig = bytearray(32 * (64 + 64 + 64 + 1))
 
-        buf_ai = bytearray(4*9*64)
-        buf_alpha = bytearray(4*9*64)
+        buf_ai = bytearray(4 * 9 * 64)
+        buf_alpha = bytearray(4 * 9 * 64)
         C, a, R = crypto.prove_range(rsig, amount, last_mask, buf_ai, buf_alpha)  # backend returns encoded
 
     finally:
@@ -43,8 +43,8 @@ def prove_range(amount, last_mask=None, decode=False, backend_impl=True, byte_en
 
 # Ring-ct MG sigs
 # Prove:
-#   c.f. http:#eprint.iacr.org/2015/1098 section 4. definition 10. 
-#   This does the MG sig on the "dest" part of the given key matrix, and 
+#   c.f. http:#eprint.iacr.org/2015/1098 section 4. definition 10.
+#   This does the MG sig on the "dest" part of the given key matrix, and
 #   the last row is the sum of input commitments from that column - sum output commitments
 #   this shows that sum inputs = sum outputs
 # Ver:
@@ -74,7 +74,7 @@ def ecdh_encode(unmasked, receiver_pk=None, derivation=None):
     rv.amount = crypto.sc_add(unmasked.amount, sharedSec2)
     return rv
 
-    
+
 def ecdh_decode(masked, receiver_sk=None, derivation=None):
     """
     Elliptic Curve Diffie-Helman: encodes and decodes the amount b and mask a
@@ -134,7 +134,7 @@ def generate_ring_signature(prefix_hash, image, pubs, sec, sec_idx, test=False):
     image_pre = crypto.ge_dsm_precomp(image_unp)
 
     buff_off = len(prefix_hash)
-    buff = bytearray(buff_off + 2*32*len(pubs))
+    buff = bytearray(buff_off + 2 * 32 * len(pubs))
     memcpy(buff, 0, prefix_hash, 0, buff_off)
     mvbuff = memoryview(buff)
 
@@ -148,24 +148,24 @@ def generate_ring_signature(prefix_hash, image, pubs, sec, sec_idx, test=False):
         if i == sec_idx:
             k = crypto.random_scalar()
             tmp3 = crypto.scalarmult_base(k)
-            crypto.encodepoint_into(tmp3, mvbuff[buff_off:buff_off+32])
+            crypto.encodepoint_into(tmp3, mvbuff[buff_off:buff_off + 32])
             buff_off += 32
 
             tmp3 = crypto.hash_to_ec(crypto.encodepoint(pubs[i]))
             tmp2 = crypto.scalarmult(tmp3, k)
-            crypto.encodepoint_into(tmp2, mvbuff[buff_off:buff_off+32])
+            crypto.encodepoint_into(tmp2, mvbuff[buff_off:buff_off + 32])
             buff_off += 32
 
         else:
             sig[i] = [crypto.random_scalar(), crypto.random_scalar()]
             tmp3 = crypto.ge_frombytes_vartime(pubs[i])
             tmp2 = crypto.ge_double_scalarmult_base_vartime(sig[i][0], tmp3, sig[i][1])
-            crypto.encodepoint_into(tmp2, mvbuff[buff_off:buff_off+32])
+            crypto.encodepoint_into(tmp2, mvbuff[buff_off:buff_off + 32])
             buff_off += 32
 
             tmp3 = crypto.hash_to_ec(crypto.encodepoint(tmp3))
             tmp2 = crypto.ge_double_scalarmult_precomp_vartime(sig[i][1], tmp3, sig[i][0], image_pre)
-            crypto.encodepoint_into(tmp2, mvbuff[buff_off:buff_off+32])
+            crypto.encodepoint_into(tmp2, mvbuff[buff_off:buff_off + 32])
             buff_off += 32
 
             sum = crypto.sc_add(sum, sig[i][0])
@@ -241,4 +241,3 @@ def export_key_image(creds, subaddresses, pkey, tx_pub_key, additional_tx_pub_ke
             raise ValueError('Signature error')
 
     return ki, sig
-

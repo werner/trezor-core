@@ -42,6 +42,3 @@ async def layout_key_image_sync(state, ctx, msg):
         from trezor.messages.MoneroRespError import MoneroRespError
         state.ctx_ki = None
         return MoneroRespError(exc='%s: %s' % (type(e), e))
-
-
-

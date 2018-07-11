@@ -1,5 +1,4 @@
 import gc
-from trezor import log
 
 
 class MemoryReaderWriter:
@@ -38,7 +37,6 @@ class MemoryReaderWriter:
             raise EOFError
 
         nread = min(ln, len(self.buffer))
-        # log.debug(__name__, 'read ln=%s, nread=%s', ln, nread)
         for idx in range(nread):
             buf[idx] = self.buffer[self.offset + idx]
 
@@ -48,7 +46,6 @@ class MemoryReaderWriter:
 
         # Deallocation threshold triggered
         if self.threshold is not None and self.offset >= self.threshold:
-            # log.debug(__name__, 'Free ')
             self.buffer = self.buffer[self.offset]
             self.woffset -= self.offset
             self.offset = 0
@@ -61,10 +58,8 @@ class MemoryReaderWriter:
     async def awrite(self, buf):
         nwritten = len(buf)
         nall = len(self.buffer)
-        nfree = nall - self.woffset
         towrite = nwritten
         bufoff = 0
-        # log.debug(__name__, 'New writing, buf: %s, nfree: %s, buffree: %s', nwritten, nfree, nfree-towrite)
 
         # Fill existing place in the buffer
         while towrite > 0 and nall - self.woffset > 0:
@@ -75,7 +70,6 @@ class MemoryReaderWriter:
 
         # Allocate next chunk if needed
         if towrite > 0:
-            # log.debug(__name__, 'New chunk to create, size: %s', towrite)
             chunk = bytearray(32)  # chunk size typical for EC point
             for i in range(towrite):
                 chunk[i] = buf[bufoff + i]
@@ -86,7 +80,6 @@ class MemoryReaderWriter:
                 chunk = None  # dereference
                 gc.collect()
 
-        # log.debug(__name__, 'write nwritten=%s, total=%s, off=%s, woff=%s, ln=%s', nwritten, self.nwritten, self.offset, self.woffset, len(self.buffer))
         self.nwritten += nwritten
         self.ndata += nwritten
         return nwritten

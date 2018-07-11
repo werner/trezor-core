@@ -44,4 +44,3 @@ class TsxData(MessageType):
         self.is_bulletproof = False
         self.exp_tx_prefix_hash = b''
         self.use_tx_keys = []
-

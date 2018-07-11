@@ -51,7 +51,7 @@ def is_type(x, types, full=False):
     sub = False
     try:
         sub = issubclass(x, types)
-    except:
+    except Exception:
         pass
     res = ins or sub
     return res if not full else (res, ins)

@@ -61,10 +61,4 @@ async def dispatch_diag(ctx, msg, **kwargs):
         log.info(__name__, 'Total modules: %s, Monero modules: %s', total, monero)
         return retit()
 
-
-
     return retit()
-
-
-
-

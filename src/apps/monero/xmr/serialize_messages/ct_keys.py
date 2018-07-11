@@ -55,4 +55,3 @@ class CtkeyV(ContainerType):
 class CtkeyM(ContainerType):
     FIX_SIZE = 0
     ELEM_TYPE = CtkeyV
-

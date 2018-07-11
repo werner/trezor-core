@@ -42,12 +42,11 @@ class TrezorInterface(object):
         from trezor import loop
         from trezor import log
         from trezor import workflow
-        from trezor.ui import display
         from trezor.ui import BACKLIGHT_DIM, BACKLIGHT_NORMAL
 
         await ui.backlight_slide(BACKLIGHT_DIM)
         slide = ui.backlight_slide(BACKLIGHT_NORMAL)
-        #await ui.backlight_slide(BACKLIGHT_NORMAL)
+        # await ui.backlight_slide(BACKLIGHT_NORMAL)
 
         text = Text('Signing transaction', ui.ICON_SEND, icon_color=ui.BLUE)
         text.normal('Signing...')
@@ -58,7 +57,7 @@ class TrezorInterface(object):
             workflow.closedefault()
             workflow.onlayoutstart(layout)
             loop.schedule(slide)
-            #display.clear()
+            # display.clear()
 
         finally:
             pass
@@ -171,4 +170,3 @@ class TrezorInterface(object):
 
 def get_iface(ctx=None):
     return TrezorInterface(ctx)
-

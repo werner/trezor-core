@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 # Author: Dusan Klinec, ph4r05, 2018
 
-import gc
 from trezor import log
 
 
@@ -68,7 +67,7 @@ class KeyImageSync(object):
             raise ValueError('Empty')
 
         resp = []
-        buff = bytearray(32*3)
+        buff = bytearray(32 * 3)
         buff_mv = memoryview(buff)
 
         for td in tds.tdis:
