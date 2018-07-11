@@ -3,10 +3,7 @@
 # Author: Dusan Klinec, ph4r05, 2018
 
 from apps.monero.xmr import common, crypto, ring_ct
-from apps.monero.xmr.serialize.base_types import UVarintType
 from apps.monero.xmr.serialize.int_serialize import dump_uvarint_b
-from apps.monero.xmr.serialize.message_types import BlobType, ContainerType, MessageType
-from apps.monero.xmr.serialize_messages.base import ECPublicKey, Hash
 
 
 def compute_hash(rr):
