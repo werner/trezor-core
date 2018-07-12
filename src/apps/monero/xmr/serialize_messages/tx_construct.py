@@ -18,7 +18,7 @@ from apps.monero.xmr.serialize_messages.base import (
     KeyImage,
 )
 from apps.monero.xmr.serialize_messages.tx_dest_entry import TxDestinationEntry
-from apps.monero.xmr.serialize_messages.tx_full import RctSig, Transaction
+from apps.monero.xmr.serialize_messages.tx_full import RctSig
 from apps.monero.xmr.serialize_messages.tx_prefix import TransactionPrefix
 from apps.monero.xmr.serialize_messages.tx_src_entry import TxSourceEntry
 
