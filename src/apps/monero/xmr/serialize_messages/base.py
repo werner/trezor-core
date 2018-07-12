@@ -6,7 +6,7 @@ XMR types
 
 from micropython import const
 
-from apps.monero.xmr.serialize.message_types import BlobType, ContainerType
+from apps.monero.xmr.serialize.message_types import BlobType
 
 _c0 = const(0)
 _c1 = const(1)
@@ -37,7 +37,3 @@ SecretKey = ECKey
 ECPublicKey = ECPoint
 KeyImage = ECPoint
 KeyDerivation = ECPoint
-
-
-class UnorderedSet(ContainerType):
-    pass

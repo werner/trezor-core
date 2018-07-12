@@ -9,7 +9,6 @@ from apps.monero.xmr.serialize.base_types import (
 from apps.monero.xmr.serialize.message_types import (
     ContainerType,
     MessageType,
-    UnicodeType,
 )
 from apps.monero.xmr.serialize_messages.addr import SubaddressIndex
 from apps.monero.xmr.serialize_messages.base import (
@@ -17,8 +16,6 @@ from apps.monero.xmr.serialize_messages.base import (
     ECPublicKey,
     Hash,
     KeyImage,
-    SecretKey,
-    UnorderedSet,
 )
 from apps.monero.xmr.serialize_messages.tx_dest_entry import TxDestinationEntry
 from apps.monero.xmr.serialize_messages.tx_full import RctSig, Transaction
@@ -104,36 +101,4 @@ class TxConstructionData(MessageType):
             ("dests", ContainerType, TxDestinationEntry),
             ("subaddr_account", UInt32),
             ("subaddr_indices", ContainerType, UVarintType),  # original: x.UInt32
-        )
-
-
-class PendingTransaction(MessageType):
-    @staticmethod
-    def f_specs():
-        return (
-            ("tx", Transaction),
-            ("dust", UInt64),
-            ("fee", UInt64),
-            ("dust_added_to_fee", BoolType),
-            ("change_dts", TxDestinationEntry),
-            ("selected_transfers", ContainerType, SizeT),
-            ("key_images", UnicodeType),
-            ("tx_key", SecretKey),
-            ("additional_tx_keys", ContainerType, SecretKey),
-            ("dests", ContainerType, TxDestinationEntry),
-            ("multisig_sigs", ContainerType, MultisigStruct),
-            ("construction_data", TxConstructionData),
-        )
-
-
-class PendingTransactionVector(ContainerType):
-    ELEM_TYPE = PendingTransaction
-
-
-class MultisigTxSet(MessageType):
-    @staticmethod
-    def f_specs():
-        return (
-            ("m_ptx", PendingTransactionVector),
-            ("m_signers", UnorderedSet, ECPublicKey),
         )
