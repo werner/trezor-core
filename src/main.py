@@ -16,6 +16,7 @@ import apps.ethereum
 import apps.lisk
 import apps.monero
 import apps.nem
+import apps.stellar
 
 if __debug__:
     import apps.debug
@@ -30,6 +31,7 @@ apps.ethereum.boot()
 apps.lisk.boot()
 apps.monero.boot()
 apps.nem.boot()
+apps.stellar.boot()
 if __debug__:
     apps.debug.boot()
 else:
