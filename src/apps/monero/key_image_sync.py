@@ -52,7 +52,10 @@ async def layout_key_image_sync(state, ctx, msg):
             raise ValueError("Unknown error")
 
     except Exception as e:
-        from trezor.messages.MoneroRespError import MoneroRespError
-
         state.ctx_ki = None
-        return MoneroRespError(exc="%s: %s" % (type(e), e))
+
+        log.debug(__name__, "KI error, %s: %s", type(e), e)
+
+        from trezor.messages.Failure import Failure
+
+        return Failure()

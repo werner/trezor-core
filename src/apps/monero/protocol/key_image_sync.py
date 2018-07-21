@@ -32,9 +32,10 @@ class KeyImageSync(object):
     async def init(self, ctx, msg):
         from apps.monero.xmr import crypto
         from apps.monero.xmr import monero
-        from trezor.messages.MoneroRespError import MoneroRespError
-        from trezor.messages.MoneroKeyImageExportInitResp import (
-            MoneroKeyImageExportInitResp
+        from trezor.messages import FailureType
+        from trezor.messages.Failure import Failure
+        from trezor.messages.MoneroKeyImageExportInitAck import (
+            MoneroKeyImageExportInitAck
         )
 
         self.ctx = ctx
@@ -42,7 +43,7 @@ class KeyImageSync(object):
 
         confirmation = await self.iface.confirm_ki_sync(msg, ctx=ctx)
         if not confirmation:
-            return MoneroRespError(reason="rejected")
+            return Failure(code=FailureType.ActionCancelled, message="rejected")
 
         self.num = msg.num
         self.hash = msg.hash
@@ -50,20 +51,18 @@ class KeyImageSync(object):
 
         # Sub address precomputation
         if msg.subs and len(msg.subs) > 0:
-            for sub in msg.subs:  # type: MoneroSubAddrIndicesList
+            for sub in msg.subs:  # type: MoneroSubAddressIndicesList
                 monero.compute_subaddresses(
                     self.creds, sub.account, sub.minor_indices, self.subaddresses
                 )
-        return MoneroKeyImageExportInitResp()
+        return MoneroKeyImageExportInitAck()
 
     async def sync(self, ctx, tds):
         from apps.monero.xmr import crypto
         from apps.monero.xmr.enc import chacha_poly
         from apps.monero.xmr import key_image
         from trezor.messages.MoneroExportedKeyImage import MoneroExportedKeyImage
-        from trezor.messages.MoneroKeyImageSyncStepResp import (
-            MoneroKeyImageSyncStepResp
-        )
+        from trezor.messages.MoneroKeyImageSyncStepAck import MoneroKeyImageSyncStepAck
 
         log.debug(__name__, "ki_sync, step i")
 
@@ -98,11 +97,11 @@ class KeyImageSync(object):
             eki = MoneroExportedKeyImage(iv=nonce, tag=b"", blob=ciph)
             resp.append(eki)
 
-        return MoneroKeyImageSyncStepResp(kis=resp)
+        return MoneroKeyImageSyncStepAck(kis=resp)
 
     async def final(self, ctx, msg=None):
-        from trezor.messages.MoneroKeyImageSyncFinalResp import (
-            MoneroKeyImageSyncFinalResp
+        from trezor.messages.MoneroKeyImageSyncFinalAck import (
+            MoneroKeyImageSyncFinalAck
         )
 
         self.ctx = ctx
@@ -118,4 +117,4 @@ class KeyImageSync(object):
             await self.iface.ki_error("Invalid hash", ctx=self.ctx)
             raise ValueError("Invalid hash")
 
-        return MoneroKeyImageSyncFinalResp(enc_key=self.enc_key)
+        return MoneroKeyImageSyncFinalAck(enc_key=self.enc_key)

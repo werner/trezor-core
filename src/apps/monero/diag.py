@@ -31,9 +31,9 @@ def check_mem(x):
 
 
 def retit(**kwargs):
-    from trezor.messages.MoneroRespError import MoneroRespError
+    from trezor.messages.Failure import Failure
 
-    return MoneroRespError(**kwargs)
+    return Failure(**kwargs)
 
 
 async def dispatch_diag(ctx, msg, **kwargs):

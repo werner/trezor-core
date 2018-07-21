@@ -224,10 +224,10 @@ class TsxSigner(object):
         except misc.TrezorTxPrefixHashNotMatchingError as e:
             await self.tsx_exc_handler(e)
 
-            from trezor.messages.MoneroRespError import MoneroRespError
+            from trezor.messages.Failure import Failure
             from apps.monero.controller.wrapper import exc2str
 
-            return MoneroRespError(status=10, exc=exc2str(e))
+            return Failure(code=10, message=exc2str(e))
 
         except Exception as e:
             await self.tsx_exc_handler(e)

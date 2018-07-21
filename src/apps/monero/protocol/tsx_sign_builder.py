@@ -439,9 +439,10 @@ class TTransactionBuilder(object):
         # Ask for confirmation
         confirmation = await self.trezor.iface.confirm_transaction(tsx_data, self.creds)
         if not confirmation:
-            from trezor.messages.MoneroRespError import MoneroRespError
+            from trezor.messages import FailureType
+            from trezor.messages.Failure import Failure
 
-            return MoneroRespError(reason="rejected")
+            return Failure(code=FailureType.ActionCancelled, message="rejected")
 
         gc.collect()
         self._log_trace(3)
@@ -513,9 +514,9 @@ class TTransactionBuilder(object):
 
         self._log_trace(6)
 
-        from trezor.messages.MoneroTsxInitResp import MoneroTsxInitResp
+        from trezor.messages.MoneroTransactionInitAck import MoneroTransactionInitAck
 
-        return MoneroTsxInitResp(
+        return MoneroTransactionInitAck(
             in_memory=self.in_memory(),
             many_inputs=self.many_inputs(),
             many_outputs=self.many_outputs(),
@@ -593,7 +594,9 @@ class TTransactionBuilder(object):
         :type src_entr: apps.monero.xmr.serialize_messages.tx_construct.TxSourceEntry
         :return:
         """
-        from trezor.messages.MoneroTsxSetInputResp import MoneroTsxSetInputResp
+        from trezor.messages.MoneroTransactionSetInputAck import (
+            MoneroTransactionSetInputAck
+        )
         from apps.monero.xmr.enc import chacha_poly
         from apps.monero.xmr.sub import tsx_helper
         from apps.monero.xmr.serialize_messages.tx_prefix import TxinToKey
@@ -681,7 +684,7 @@ class TTransactionBuilder(object):
         if self.inp_idx + 1 == self.num_inputs():
             await self.tsx_inputs_done()
 
-        return MoneroTsxSetInputResp(
+        return MoneroTransactionSetInputAck(
             vini=await misc.dump_msg(vini, preallocate=64),
             vini_hmac=hmac_vini,
             pseudo_out=pseudo_out,
@@ -723,8 +726,8 @@ class TTransactionBuilder(object):
         :param permutation:
         :return:
         """
-        from trezor.messages.MoneroTsxInputsPermutationResp import (
-            MoneroTsxInputsPermutationResp
+        from trezor.messages.MoneroTransactionInputsPermutationAck import (
+            MoneroTransactionInputsPermutationAck
         )
 
         await self.trezor.iface.transaction_step(self.STEP_PERM)
@@ -732,7 +735,7 @@ class TTransactionBuilder(object):
         if self.in_memory():
             return
         await self._tsx_inputs_permutation(permutation)
-        return MoneroTsxInputsPermutationResp()
+        return MoneroTransactionInputsPermutationAck()
 
     async def _tsx_inputs_permutation(self, permutation):
         """
@@ -783,7 +786,9 @@ class TTransactionBuilder(object):
         :param pseudo_out_hmac: hmac of pseudo_out
         :return:
         """
-        from trezor.messages.MoneroTsxInputViniResp import MoneroTsxInputViniResp
+        from trezor.messages.MoneroTransactionInputViniAck import (
+            MoneroTransactionInputViniAck
+        )
 
         await self.trezor.iface.transaction_step(
             self.STEP_VINI, self.inp_idx + 1, self.num_inputs()
@@ -805,7 +810,7 @@ class TTransactionBuilder(object):
             raise ValueError("HMAC is not correct")
 
         await self.hash_vini_pseudo_out(vini, self.inp_idx, pseudo_out, pseudo_out_hmac)
-        return MoneroTsxInputViniResp()
+        return MoneroTransactionInputViniAck()
 
     async def hash_vini_pseudo_out(
         self, vini, inp_idx, pseudo_out=None, pseudo_out_hmac=None
@@ -1074,10 +1079,12 @@ class TTransactionBuilder(object):
         gc.collect()
 
         self._log_trace(10)
-        from trezor.messages.MoneroTsxSetOutputResp import MoneroTsxSetOutputResp
+        from trezor.messages.MoneroTransactionSetOutputAck import (
+            MoneroTransactionSetOutputAck
+        )
         from apps.monero.xmr.serialize_messages.ct_keys import CtKey
 
-        return MoneroTsxSetOutputResp(
+        return MoneroTransactionSetOutputAck(
             tx_out=await misc.dump_msg(tx_out, preallocate=34),
             vouti_hmac=hmac_vouti,
             rsig=rsig,  # rsig is already byte-encoded
@@ -1173,12 +1180,14 @@ class TTransactionBuilder(object):
         gc.collect()
         self._log_trace(5)
 
-        from trezor.messages.MoneroRctSig import MoneroRctSig
-        from trezor.messages.MoneroTsxAllOutSetResp import MoneroTsxAllOutSetResp
+        from trezor.messages.MoneroRingCtSig import MoneroRingCtSig
+        from trezor.messages.MoneroTransactionAllOutSetAck import (
+            MoneroTransactionAllOutSetAck
+        )
 
         rv = self.init_rct_sig()
-        rv_pb = MoneroRctSig(txn_fee=rv.txnFee, message=rv.message, rv_type=rv.type)
-        return MoneroTsxAllOutSetResp(
+        rv_pb = MoneroRingCtSig(txn_fee=rv.txnFee, message=rv.message, rv_type=rv.type)
+        return MoneroTransactionAllOutSetAck(
             extra=extra_b, tx_prefix_hash=self.tx_prefix_hash, rv=rv_pb
         )
 
@@ -1208,7 +1217,9 @@ class TTransactionBuilder(object):
 
         :return:
         """
-        from trezor.messages.MoneroTsxMlsagDoneResp import MoneroTsxMlsagDoneResp
+        from trezor.messages.MoneroTransactionMlsagDoneAck import (
+            MoneroTransactionMlsagDoneAck
+        )
 
         self.state.set_final_message_done()
         await self.trezor.iface.transaction_step(self.STEP_MLSAG)
@@ -1222,7 +1233,7 @@ class TTransactionBuilder(object):
         self.full_message = await self.full_message_hasher.get_digest()
         self.full_message_hasher = None
 
-        return MoneroTsxMlsagDoneResp(full_message_hash=self.full_message)
+        return MoneroTransactionMlsagDoneAck(full_message_hash=self.full_message)
 
     async def sign_input(
         self,
@@ -1406,9 +1417,11 @@ class TTransactionBuilder(object):
         gc.collect()
         self._log_trace()
 
-        from trezor.messages.MoneroTsxSignInputResp import MoneroTsxSignInputResp
+        from trezor.messages.MoneroTransactionSignInputAck import (
+            MoneroTransactionSignInputAck
+        )
 
-        return MoneroTsxSignInputResp(
+        return MoneroTransactionSignInputAck(
             signature=await misc.dump_msg_gc(mgs[0], preallocate=488, del_msg=True),
             cout=cout,
         )
@@ -1421,7 +1434,7 @@ class TTransactionBuilder(object):
         :param kwargs:
         :return:
         """
-        from trezor.messages.MoneroTsxFinalResp import MoneroTsxFinalResp
+        from trezor.messages.MoneroTransactionFinalAck import MoneroTransactionFinalAck
         from apps.monero.xmr.enc import chacha_poly
 
         self.state.set_final()
@@ -1442,6 +1455,6 @@ class TTransactionBuilder(object):
         await self.trezor.iface.transaction_finished()
         gc.collect()
 
-        return MoneroTsxFinalResp(
+        return MoneroTransactionFinalAck(
             cout_key=cout_key, salt=salt, rand_mult=rand_mult, tx_enc_keys=tx_enc_keys
         )
