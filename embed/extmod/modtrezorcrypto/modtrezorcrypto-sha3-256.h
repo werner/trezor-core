@@ -84,8 +84,9 @@ STATIC mp_obj_t mod_trezorcrypto_Sha3_256_digest(size_t n_args, const mp_obj_t *
     mp_obj_Sha3_256_t *o = MP_OBJ_TO_PTR(args[0]);
     uint8_t out[SHA3_256_DIGEST_LENGTH];
     SHA3_CTX ctx;
+    bool use_keccak = n_args > 1 ? args[1] == mp_const_true : o->keccak == 1;
     memcpy(&ctx, &(o->ctx), sizeof(SHA3_CTX));
-    if (o->keccak == 1 || (n_args > 1 && args[1] == mp_const_true)) {
+    if (use_keccak) {
         keccak_Final(&ctx, out);
     } else {
         sha3_Final(&ctx, out);
