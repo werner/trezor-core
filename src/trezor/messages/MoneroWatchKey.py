@@ -3,7 +3,7 @@
 import protobuf as p
 
 
-class MoneroWatchKeyAck(p.MessageType):
+class MoneroWatchKey(p.MessageType):
     MESSAGE_WIRE_TYPE = 533
     FIELDS = {
         1: ('watch_key', p.BytesType, 0),

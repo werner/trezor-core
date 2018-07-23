@@ -8,7 +8,7 @@ if __debug__:
         List = None  # type: ignore
 
 
-class MoneroGetAddressRequest(p.MessageType):
+class MoneroGetAddress(p.MessageType):
     MESSAGE_WIRE_TYPE = 530
     FIELDS = {
         1: ('address_n', p.UVarintType, p.FLAG_REPEATED),

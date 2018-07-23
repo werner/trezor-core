@@ -8,7 +8,7 @@ if __debug__:
         List = None  # type: ignore
 
 
-class MoneroGetWatchKeyRequest(p.MessageType):
+class MoneroGetWatchKey(p.MessageType):
     MESSAGE_WIRE_TYPE = 532
     FIELDS = {
         1: ('address_n', p.UVarintType, p.FLAG_REPEATED),
