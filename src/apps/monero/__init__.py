@@ -3,8 +3,8 @@ import gc
 from trezor import log
 from trezor.messages.MessageType import (
     DebugMoneroDiagRequest,
-    MoneroGetAddressRequest,
-    MoneroGetWatchKeyRequest,
+    MoneroGetAddress,
+    MoneroGetWatchKey,
     MoneroKeyImageSyncRequest,
     MoneroTransactionSignRequest,
 )
@@ -54,8 +54,8 @@ def dispatch_MoneroDiag(*args, **kwargs):
 
 
 def boot():
-    register(MoneroGetAddressRequest, protobuf_workflow, dispatch_MoneroGetAddress)
-    register(MoneroGetWatchKeyRequest, protobuf_workflow, dispatch_MoneroGetWatchKey)
+    register(MoneroGetAddress, protobuf_workflow, dispatch_MoneroGetAddress)
+    register(MoneroGetWatchKey, protobuf_workflow, dispatch_MoneroGetWatchKey)
     register(MoneroTransactionSignRequest, protobuf_workflow, dispatch_MoneroTsxSign)
     register(MoneroKeyImageSyncRequest, protobuf_workflow, dispatch_MoneroKeyImageSync)
     register(DebugMoneroDiagRequest, protobuf_workflow, dispatch_MoneroDiag)
