@@ -103,6 +103,7 @@ STATIC mp_obj_t mod_trezorcrypto_Sha3_256_copy(size_t n_args, const mp_obj_t *ar
     mp_obj_Sha3_256_t *o = MP_OBJ_TO_PTR(args[0]);
     mp_obj_Sha3_256_t *out = m_new_obj(mp_obj_Sha3_256_t);
     out->base.type = o->base.type;
+    out->keccak = o->keccak;
     memcpy(&(out->ctx), &(o->ctx), sizeof(SHA3_CTX));
     return MP_OBJ_FROM_PTR(out);
 }
