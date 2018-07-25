@@ -15,8 +15,8 @@ class TxExtraPadding(MessageType):
 
     VARIANT_CODE = 0x0
 
-    @staticmethod
-    def f_specs():
+    @classmethod
+    def f_specs(cls):
         return (("size", SizeT),)
 
     def __init__(self, **kwargs):
@@ -51,8 +51,8 @@ class TxExtraPubKey(MessageType):
     __slots__ = ("pub_key",)
     VARIANT_CODE = 0x1
 
-    @staticmethod
-    def f_specs():
+    @classmethod
+    def f_specs(cls):
         return (("pub_key", ECPublicKey),)
 
 
@@ -60,16 +60,16 @@ class TxExtraNonce(MessageType):
     __slots__ = ("nonce",)
     VARIANT_CODE = 0x2
 
-    @staticmethod
-    def f_specs():
+    @classmethod
+    def f_specs(cls):
         return (("nonce", BlobType),)
 
 
 class TxExtraMergeMiningTag(MessageType):
     VARIANT_CODE = 0x3
 
-    @staticmethod
-    def f_specs():
+    @classmethod
+    def f_specs(cls):
         return (
             ("field_len", UVarintType),
             ("depth", UVarintType),
@@ -81,8 +81,8 @@ class TxExtraAdditionalPubKeys(MessageType):
     __slots__ = ("data",)
     VARIANT_CODE = 0x4
 
-    @staticmethod
-    def f_specs():
+    @classmethod
+    def f_specs(cls):
         return (("data", ContainerType, ECPublicKey),)
 
 
@@ -90,14 +90,14 @@ class TxExtraMysteriousMinergate(MessageType):
     __slots__ = ("data",)
     VARIANT_CODE = 0xde
 
-    @staticmethod
-    def f_specs():
+    @classmethod
+    def f_specs(cls):
         return (("data", BlobType),)
 
 
 class TxExtraField(VariantType):
-    @staticmethod
-    def f_specs():
+    @classmethod
+    def f_specs(cls):
         return (
             ("tx_extra_padding", TxExtraPadding),
             ("tx_extra_pub_key", TxExtraPubKey),

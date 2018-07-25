@@ -9,20 +9,20 @@ from apps.monero.xmr.serialize_messages.ct_keys import CtKey
 
 
 class MultisigKLRki(MessageType):
-    @staticmethod
-    def f_specs():
+    @classmethod
+    def f_specs(cls):
         return (("K", ECKey), ("L", ECKey), ("R", ECKey), ("ki", ECKey))
 
 
 class OutputEntry(TupleType):
-    @staticmethod
-    def f_specs():
+    @classmethod
+    def f_specs(cls):
         return (UVarintType, CtKey)  # original: x.UInt64
 
 
 class TxSourceEntry(MessageType):
-    @staticmethod
-    def f_specs():
+    @classmethod
+    def f_specs(cls):
         return (
             ("outputs", ContainerType, OutputEntry),
             ("real_output", SizeT),

@@ -27,8 +27,8 @@ class TsxData(MessageType):
         "is_bulletproof",
     )
 
-    @staticmethod
-    def f_specs():
+    @classmethod
+    def f_specs(cls):
         return (
             ("version", UVarintType),
             ("payment_id", BlobType),

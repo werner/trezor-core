@@ -38,8 +38,8 @@ class KeyMFix(ContainerType):
 class CtKey(MessageType):
     __slots__ = ("dest", "mask")
 
-    @staticmethod
-    def f_specs():
+    @classmethod
+    def f_specs(cls):
         return (("dest", ECKey), ("mask", ECKey))
 
 

@@ -5,8 +5,8 @@ from apps.monero.xmr.serialize_messages.base import ECKey
 class EcdhTuple(MessageType):
     __slots__ = ("mask", "amount")
 
-    @staticmethod
-    def f_specs():
+    @classmethod
+    def f_specs(cls):
         return (("mask", ECKey), ("amount", ECKey))
 
 

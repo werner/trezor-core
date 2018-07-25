@@ -42,8 +42,8 @@ class VariantType(XmrType):
         self.variant_elem = None
         self.variant_elem_type = None
 
-    @staticmethod
-    def f_specs():
+    @classmethod
+    def f_specs(cls):
         return ()
 
     def set_variant(self, fname, fvalue):
@@ -72,8 +72,8 @@ class ContainerType(XmrType):
 
 
 class TupleType(XmrType):
-    @staticmethod
-    def f_specs():
+    @classmethod
+    def f_specs(cls):
         return ()
 
 
@@ -89,8 +89,8 @@ class MessageType(XmrType):
         dct = slot_obj_dict(self) if hasattr(self, "__slots__") else self.__dict__
         return "<%s: %s>" % (self.__class__.__name__, dct)
 
-    @staticmethod
-    def f_specs():
+    @classmethod
+    def f_specs(cls):
         return ()
 
     def _field(self, fname=None, idx=None):

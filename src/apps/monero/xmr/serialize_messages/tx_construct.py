@@ -16,24 +16,24 @@ from apps.monero.xmr.serialize_messages.tx_src_entry import TxSourceEntry
 
 
 class MultisigOut(MessageType):
-    @staticmethod
-    def f_specs():
+    @classmethod
+    def f_specs(cls):
         return (("c", ContainerType, ECKey),)
 
 
 class MultisigLR(MessageType):
     __slots__ = ("L", "R")
 
-    @staticmethod
-    def f_specs():
+    @classmethod
+    def f_specs(cls):
         return (("L", ECKey), ("R", ECKey))
 
 
 class MultisigInfo(MessageType):
     __slots__ = ("signer", "LR", "partial_key_images")
 
-    @staticmethod
-    def f_specs():
+    @classmethod
+    def f_specs(cls):
         return (
             ("signer", ECPublicKey),
             ("LR", ContainerType, MultisigLR),
@@ -44,8 +44,8 @@ class MultisigInfo(MessageType):
 class MultisigStruct(MessageType):
     __slots__ = ("sigs", "ignore", "used_L", "signing_keys", "msout")
 
-    @staticmethod
-    def f_specs():
+    @classmethod
+    def f_specs(cls):
         return (
             ("sigs", RctSig),
             ("ignore", ECPublicKey),
@@ -56,8 +56,8 @@ class MultisigStruct(MessageType):
 
 
 class TransferDetails(MessageType):
-    @staticmethod
-    def f_specs():
+    @classmethod
+    def f_specs(cls):
         return (
             ("m_block_height", UInt64),
             ("m_tx", TransactionPrefix),
@@ -80,8 +80,8 @@ class TransferDetails(MessageType):
 
 
 class TxConstructionData(MessageType):
-    @staticmethod
-    def f_specs():
+    @classmethod
+    def f_specs(cls):
         return (
             ("sources", ContainerType, TxSourceEntry),
             ("change_dts", TxDestinationEntry),

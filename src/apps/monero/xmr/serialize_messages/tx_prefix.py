@@ -19,8 +19,8 @@ class TxoutToScript(MessageType):
     __slots__ = ("keys", "script")
     VARIANT_CODE = 0x0
 
-    @staticmethod
-    def f_specs():
+    @classmethod
+    def f_specs(cls):
         return (("keys", ContainerType, ECPublicKey), ("script", ContainerType, UInt8))
 
 
@@ -28,8 +28,8 @@ class TxoutToKey(MessageType):
     __slots__ = ("key",)
     VARIANT_CODE = 0x2
 
-    @staticmethod
-    def f_specs():
+    @classmethod
+    def f_specs(cls):
         return (("key", ECPublicKey),)
 
 
@@ -37,14 +37,14 @@ class TxoutToScriptHash(MessageType):
     __slots__ = ("hash",)
     VARIANT_CODE = 0x1
 
-    @staticmethod
-    def f_specs():
+    @classmethod
+    def f_specs(cls):
         return (("hash", Hash),)
 
 
 class TxoutTargetV(VariantType):
-    @staticmethod
-    def f_specs():
+    @classmethod
+    def f_specs(cls):
         return (
             ("txout_to_script", TxoutToScript),
             ("txout_to_scripthash", TxoutToScriptHash),
@@ -56,8 +56,8 @@ class TxinGen(MessageType):
     __slots__ = ("height",)
     VARIANT_CODE = 0xff
 
-    @staticmethod
-    def f_specs():
+    @classmethod
+    def f_specs(cls):
         return (("height", UVarintType),)
 
 
@@ -65,8 +65,8 @@ class TxinToKey(MessageType):
     __slots__ = ("amount", "key_offsets", "k_image")
     VARIANT_CODE = 0x2
 
-    @staticmethod
-    def f_specs():
+    @classmethod
+    def f_specs(cls):
         return (
             ("amount", UVarintType),
             ("key_offsets", ContainerType, UVarintType),
@@ -85,8 +85,8 @@ class TxinToScriptHash(MessageType):
 
 
 class TxInV(VariantType):
-    @staticmethod
-    def f_specs():
+    @classmethod
+    def f_specs(cls):
         return (
             ("txin_gen", TxinGen),
             ("txin_to_script", TxinToScript),
@@ -98,14 +98,14 @@ class TxInV(VariantType):
 class TxOut(MessageType):
     __slots__ = ("amount", "target")
 
-    @staticmethod
-    def f_specs():
+    @classmethod
+    def f_specs(cls):
         return (("amount", UVarintType), ("target", TxoutTargetV))
 
 
 class TransactionPrefix(MessageType):
-    @staticmethod
-    def f_specs():
+    @classmethod
+    def f_specs(cls):
         return (
             ("version", UVarintType),
             ("unlock_time", UVarintType),
@@ -117,6 +117,6 @@ class TransactionPrefix(MessageType):
 
 class TransactionPrefixExtraBlob(TransactionPrefix):
     # noinspection PyTypeChecker
-    @staticmethod
-    def f_specs():
+    @classmethod
+    def f_specs(cls):
         return TransactionPrefix.f_specs()[:-1] + (("extra", BlobType),)

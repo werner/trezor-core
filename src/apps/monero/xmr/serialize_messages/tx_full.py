@@ -19,8 +19,8 @@ from apps.monero.xmr.serialize_messages.tx_sig import (
 class MgSig(MessageType):
     __slots__ = ("ss", "cc", "II")
 
-    @staticmethod
-    def f_specs():
+    @classmethod
+    def f_specs(cls):
         return (("ss", KeyM), ("cc", ECKey))
 
 
@@ -35,8 +35,8 @@ class RctSigBase(MessageType):
         "outPk",
     )
 
-    @staticmethod
-    def f_specs():
+    @classmethod
+    def f_specs(cls):
         return (
             ("type", UInt8),
             ("txnFee", UVarintType),
@@ -92,8 +92,8 @@ class RctSigBase(MessageType):
 class RctSigPrunable(MessageType):
     __slots__ = ("rangeSigs", "bulletproofs", "MGs", "pseudoOuts")
 
-    @staticmethod
-    def f_specs():
+    @classmethod
+    def f_specs(cls):
         return (
             ("rangeSigs", ContainerType, RangeSig),
             ("bulletproofs", ContainerType, Bulletproof),
@@ -191,14 +191,14 @@ class RctSigPrunable(MessageType):
 
 
 class RctSig(RctSigBase):
-    @staticmethod
-    def f_specs():
+    @classmethod
+    def f_specs(cls):
         return RctSigBase.f_specs() + (("p", RctSigPrunable),)
 
 
 class Transaction(TransactionPrefix):
-    @staticmethod
-    def f_specs():
+    @classmethod
+    def f_specs(cls):
         return TransactionPrefix.f_specs() + (
             ("signatures", ContainerType, SignatureArray),
             ("rct_signatures", RctSig),

@@ -6,8 +6,8 @@ from apps.monero.xmr.serialize_messages.addr import AccountPublicAddress
 class TxDestinationEntry(MessageType):
     __slots__ = ("amount", "addr", "is_subaddress")
 
-    @staticmethod
-    def f_specs():
+    @classmethod
+    def f_specs(cls):
         return (
             ("amount", UVarintType),  # original: UInt64
             ("addr", AccountPublicAddress),

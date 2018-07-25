@@ -12,8 +12,8 @@ from apps.monero.xmr.serialize_messages.tx_prefix import (
 class Signature(MessageType):
     __slots__ = ("c", "r")
 
-    @staticmethod
-    def f_specs():
+    @classmethod
+    def f_specs(cls):
         return (("c", ECKey), ("r", ECKey))
 
     async def serialize_archive(self, ar):

@@ -6,8 +6,8 @@ from apps.monero.xmr.serialize_messages.ct_keys import KeyV
 class Bulletproof(MessageType):
     __slots__ = ("V", "A", "S", "T1", "T2", "taux", "mu", "L", "R", "a", "b", "t")
 
-    @staticmethod
-    def f_specs():
+    @classmethod
+    def f_specs(cls):
         return (
             ("A", ECKey),
             ("S", ECKey),
