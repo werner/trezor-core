@@ -40,10 +40,10 @@ class MemoryReaderWriter:
 
     async def areadinto(self, buf):
         ln = len(buf)
-        if not self.read_empty and ln > 0 and len(self.buffer) == 0:
+        if not self.read_empty and ln > 0 and self.offset == len(self.buffer):
             raise EOFError
 
-        nread = min(ln, len(self.buffer))
+        nread = min(ln, len(self.buffer) - self.offset)
         for idx in range(nread):
             buf[idx] = self.buffer[self.offset + idx]
 
@@ -53,7 +53,7 @@ class MemoryReaderWriter:
 
         # Deallocation threshold triggered
         if self.threshold is not None and self.offset >= self.threshold:
-            self.buffer = self.buffer[self.offset]
+            self.buffer = self.buffer[self.offset:]
             self.woffset -= self.offset
             self.offset = 0
 
@@ -76,11 +76,15 @@ class MemoryReaderWriter:
             towrite -= 1
 
         # Allocate next chunk if needed
-        if towrite > 0:
+        while towrite > 0:
+            _towrite = min(32, towrite)
             chunk = bytearray(32)  # chunk size typical for EC point
-            for i in range(towrite):
-                chunk[i] = buf[bufoff + i]
+
+            for i in range(_towrite):
+                chunk[i] = buf[bufoff]
                 self.woffset += 1
+                bufoff += 1
+                towrite -= 1
 
             self.buffer.extend(chunk)
             if self.do_gc:
