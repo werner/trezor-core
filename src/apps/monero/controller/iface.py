@@ -23,24 +23,11 @@ class TrezorInterface(object):
         :param ctx:
         :return:
         """
-        from apps.monero.xmr.sub.addr import encode_addr
+        from apps.monero.xmr.sub.addr import addr_eq, encode_addr, get_change_addr_idx
         from apps.monero.xmr.sub.xmr_net import net_version
-        from apps.monero.xmr.sub.addr import addr_eq
-
-        change_coord = None, None
-        if tsx_data.change_dts:
-            change_coord = tsx_data.change_dts.amount, tsx_data.change_dts.addr
 
         outs = tsx_data.outputs
-        change_idx = None
-        for idx, dst in enumerate(outs):
-            if (
-                change_coord
-                and change_coord[0]
-                and change_coord[0] == dst.amount
-                and addr_eq(change_coord[1], dst.addr)
-            ):
-                change_idx = idx
+        change_idx = get_change_addr_idx(outs, tsx_data.change_dts)
 
         if change_idx is not None:
             outs = [x for i, x in enumerate(outs) if i != change_idx] + [
