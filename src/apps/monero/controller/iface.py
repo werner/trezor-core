@@ -25,6 +25,7 @@ class TrezorInterface(object):
         """
         from apps.monero.xmr.sub.addr import encode_addr
         from apps.monero.xmr.sub.xmr_net import net_version
+        from apps.monero.xmr.sub.addr import addr_eq
 
         change_coord = None, None
         if tsx_data.change_dts:
@@ -36,7 +37,8 @@ class TrezorInterface(object):
             if (
                 change_coord
                 and change_coord[0]
-                and change_coord == (dst.amount, dst.addr)
+                and change_coord[0] == dst.amount
+                and addr_eq(change_coord[1], dst.addr)
             ):
                 change_idx = idx
 
