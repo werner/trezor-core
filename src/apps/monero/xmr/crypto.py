@@ -102,7 +102,9 @@ def pbkdf2(inp, salt, length=32, count=1000, prf=None):
     :param prf:
     :return:
     """
-    return tpbkdf2("hmac-sha256", inp, salt).key()
+    pb = tpbkdf2("hmac-sha256", inp, salt)
+    pb.update(count)
+    return pb.key()
 
 
 #
