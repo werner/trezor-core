@@ -186,6 +186,7 @@ class TTransactionBuilder(object):
         :return:
         """
         from apps.monero.xmr.sub.addr import addr_eq
+
         change_addr = self.change_address()
         if change_addr is None:
             return
@@ -1016,6 +1017,7 @@ class TTransactionBuilder(object):
                 self.additional_tx_private_keys.append(additional_txkey_priv)
 
         from apps.monero.xmr.sub.addr import addr_eq
+
         if change_addr and addr_eq(dst_entr.addr, change_addr):
             # sending change to yourself; derivation = a*R
             derivation = monero.generate_key_derivation(

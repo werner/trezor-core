@@ -79,5 +79,6 @@ def classify_subaddresses(tx_dests, change_addr):
 
 
 def addr_eq(a, b):
-    return bytes(a.m_spend_public_key) == bytes(b.m_spend_public_key) \
-           and bytes(a.m_view_public_key) == bytes(b.m_view_public_key)
+    return bytes(a.m_spend_public_key) == bytes(b.m_spend_public_key) and bytes(
+        a.m_view_public_key
+    ) == bytes(b.m_view_public_key)
