@@ -23,7 +23,7 @@ class TrezorInterface(object):
         :param ctx:
         :return:
         """
-        from apps.monero.xmr.sub.addr import addr_eq, encode_addr, get_change_addr_idx
+        from apps.monero.xmr.sub.addr import encode_addr, get_change_addr_idx
         from apps.monero.xmr.sub.xmr_net import net_version
 
         outs = tsx_data.outputs
