@@ -14,7 +14,6 @@ import ubinascii as binascii
 from trezor.crypto import hmac, monero as tcry, pbkdf2 as tpbkdf2, random
 from trezor.crypto.hashlib import sha3_256
 
-
 NULL_KEY_ENC = [0] * 32
 
 
