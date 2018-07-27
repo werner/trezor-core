@@ -382,18 +382,20 @@ class ConfirmState:
         from trezor.ui.confirm import ConfirmDialog, CONFIRMED
         from trezor.ui.text import Text
 
-        if bytes(self.app_id) == _BOGUS_APPID:
-            text = Text("U2F mismatch", ui.ICON_WRONG, icon_color=ui.RED)
+        app_id = bytes(self.app_id)  # could be bytearray, which doesn't have __hash__
+
+        if app_id == _BOGUS_APPID and self.action == _CONFIRM_REGISTER:
+            text = Text("U2F", ui.ICON_WRONG, icon_color=ui.RED)
             text.normal(
                 "Another U2F device", "was used to register", "in this application."
             )
             text.render()
-            await loop.sleep(3 * 1000 * 1000)
-            self.confirmed = True
+            dialog = ConfirmDialog(text)
         else:
-            content = ConfirmContent(self.action, self.app_id)
+            content = ConfirmContent(self.action, app_id)
             dialog = ConfirmDialog(content)
-            self.confirmed = await dialog == CONFIRMED
+
+        self.confirmed = await dialog == CONFIRMED
 
 
 class ConfirmContent(ui.Widget):
@@ -409,24 +411,17 @@ class ConfirmContent(ui.Widget):
         from trezor import res
         from apps.fido_u2f import knownapps
 
-        app_id = bytes(self.app_id)  # could be bytearray, which doesn't have __hash__
-
-        if app_id == _BOGUS_APPID:
-            # TODO: display a warning dialog for bogus app ids
-            name = "Another U2F device"
-            icon = res.load("apps/fido_u2f/res/u2f_generic.toif")  # TODO: warning icon
-        elif app_id in knownapps.knownapps:
-            name = knownapps.knownapps[app_id]
+        if self.app_id in knownapps.knownapps:
+            name = knownapps.knownapps[self.app_id]
             try:
-                icon = res.load(
-                    "apps/fido_u2f/res/u2f_%s.toif" % name.lower().replace(" ", "_")
-                )
+                namepart = name.lower().replace(" ", "_")
+                icon = res.load("apps/fido_u2f/res/u2f_%s.toif" % namepart)
             except Exception:
                 icon = res.load("apps/fido_u2f/res/u2f_generic.toif")
         else:
             name = "%s...%s" % (
-                hexlify(app_id[:4]).decode(),
-                hexlify(app_id[-4:]).decode(),
+                hexlify(self.app_id[:4]).decode(),
+                hexlify(self.app_id[-4:]).decode(),
             )
             icon = res.load("apps/fido_u2f/res/u2f_generic.toif")
         self.app_name = name
@@ -565,7 +560,7 @@ def msg_register_sign(challenge: bytes, app_id: bytes) -> bytes:
     pubkey = nist256p1.publickey(node.private_key(), False)
 
     # first half of keyhandle is keypath
-    keybuf = ustruct.pack(">8L", *keypath)
+    keybuf = ustruct.pack("<8L", *keypath)
 
     # second half of keyhandle is a hmac of app_id and keypath
     keybase = hmac.Hmac(node.private_key(), app_id, hashlib.sha256)
@@ -626,7 +621,12 @@ def msg_authenticate(req: Msg, state: ConfirmState) -> Cmd:
     auth = overlay_struct(req.data, req_cmd_authenticate(khlen))
 
     # check the keyHandle and generate the signing key
-    node = msg_authenticate_genkey(auth.appId, auth.keyHandle)
+    node = msg_authenticate_genkey(auth.appId, auth.keyHandle, "<8L")
+    if node is None:
+        # prior to firmware version 2.0.8, keypath was serialized in a
+        # big-endian manner, instead of little endian, like in trezor-mcu.
+        # try to parse it as big-endian now and check the HMAC.
+        node = msg_authenticate_genkey(auth.appId, auth.keyHandle, ">8L")
     if node is None:
         # specific error logged in msg_authenticate_genkey
         return msg_error(req.cid, _SW_WRONG_DATA)
@@ -665,12 +665,12 @@ def msg_authenticate(req: Msg, state: ConfirmState) -> Cmd:
     return Cmd(req.cid, _CMD_MSG, buf)
 
 
-def msg_authenticate_genkey(app_id: bytes, keyhandle: bytes):
+def msg_authenticate_genkey(app_id: bytes, keyhandle: bytes, pathformat: str):
     from apps.common import seed
 
     # unpack the keypath from the first half of keyhandle
     keybuf = keyhandle[:32]
-    keypath = ustruct.unpack(">8L", keybuf)
+    keypath = ustruct.unpack(pathformat, keybuf)
 
     # check high bit for hardened keys
     for i in keypath:
