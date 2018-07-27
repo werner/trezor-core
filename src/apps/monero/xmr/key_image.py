@@ -13,14 +13,14 @@ def compute_hash(rr):
     :type rr: TransferDetails
     :return:
     """
-    buff = b""
-    buff += rr.out_key
-    buff += rr.tx_pub_key
+    kck = crypto.get_keccak()
+    kck.update(rr.out_key)
+    kck.update(rr.tx_pub_key)
     if rr.additional_tx_pub_keys:
-        buff += b"".join(rr.additional_tx_pub_keys)
-    buff += dump_uvarint_b(rr.internal_output_index)
-
-    return crypto.cn_fast_hash(buff)
+        for x in rr.additional_tx_pub_keys:
+            kck.update(x)
+    kck.update(dump_uvarint_b(rr.internal_output_index))
+    return kck.digest()
 
 
 async def export_key_image(creds, subaddresses, td):
