@@ -3,7 +3,6 @@ from apps.monero.xmr.serialize_messages.base import ECKey
 from apps.monero.xmr.serialize_messages.ct_keys import KeyV
 from apps.monero.xmr.serialize_messages.tx_ecdh import EcdhInfo
 from apps.monero.xmr.serialize_messages.tx_full import RctSigBase
-from apps.monero.xmr.serialize_messages.tx_rsig import RctType
 
 
 class PreMlsagHasher(object):
@@ -138,59 +137,3 @@ class PreMlsagHasher(object):
 
         self.kc_master.update(c_hash)
         return self.kc_master.digest()
-
-
-async def get_pre_mlsag_hash(rv):
-    """
-    Generates final message for the Ring CT signature
-
-    :param rv:
-    :type rv: RctSig
-    :return:
-    """
-    from apps.monero.xmr.sub.keccak_hasher import get_keccak_writer, HashWrapper
-    from apps.monero.xmr.serialize import xmrserialize
-
-    kc_master = HashWrapper(crypto.get_keccak())
-    kc_master.update(rv.message)
-
-    is_simple = rv.type in [RctType.Simple, RctType.SimpleBulletproof]
-    inputs = len(rv.pseudoOuts) if is_simple else 0
-    outputs = len(rv.ecdhInfo)
-
-    kwriter = get_keccak_writer()
-    ar = xmrserialize.Archive(kwriter, True)
-    await rv.serialize_rctsig_base(ar, inputs, outputs)
-    c_hash = kwriter.get_digest()
-    kc_master.update(c_hash)
-
-    kc = crypto.get_keccak()
-    if rv.type in [RctType.FullBulletproof, RctType.SimpleBulletproof]:
-        for p in rv.p.bulletproofs:
-            kc.update(p.A)
-            kc.update(p.S)
-            kc.update(p.T1)
-            kc.update(p.T2)
-            kc.update(p.taux)
-            kc.update(p.mu)
-            for i in range(len(p.L)):
-                kc.update(p.L[i])
-            for i in range(len(p.R)):
-                kc.update(p.R[i])
-            kc.update(p.a)
-            kc.update(p.b)
-            kc.update(p.t)
-
-    else:
-        for r in rv.p.rangeSigs:
-            for i in range(64):
-                kc.update(r.asig.s0[i])
-            for i in range(64):
-                kc.update(r.asig.s1[i])
-            kc.update(r.asig.ee)
-            for i in range(64):
-                kc.update(r.Ci[i])
-
-    c_hash = kc.digest()
-    kc_master.update(c_hash)
-    return kc_master.digest()

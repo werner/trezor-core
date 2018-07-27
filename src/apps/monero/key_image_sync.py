@@ -19,7 +19,7 @@ async def layout_key_image_sync(state, ctx, msg):
 
     log.debug(
         __name__,
-        "### KI sync importedd. Free: {} Allocated: {}".format(
+        "### KI sync imported. Free: {} Allocated: {}".format(
             gc.mem_free(), gc.mem_alloc()
         ),
     )
