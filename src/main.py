@@ -17,8 +17,8 @@ import apps.lisk
 import apps.monero
 import apps.nem
 import apps.stellar
+import apps.ripple
 import apps.cardano
-
 
 if __debug__:
     import apps.debug
@@ -34,6 +34,7 @@ apps.lisk.boot()
 apps.monero.boot()
 apps.nem.boot()
 apps.stellar.boot()
+apps.ripple.boot()
 apps.cardano.boot()
 if __debug__:
     apps.debug.boot()
