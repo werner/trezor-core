@@ -16,11 +16,6 @@ UNAME_S := $(shell uname -s)
 UNIX_PORT_OPTS ?=
 CROSS_PORT_OPTS ?=
 
-ifeq ($(DISPLAY_ILI9341V), 1)
-CFLAGS += -DDISPLAY_ILI9341V=1
-CFLAGS += -DDISPLAY_ST7789V=0
-endif
-
 PRODUCTION ?= 0
 
 STLINK_VER ?= v2
@@ -92,6 +87,8 @@ cstyle: ## run code style check on low-level C code
 ## build commands:
 
 build: build_boardloader build_bootloader build_firmware build_prodtest build_unix ## build all
+
+build_embed: build_boardloader build_bootloader build_firmware # build boardloader, bootloader, firmware
 
 build_boardloader: ## build boardloader
 	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" $(BOARDLOADER_BUILD_DIR)/boardloader.bin
