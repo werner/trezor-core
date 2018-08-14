@@ -132,10 +132,7 @@ class TsxSigner(object):
         """
         self.tsx_ctr += 1
         try:
-            tsxd = await misc.translate_tsx_data(tsx_data)
-            del tsx_data
-
-            return await self.tsx_obj.init_transaction(tsxd, self.tsx_ctr)
+            return await self.tsx_obj.init_transaction(tsx_data, self.tsx_ctr)
         except Exception as e:
             await self.tsx_exc_handler(e)
             raise
@@ -153,10 +150,7 @@ class TsxSigner(object):
         :return:
         """
         try:
-            src_entr = await misc.parse_src_entry(msg.src_entr)
-            del msg.src_entr
-
-            return await self.tsx_obj.set_input(src_entr)
+            return await self.tsx_obj.set_input(msg.src_entr)
         except Exception as e:
             await self.tsx_exc_handler(e)
             raise
@@ -181,13 +175,11 @@ class TsxSigner(object):
         :return:
         """
         try:
-            src_entr = await misc.parse_src_entry(msg.src_entr)
             vini = await misc.parse_vini(msg.vini)
-            del msg.src_entr
             del msg.vini
 
             return await self.tsx_obj.input_vini(
-                src_entr, vini, msg.vini_hmac, msg.pseudo_out, msg.pseudo_out_hmac
+                msg.src_entr, vini, msg.vini_hmac, msg.pseudo_out, msg.pseudo_out_hmac
             )
         except Exception as e:
             await self.tsx_exc_handler(e)
@@ -202,10 +194,7 @@ class TsxSigner(object):
         :return:
         """
         try:
-            dst_entr = await misc.parse_dst_entry(msg.dst_entr)
-            del msg.dst_entr
-
-            return await self.tsx_obj.set_out1(dst_entr, msg.dst_entr_hmac)
+            return await self.tsx_obj.set_out1(msg.dst_entr, msg.dst_entr_hmac)
         except Exception as e:
             await self.tsx_exc_handler(e)
             raise
@@ -252,13 +241,11 @@ class TsxSigner(object):
         :return:
         """
         try:
-            src_entr = await misc.parse_src_entry(msg.src_entr)
             vini = await misc.parse_vini(msg.vini)
-            del msg.src_entr
             del msg.vini
 
             return await self.tsx_obj.sign_input(
-                src_entr,
+                msg.src_entr,
                 vini,
                 msg.vini_hmac,
                 msg.pseudo_out,

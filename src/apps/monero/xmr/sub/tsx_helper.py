@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Author: Dusan Klinec, ph4r05, 2018
+from trezor.messages.MoneroAccountPublicAddress import MoneroAccountPublicAddress
+
 from apps.monero.xmr import crypto
 from apps.monero.xmr.serialize import xmrserialize
 from apps.monero.xmr.serialize.readwriter import MemoryReaderWriter
-from apps.monero.xmr.serialize_messages.addr import AccountPublicAddress
 from apps.monero.xmr.serialize_messages.tx_extra import (
     TxExtraAdditionalPubKeys,
     TxExtraField,
@@ -120,8 +121,8 @@ def get_destination_view_key_pub(destinations, change_addr=None):
     """
     from apps.monero.xmr.sub.addr import addr_eq
 
-    addr = AccountPublicAddress(
-        m_spend_public_key=crypto.NULL_KEY_ENC, m_view_public_key=crypto.NULL_KEY_ENC
+    addr = MoneroAccountPublicAddress(
+        spend_public_key=crypto.NULL_KEY_ENC, view_public_key=crypto.NULL_KEY_ENC
     )
     count = 0
     for dest in destinations:
@@ -135,7 +136,7 @@ def get_destination_view_key_pub(destinations, change_addr=None):
             return crypto.NULL_KEY_ENC
         addr = dest.addr
         count += 1
-    return addr.m_view_public_key
+    return addr.view_public_key
 
 
 def encrypt_payment_id(payment_id, public_key, secret_key):

@@ -40,8 +40,8 @@ class TrezorInterface(object):
         for idx, dst in enumerate(outs):
             addr = encode_addr(
                 net_version(creds.network_type),
-                dst.addr.m_spend_public_key,
-                dst.addr.m_view_public_key,
+                dst.addr.spend_public_key,
+                dst.addr.view_public_key,
             )
             is_change = change_idx and idx == change_idx
             await layout.require_confirm_tx(

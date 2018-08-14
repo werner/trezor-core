@@ -52,36 +52,6 @@ def compute_tx_key(spend_key_private, tx_prefix_hash, salt=None, rand_mult=None)
     return tx_key, salt, rand_mult
 
 
-def translate_monero_dest_entry(dst_entry):
-    from apps.monero.xmr.serialize_messages.tx_dest_entry import TxDestinationEntry
-    from apps.monero.xmr.serialize_messages.addr import AccountPublicAddress
-
-    d = TxDestinationEntry()
-    d.amount = dst_entry.amount
-    d.is_subaddress = dst_entry.is_subaddress
-    d.addr = AccountPublicAddress(
-        m_spend_public_key=dst_entry.addr.spend_public_key,
-        m_view_public_key=dst_entry.addr.view_public_key,
-    )
-    return d
-
-
-async def translate_tsx_data(tsx_data):
-    from apps.monero.xmr.tsx_data import TsxData
-
-    tsxd = TsxData()
-    for fld in TsxData.f_specs():
-        fname = fld[0]
-        if hasattr(tsx_data, fname):
-            setattr(tsxd, fname, getattr(tsx_data, fname))
-
-    if tsx_data.change_dts:
-        tsxd.change_dts = translate_monero_dest_entry(tsx_data.change_dts)
-
-    tsxd.outputs = [translate_monero_dest_entry(x) for x in tsx_data.outputs]
-    return tsxd
-
-
 async def parse_msg(bts, msg):
     from apps.monero.xmr.serialize import xmrserialize
     from apps.monero.xmr.serialize.readwriter import MemoryReaderWriter
@@ -89,18 +59,6 @@ async def parse_msg(bts, msg):
     reader = MemoryReaderWriter(memoryview(bts))
     ar = xmrserialize.Archive(reader, False)
     return await ar.message(msg)
-
-
-async def parse_src_entry(bts):
-    from apps.monero.xmr.serialize_messages.tx_src_entry import TxSourceEntry
-
-    return await parse_msg(bts, TxSourceEntry())
-
-
-async def parse_dst_entry(bts):
-    from apps.monero.xmr.serialize_messages.tx_dest_entry import TxDestinationEntry
-
-    return await parse_msg(bts, TxDestinationEntry())
 
 
 async def parse_vini(bts):
@@ -135,7 +93,7 @@ def dst_entry_to_stdobj(dst):
         return None
 
     addr = StdObj(
-        m_spend_public_key=dst.addr.m_spend_public_key,
-        m_view_public_key=dst.addr.m_view_public_key,
+        spend_public_key=dst.addr.spend_public_key,
+        view_public_key=dst.addr.view_public_key,
     )
     return StdObj(amount=dst.amount, addr=addr, is_subaddress=dst.is_subaddress)
