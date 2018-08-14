@@ -55,7 +55,7 @@ async def layout_key_image_sync(state, ctx, msg):
         state.ctx_ki = None
 
         log.debug(__name__, "KI error, %s: %s", type(e), e)
+        raise
+        # from trezor.messages.Failure import Failure
 
-        from trezor.messages.Failure import Failure
-
-        return Failure()
+        # return Failure()
