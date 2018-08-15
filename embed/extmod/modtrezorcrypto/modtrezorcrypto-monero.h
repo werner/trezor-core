@@ -428,6 +428,23 @@ STATIC mp_obj_t mod_trezorcrypto_monero_unpack256_modm(size_t n_args, const mp_o
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_monero_unpack256_modm_obj, 1, 2, mod_trezorcrypto_monero_unpack256_modm);
 
+//expand256_modm_r
+STATIC mp_obj_t mod_trezorcrypto_monero_unpack256_modm_noreduce(size_t n_args, const mp_obj_t *args){
+    mp_obj_t res = n_args == 2 ? args[0] : mp_obj_new_scalar();
+    const int off = n_args == 2 ? 0 : -1;
+    assert_scalar(res);
+
+    mp_buffer_info_t buff;
+    mp_get_buffer_raise(args[1+off], &buff, MP_BUFFER_READ);
+    if (buff.len != 32) {
+        mp_raise_ValueError("Invalid length of secret key");
+    }
+
+    expand_raw256_modm(MP_OBJ_SCALAR(res), buff.buf);
+    return res;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_monero_unpack256_modm_noreduce_obj, 1, 2, mod_trezorcrypto_monero_unpack256_modm_noreduce);
+
 //
 // GE25519 Defs
 //
@@ -1009,6 +1026,7 @@ STATIC const mp_rom_map_elem_t mod_trezorcrypto_monero_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR_pack256_modm), MP_ROM_PTR(&mod_trezorcrypto_monero_pack256_modm_obj) },
     { MP_ROM_QSTR(MP_QSTR_pack256_modm_into), MP_ROM_PTR(&mod_trezorcrypto_monero_pack256_modm_into_obj) },
     { MP_ROM_QSTR(MP_QSTR_unpack256_modm), MP_ROM_PTR(&mod_trezorcrypto_monero_unpack256_modm_obj) },
+    { MP_ROM_QSTR(MP_QSTR_unpack256_modm_noreduce), MP_ROM_PTR(&mod_trezorcrypto_monero_unpack256_modm_noreduce_obj) },
     { MP_ROM_QSTR(MP_QSTR_ge25519_set_neutral), MP_ROM_PTR(&mod_trezorcrypto_monero_ge25519_set_neutral_obj) },
     { MP_ROM_QSTR(MP_QSTR_ge25519_set_h), MP_ROM_PTR(&mod_trezorcrypto_monero_ge25519_set_xmr_h_obj) },
     { MP_ROM_QSTR(MP_QSTR_ge25519_pack), MP_ROM_PTR(&mod_trezorcrypto_monero_ge25519_pack_obj) },
