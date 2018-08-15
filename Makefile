@@ -84,6 +84,10 @@ isort:
 black:
 	black $(shell find src -name *.py ! -path 'src/trezor/messages/*')
 
+mypy:
+	mypy \
+		src/protobuf.py
+
 ## build commands:
 
 build: build_boardloader build_bootloader build_firmware build_prodtest build_unix ## build all

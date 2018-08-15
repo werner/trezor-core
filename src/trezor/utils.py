@@ -2,12 +2,15 @@ import gc
 import sys
 from trezorutils import halt, memcpy, model, set_mode_unprivileged, symbol  # noqa: F401
 
+if False:
+    from typing import Iterable, Iterator, TypeVar, List, Callable
 
-def unimport_begin():
+
+def unimport_begin() -> Iterable[str]:
     return set(sys.modules)
 
 
-def unimport_end(mods):
+def unimport_end(mods: Iterable[str]) -> None:
     for mod in sys.modules:
         if mod not in mods:
             # remove reference from sys.modules
@@ -24,7 +27,7 @@ def unimport_end(mods):
     gc.collect()
 
 
-def ensure(cond, msg=None):
+def ensure(cond: bool, msg: str = None) -> None:
     if not cond:
         if msg is None:
             raise AssertionError()
@@ -32,13 +35,19 @@ def ensure(cond, msg=None):
             raise AssertionError(msg)
 
 
-def chunks(items, size):
+if False:
+    Chunked = TypeVar("Chunked")
+
+
+def chunks(items: List[Chunked], size: int) -> Iterator[List[Chunked]]:
     for i in range(0, len(items), size):
         yield items[i : i + size]
 
 
-def split_words(sentence, width, metric=len):
-    line = []
+def split_words(
+    sentence: str, width: int, metric: Callable[[str], int] = len
+) -> Iterator[str]:
+    line = []  # type: List[str]
     for w in sentence.split(" "):
         # empty word  -> skip
         if not w:
@@ -58,15 +67,15 @@ def split_words(sentence, width, metric=len):
     yield " ".join(line)
 
 
-def format_amount(amount, decimals):
+def format_amount(amount: int, decimals: int) -> str:
     d = pow(10, decimals)
-    amount = ("%d.%0*d" % (amount // d, decimals, amount % d)).rstrip("0")
-    if amount.endswith("."):
-        amount = amount[:-1]
-    return amount
+    s = ("%d.%0*d" % (amount // d, decimals, amount % d)).rstrip("0")
+    if s.endswith("."):
+        s = s[:-1]
+    return s
 
 
-def format_ordinal(number):
+def format_ordinal(number: int) -> str:
     return str(number) + {1: "st", 2: "nd", 3: "rd"}.get(
         4 if 10 <= number % 100 < 20 else number % 10, "th"
     )

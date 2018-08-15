@@ -182,7 +182,7 @@ class Blake2b:
     Blake2b context.
     '''
 
-    def __init__(self, data: bytes = None, key: bytes = None) -> None:
+    def __init__(self, data: bytes = None, outlen: int = Blake2b.digest_size, personal: bytes = None) -> None:
         '''
         Creates a hash context object.
         '''
@@ -203,7 +203,7 @@ class Blake2s:
     Blake2s context.
     '''
 
-    def __init__(self, data: bytes = None, key: bytes = None) -> None:
+    def __init__(self, data: bytes = None, outlen: int = Blake2s.digest_size, key: bytes = None, personal: bytes = None) -> None:
         '''
         Creates a hash context object.
         '''
@@ -313,6 +313,27 @@ def cosi_sign(secret_key: bytes, message: bytes, nonce: bytes, sigR: bytes, comb
     '''
     Produce signature of message using COSI cosigning scheme.
     '''
+
+# extmod/modtrezorcrypto/modtrezorcrypto-groestl.h
+class Groestl512:
+    '''
+    GROESTL512 context.
+    '''
+
+    def __init__(self, data: bytes = None) -> None:
+        '''
+        Creates a hash context object.
+        '''
+
+    def update(self, data: bytes) -> None:
+        '''
+        Update the hash context with hashed data.
+        '''
+
+    def digest(self) -> bytes:
+        '''
+        Returns the digest of hashed data.
+        '''
 
 # extmod/modtrezorcrypto/modtrezorcrypto-nem.h
 def validate_address(address: str, network: int) -> bool:

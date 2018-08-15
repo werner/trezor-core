@@ -11,6 +11,7 @@ mock = "*"
 isort = "*"
 flake8 = "*"
 black = "*"
+mypy = "*"
 
 [pipenv]
 allow_prereleases = true
