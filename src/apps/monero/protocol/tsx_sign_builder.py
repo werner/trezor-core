@@ -50,6 +50,7 @@ class TTransactionBuilder(object):
         self.output_change = None
         self.mixin = 0
         self.fee = 0
+        self.account_idx = 0
 
         self.additional_tx_private_keys = []
         self.additional_tx_public_keys = []
@@ -179,9 +180,25 @@ class TTransactionBuilder(object):
         self.r = crypto.random_scalar() if use_r is None else use_r
         self.r_pub = crypto.scalarmult_base(self.r)
 
+    def get_primary_change_address(self):
+        """
+        Computes primary change address for the current account index
+        :return:
+        """
+        D, C = monero.generate_sub_address_keys(
+            self.creds.view_key_private,
+            self.creds.spend_key_public,
+            self.account_idx,
+            0,
+        )
+        return misc.StdObj(
+            view_public_key=crypto.encodepoint(C),
+            spend_public_key=crypto.encodepoint(D),
+        )
+
     def check_change(self, outputs):
         """
-        Checks if the change address is among tx outputs.
+        Checks if the change address is among tx outputs and it is equal to our address.
         :param outputs:
         :return:
         """
@@ -191,11 +208,20 @@ class TTransactionBuilder(object):
         if change_addr is None:
             return
 
+        found = False
         for out in outputs:
             if addr_eq(out.addr, change_addr):
-                return True
+                found = True
+                break
 
-        raise ValueError("Change address not found in outputs")
+        if not found:
+            raise misc.TrezorChangeAddressError("Change address not found in outputs")
+
+        my_addr = self.get_primary_change_address()
+        if not addr_eq(my_addr, change_addr):
+            raise misc.TrezorChangeAddressError("Change address differs from ours")
+
+        return True
 
     def in_memory(self):
         """
@@ -453,6 +479,7 @@ class TTransactionBuilder(object):
         self.output_change = misc.dst_entry_to_stdobj(tsx_data.change_dts)
         self.mixin = tsx_data.mixin
         self.fee = tsx_data.fee
+        self.account_idx = tsx_data.account
         self.use_simple_rct = self.input_count > 1
         self.use_bulletproof = tsx_data.is_bulletproof
         self.multi_sig = tsx_data.is_multisig

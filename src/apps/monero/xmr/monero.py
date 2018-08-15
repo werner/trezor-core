@@ -301,3 +301,22 @@ def generate_monero_keys(seed):
     hash = crypto.cn_fast_hash(crypto.encodeint(spend_sec))
     view_sec, view_pub = generate_keys(crypto.decodeint(hash))
     return spend_sec, spend_pub, view_sec, view_pub
+
+
+def generate_sub_address_keys(view_sec, spend_pub, major, minor):
+    """
+    Computes generic public sub-address
+    :param view_sec:
+    :param spend_pub:
+    :param major:
+    :param minor:
+    :return: spend public, view public
+    """
+    if major == 0 and minor == 0:  # special case, Monero-defined
+        return spend_pub, crypto.scalarmult_base(view_sec)
+
+    m = get_subaddress_secret_key(view_sec, major=major, minor=minor)
+    M = crypto.scalarmult_base(m)
+    D = crypto.point_add(spend_pub, M)
+    C = crypto.ge_scalarmult(view_sec, D)
+    return D, C

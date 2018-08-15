@@ -20,6 +20,11 @@ class TrezorTxPrefixHashNotMatchingError(TrezorError):
         super().__init__(*args, **kwargs)
 
 
+class TrezorChangeAddressError(TrezorError):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
 class StdObj(object):
     def __init__(self, **kwargs):
         for kw in kwargs:
