@@ -50,6 +50,7 @@ class TTransactionBuilder(object):
         self.output_change = None
         self.mixin = 0
         self.fee = 0
+        self.account_idx = 0
 
         self.additional_tx_private_keys = []
         self.additional_tx_public_keys = []
@@ -142,7 +143,7 @@ class TTransactionBuilder(object):
                 setattr(t, attr, cval)
         return t
 
-    def _log_trace(self, x=None):
+    def _log_trace(self, x=None, collect=False):
         log.debug(
             __name__,
             "Log trace %s, ... F: %s A: %s, S: %s",
@@ -151,6 +152,8 @@ class TTransactionBuilder(object):
             gc.mem_alloc(),
             micropython.stack_use(),
         )
+        if collect:
+            gc.collect()
 
     def assrt(self, condition, msg=None):
         """
@@ -179,9 +182,25 @@ class TTransactionBuilder(object):
         self.r = crypto.random_scalar() if use_r is None else use_r
         self.r_pub = crypto.scalarmult_base(self.r)
 
+    def get_primary_change_address(self):
+        """
+        Computes primary change address for the current account index
+        :return:
+        """
+        D, C = monero.generate_sub_address_keys(
+            self.creds.view_key_private,
+            self.creds.spend_key_public,
+            self.account_idx,
+            0,
+        )
+        return misc.StdObj(
+            view_public_key=crypto.encodepoint(C),
+            spend_public_key=crypto.encodepoint(D),
+        )
+
     def check_change(self, outputs):
         """
-        Checks if the change address is among tx outputs.
+        Checks if the change address is among tx outputs and it is equal to our address.
         :param outputs:
         :return:
         """
@@ -191,11 +210,20 @@ class TTransactionBuilder(object):
         if change_addr is None:
             return
 
+        found = False
         for out in outputs:
             if addr_eq(out.addr, change_addr):
-                return True
+                found = True
+                break
 
-        raise ValueError("Change address not found in outputs")
+        if not found:
+            raise misc.TrezorChangeAddressError("Change address not found in outputs")
+
+        my_addr = self.get_primary_change_address()
+        if not addr_eq(my_addr, change_addr):
+            raise misc.TrezorChangeAddressError("Change address differs from ours")
+
+        return True
 
     def in_memory(self):
         """
@@ -453,6 +481,7 @@ class TTransactionBuilder(object):
         self.output_change = misc.dst_entry_to_stdobj(tsx_data.change_dts)
         self.mixin = tsx_data.mixin
         self.fee = tsx_data.fee
+        self.account_idx = tsx_data.account
         self.use_simple_rct = self.input_count > 1
         self.use_bulletproof = tsx_data.is_bulletproof
         self.multi_sig = tsx_data.is_multisig
@@ -476,8 +505,8 @@ class TTransactionBuilder(object):
 
         # if this is a single-destination transfer to a subaddress, we set the tx pubkey to R=s*D
         if num_stdaddresses == 0 and num_subaddresses == 1:
-            self.r_pub = crypto.ge_scalarmult(
-                self.r, crypto.decodepoint(single_dest_subaddress.spend_public_key)
+            self.r_pub = crypto.scalarmult(
+                crypto.decodepoint(single_dest_subaddress.spend_public_key), self.r
             )
 
         self.need_additional_txkeys = num_subaddresses > 0 and (
@@ -893,9 +922,6 @@ class TTransactionBuilder(object):
         """
         from apps.monero.xmr import ring_ct
 
-        rsig = bytearray(32 * (64 + 64 + 64 + 1))
-        rsig_mv = memoryview(rsig)
-
         out_pk = misc.StdObj(dest=dest_pub_key, mask=None)
         is_last = idx + 1 == self.num_dests()
         last_mask = (
@@ -908,32 +934,40 @@ class TTransactionBuilder(object):
         C, mask, rsig = None, 0, None
 
         # Rangeproof
-        gc.collect()
+        self._log_trace("pre-rproof", collect=True)
         if self.use_bulletproof:
-            raise ValueError("Bulletproof not yet supported")
+            C, mask, rsig = await ring_ct.prove_range_bp(amount, last_mask)
+            self._log_trace("post-bp", collect=True)
+
+            # Incremental hashing
+            await self.full_message_hasher.rsig_val(rsig, True, raw=False)
+            self._log_trace("post-bp-hash", collect=True)
+
+            rsig = await misc.dump_msg(rsig, preallocate=9 * 32 + 2 * 6 * 32 + 2)
+            self._log_trace("post-bp-ser", collect=True)
 
         else:
+            rsig_buff = bytearray(32 * (64 + 64 + 64 + 1))
+            rsig_mv = memoryview(rsig_buff)
+
             C, mask, rsig = ring_ct.prove_range(
                 amount, last_mask, backend_impl=True, byte_enc=True, rsig=rsig_mv
             )
             rsig = memoryview(rsig)
 
-            self.assrt(
-                crypto.point_eq(
-                    C,
-                    crypto.point_add(
-                        crypto.scalarmult_base(mask), crypto.scalarmult_h(amount)
-                    ),
-                ),
-                "rproof",
-            )
-
             # Incremental hashing
-            await self.full_message_hasher.rsig_val(
-                rsig, self.use_bulletproof, raw=True
-            )
-        gc.collect()
-        self._log_trace("rproof")
+            await self.full_message_hasher.rsig_val(rsig, False, raw=True)
+
+        self._log_trace("rproof", collect=True)
+        self.assrt(
+            crypto.point_eq(
+                C,
+                crypto.point_add(
+                    crypto.scalarmult_base(mask), crypto.scalarmult_h(amount)
+                ),
+            ),
+            "rproof",
+        )
 
         # Mask sum
         out_pk.mask = crypto.encodepoint(C)
@@ -972,12 +1006,12 @@ class TTransactionBuilder(object):
             )
 
             if dst_entr.is_subaddress:
-                additional_txkey = crypto.ge_scalarmult(
-                    additional_txkey_priv,
+                additional_txkey = crypto.scalarmult(
                     crypto.decodepoint(dst_entr.addr.spend_public_key),
+                    additional_txkey_priv,
                 )
             else:
-                additional_txkey = crypto.ge_scalarmult_base(additional_txkey_priv)
+                additional_txkey = crypto.scalarmult_base(additional_txkey_priv)
 
             self.additional_tx_public_keys.append(crypto.encodepoint(additional_txkey))
             if not use_provided:

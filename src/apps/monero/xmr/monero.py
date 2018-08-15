@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 # Author: Dusan Klinec, ph4r05, 2018
 
-import ustruct as struct
 from micropython import const
 
 from apps.monero.xmr import common, crypto
@@ -15,48 +14,21 @@ class XmrNoSuchAddressException(common.XmrException):
         super().__init__(*args, **kwargs)
 
 
-def get_subaddress_secret_key(
-    secret_key, index=None, major=None, minor=None, little_endian=True
-):
+def get_subaddress_secret_key(secret_key, index=None, major=None, minor=None):
     """
     Builds subaddress secret key from the subaddress index
     Hs(SubAddr || a || index_major || index_minor)
 
-    UPDATE: Monero team fixed this problem. Always use little endian.
-    Note: need to handle endianity in the index
-    C-code simply does: memcpy(data + sizeof(prefix) + sizeof(crypto::secret_key), &index, sizeof(subaddress_index));
-    Where the index has the following form:
-
-    struct subaddress_index {
-        uint32_t major;
-        uint32_t minor;
-    }
-
-    https://docs.python.org/3/library/struct.html#byte-order-size-and-alignment
     :param secret_key:
     :param index:
     :param major:
     :param minor:
-    :param little_endian:
     :return:
     """
     if index:
         major = index.major
         minor = index.minor
-    endianity = "<" if little_endian else ">"
-    prefix = b"SubAddr"
-    buffer = bytearray(len(prefix) + 1 + 32 + 4 + 4)
-    struct.pack_into(
-        "%s7sb32sLL" % endianity,
-        buffer,
-        0,
-        prefix,
-        0,
-        crypto.encodeint(secret_key),
-        major,
-        minor,
-    )
-    return crypto.hash_to_scalar(buffer)
+    return crypto.get_subaddress_secret_key(secret_key, major, minor)
 
 
 def get_subaddress_spend_public_key(view_private, spend_public, major, minor):
@@ -108,7 +80,7 @@ def generate_key_image(public_key, secret_key):
     :return:
     """
     point = crypto.hash_to_ec(public_key)
-    point2 = crypto.ge_scalarmult(secret_key, point)
+    point2 = crypto.scalarmult(point, secret_key)
     return point2
 
 
@@ -283,9 +255,8 @@ def generate_keys(recovery_key):
     :param recovery_key:
     :return:
     """
-    sec = crypto.sc_reduce32(recovery_key)
-    pub = crypto.scalarmult_base(sec)
-    return sec, pub
+    pub = crypto.scalarmult_base(recovery_key)
+    return recovery_key, pub
 
 
 def generate_monero_keys(seed):
@@ -301,3 +272,22 @@ def generate_monero_keys(seed):
     hash = crypto.cn_fast_hash(crypto.encodeint(spend_sec))
     view_sec, view_pub = generate_keys(crypto.decodeint(hash))
     return spend_sec, spend_pub, view_sec, view_pub
+
+
+def generate_sub_address_keys(view_sec, spend_pub, major, minor):
+    """
+    Computes generic public sub-address
+    :param view_sec:
+    :param spend_pub:
+    :param major:
+    :param minor:
+    :return: spend public, view public
+    """
+    if major == 0 and minor == 0:  # special case, Monero-defined
+        return spend_pub, crypto.scalarmult_base(view_sec)
+
+    m = get_subaddress_secret_key(view_sec, major=major, minor=minor)
+    M = crypto.scalarmult_base(m)
+    D = crypto.point_add(spend_pub, M)
+    C = crypto.scalarmult(D, view_sec)
+    return D, C

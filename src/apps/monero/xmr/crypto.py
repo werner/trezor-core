@@ -46,6 +46,14 @@ def keccak_hash(inp):
     return tcry.xmr_fast_hash(inp)
 
 
+def keccak_hash_into(r, inp):
+    """
+    Hashesh input in one call
+    :return:
+    """
+    return tcry.xmr_fast_hash(r, inp)
+
+
 def keccak_2hash(inp):
     """
     Keccak double hashing
@@ -96,8 +104,20 @@ def pbkdf2(inp, salt, length=32, count=1000, prf=None):
 #
 
 
+def new_point():
+    return tcry.ge25519_set_neutral()
+
+
+def new_scalar():
+    return tcry.init256_modm(0)
+
+
 def decodepoint(x):
     return tcry.ge25519_unpack_vartime(x)
+
+
+def decodepoint_into(r, x):
+    return tcry.ge25519_unpack_vartime(r, x)
 
 
 def encodepoint(pt):
@@ -110,6 +130,14 @@ def encodepoint_into(pt, b):
 
 def decodeint(x):
     return tcry.unpack256_modm(x)
+
+
+def decodeint_into_noreduce(r, x):
+    return tcry.unpack256_modm_noreduce(r, x)
+
+
+def decodeint_into(r, x):
+    return tcry.unpack256_modm(r, x)
 
 
 def encodeint(x):
@@ -128,16 +156,32 @@ def scalarmult_base(a):
     return tcry.ge25519_scalarmult_base(a)
 
 
+def scalarmult_base_into(r, a):
+    return tcry.ge25519_scalarmult_base(r, a)
+
+
 def scalarmult(P, e):
     return tcry.ge25519_scalarmult(P, e)
+
+
+def scalarmult_into(r, P, e):
+    return tcry.ge25519_scalarmult(r, P, e)
 
 
 def point_add(P, Q):
     return tcry.ge25519_add(P, Q, 0)
 
 
+def point_add_into(r, P, Q):
+    return tcry.ge25519_add(r, P, Q, 0)
+
+
 def point_sub(P, Q):
     return tcry.ge25519_add(P, Q, 1)
+
+
+def point_sub_into(r, P, Q):
+    return tcry.ge25519_add(r, P, Q, 1)
 
 
 def point_eq(P, Q):
@@ -146,16 +190,6 @@ def point_eq(P, Q):
 
 def point_double(P):
     return tcry.ge25519_double(P)
-
-
-def point_norm(P):
-    """
-    Normalizes point after multiplication
-    Extended edwards coordinates (X,Y,Z,T)
-    :param P:
-    :return:
-    """
-    return tcry.ge25519_norm(P)
 
 
 #
@@ -171,6 +205,14 @@ def sc_0():
     return tcry.init256_modm(0)
 
 
+def sc_0_into(r):
+    """
+    Sets 0 to the scalar value Zmod(m)
+    :return:
+    """
+    return tcry.init256_modm(r, 0)
+
+
 def sc_init(x):
     """
     Sets x to the scalar value Zmod(m)
@@ -179,6 +221,16 @@ def sc_init(x):
     if x >= (1 << 64):
         raise ValueError("Initialization works up to 64-bit only")
     return tcry.init256_modm(x)
+
+
+def sc_init_into(r, x):
+    """
+    Sets x to the scalar value Zmod(m)
+    :return:
+    """
+    if x >= (1 << 64):
+        raise ValueError("Initialization works up to 64-bit only")
+    return tcry.init256_modm(r, x)
 
 
 def sc_get64(x):
@@ -211,20 +263,6 @@ def check_sc(key):
         raise ValueError("Invalid scalar value")
 
 
-def sc_reduce32(data):
-    """
-    Exactly the same as sc_reduce (which is default lib sodium)
-    except it is assumed that your input s is alread in the form:
-    s[0]+256*s[1]+...+256^31*s[31] = s
-
-    And the rest is reducing mod l,
-    so basically take a 32 byte input, and reduce modulo the prime.
-    :param data:
-    :return:
-    """
-    return tcry.reduce256_modm(data)
-
-
 def sc_add(aa, bb):
     """
     Scalar addition
@@ -235,6 +273,17 @@ def sc_add(aa, bb):
     return tcry.add256_modm(aa, bb)
 
 
+def sc_add_into(r, aa, bb):
+    """
+    Scalar addition
+    :param r:
+    :param aa:
+    :param bb:
+    :return:
+    """
+    return tcry.add256_modm(r, aa, bb)
+
+
 def sc_sub(aa, bb):
     """
     Scalar subtraction
@@ -243,6 +292,38 @@ def sc_sub(aa, bb):
     :return:
     """
     return tcry.sub256_modm(aa, bb)
+
+
+def sc_sub_into(r, aa, bb):
+    """
+    Scalar subtraction
+    :param r:
+    :param aa:
+    :param bb:
+    :return:
+    """
+    return tcry.sub256_modm(r, aa, bb)
+
+
+def sc_mul(aa, bb):
+    """
+    Scalar multiplication
+    :param aa:
+    :param bb:
+    :return:
+    """
+    return tcry.mul256_modm(aa, bb)
+
+
+def sc_mul_into(r, aa, bb):
+    """
+    Scalar multiplication
+    :param r:
+    :param aa:
+    :param bb:
+    :return:
+    """
+    return tcry.mul256_modm(r, aa, bb)
 
 
 def sc_isnonzero(c):
@@ -275,28 +356,62 @@ def sc_mulsub(aa, bb, cc):
     return tcry.mulsub256_modm(aa, bb, cc)
 
 
+def sc_mulsub_into(r, aa, bb, cc):
+    """
+    (cc - aa * bb) % l
+    :param r:
+    :param aa:
+    :param bb:
+    :param cc:
+    :return:
+    """
+    return tcry.mulsub256_modm(r, aa, bb, cc)
+
+
+def sc_muladd(aa, bb, cc):
+    """
+    (cc + aa * bb) % l
+    :param aa:
+    :param bb:
+    :param cc:
+    :return:
+    """
+    return tcry.muladd256_modm(aa, bb, cc)
+
+
+def sc_muladd_into(r, aa, bb, cc):
+    """
+    (cc + aa * bb) % l
+    :param r:
+    :param aa:
+    :param bb:
+    :param cc:
+    :return:
+    """
+    return tcry.muladd256_modm(r, aa, bb, cc)
+
+
+def sc_inv_into(r, x):
+    """
+    Modular inversion mod curve order L
+    :param r:
+    :param x:
+    :return:
+    """
+    return tcry.inv256_modm(r, x)
+
+
 def random_scalar():
     return tcry.xmr_random_scalar()
+
+
+def random_scalar_into(r):
+    return tcry.xmr_random_scalar(r)
 
 
 #
 # GE - ed25519 group
 #
-
-
-def ge_scalarmult(a, A):
-    check_ed25519point(A)
-    return scalarmult(A, a)
-
-
-def ge_mul8(P):
-    check_ed25519point(P)
-    return tcry.ge25519_mul8(P)
-
-
-def ge_scalarmult_base(a):
-    a = sc_reduce32(a)
-    return scalarmult_base(a)
 
 
 def ge_double_scalarmult_base_vartime(a, A, b):
@@ -313,23 +428,6 @@ def ge_double_scalarmult_base_vartime(a, A, b):
     :return:
     """
     R = tcry.ge25519_double_scalarmult_vartime(A, a, b)
-    tcry.ge25519_norm(R, R)
-    return R
-
-
-def ge_double_scalarmult_base_vartime2(a, A, b, B):
-    """
-    void ge25519_double_scalarmult_vartime2(ge25519 *r, const ge25519 *p1, const bignum256modm s1, const ge25519 *p2, const bignum256modm s2);
-    r = a * A + b * B
-
-    :param a:
-    :param A:
-    :param b:
-    :param B:
-    :return:
-    """
-    R = tcry.ge25519_double_scalarmult_vartime2(A, a, B, b)
-    tcry.ge25519_norm(R, R)
     return R
 
 
@@ -360,6 +458,14 @@ def identity(byte_enc=False):
     """
     idd = tcry.ge25519_set_neutral()
     return idd if not byte_enc else encodepoint(idd)
+
+
+def identity_into(r):
+    """
+    Identity point
+    :return:
+    """
+    return tcry.ge25519_set_neutral(r)
 
 
 def ge_frombytes_vartime_check(point):
@@ -443,6 +549,18 @@ def hash_to_scalar(data, length=None):
     return tcry.xmr_hash_to_scalar(bytes(dt))
 
 
+def hash_to_scalar_into(r, data, length=None):
+    """
+    H_s(P)
+    :param r:
+    :param data:
+    :param length:
+    :return:
+    """
+    dt = data[:length] if length else data
+    return tcry.xmr_hash_to_scalar(r, bytes(dt))
+
+
 def hash_to_ec(buf):
     """
     H_p(buf)
@@ -454,6 +572,20 @@ def hash_to_ec(buf):
     :return:
     """
     return tcry.xmr_hash_to_ec(buf)
+
+
+def hash_to_ec_into(r, buf):
+    """
+    H_p(buf)
+
+    Code adapted from MiniNero: https://github.com/monero-project/mininero
+    https://github.com/monero-project/research-lab/blob/master/whitepaper/ge_fromfe_writeup/ge_fromfe.pdf
+    http://archive.is/yfINb
+    :param r:
+    :param buf:
+    :return:
+    """
+    return tcry.xmr_hash_to_ec(r, buf)
 
 
 #
@@ -485,6 +617,18 @@ def add_keys2(a, b, B):
     return tcry.xmr_add_keys2_vartime(a, b, B)
 
 
+def add_keys2_into(r, a, b, B):
+    """
+    aG + bB, G is basepoint
+    :param r:
+    :param a:
+    :param b:
+    :param B:
+    :return:
+    """
+    return tcry.xmr_add_keys2_vartime(r, a, b, B)
+
+
 def add_keys3(a, A, b, B):
     """
     aA + bB
@@ -495,6 +639,19 @@ def add_keys3(a, A, b, B):
     :return:
     """
     return tcry.xmr_add_keys3_vartime(a, A, b, B)
+
+
+def add_keys3_into(r, a, A, b, B):
+    """
+    aA + bB
+    :param r:
+    :param a:
+    :param A:
+    :param b:
+    :param B:
+    :return:
+    """
+    return tcry.xmr_add_keys3_vartime(r, a, A, b, B)
 
 
 def gen_c(a, amount):
@@ -566,6 +723,21 @@ def derive_secret_key(derivation, output_index, base):
     return tcry.xmr_derive_private_key(derivation, output_index, base)
 
 
+def get_subaddress_secret_key(secret_key, major=0, minor=0):
+    """
+    Builds subaddress secret key from the subaddress index
+    Hs(SubAddr || a || index_major || index_minor)
+
+    :param secret_key:
+    :param index:
+    :param major:
+    :param minor:
+    :param little_endian:
+    :return:
+    """
+    return tcry.xmr_get_subaddress_secret_key(major, minor, secret_key)
+
+
 def prove_range(amount, last_mask=None, *args, **kwargs):
     """
     Range proof provided by the backend. Implemented in C for speed.
@@ -635,8 +807,6 @@ def check_signature(data, c, r, pub):
     :return:
     """
     check_ed25519point(pub)
-    c = sc_reduce32(c)
-    r = sc_reduce32(r)
     if sc_check(c) != 0 or sc_check(r) != 0:
         raise ValueError("Signature error")
 

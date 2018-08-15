@@ -38,12 +38,16 @@ class TrezorInterface(object):
         from apps.monero import layout
 
         for idx, dst in enumerate(outs):
+            is_change = change_idx and idx == change_idx
+            if is_change:
+                continue
+
             addr = encode_addr(
                 net_version(creds.network_type),
                 dst.addr.spend_public_key,
                 dst.addr.view_public_key,
             )
-            is_change = change_idx and idx == change_idx
+
             await layout.require_confirm_tx(
                 self.gctx(ctx), addr.decode("ascii"), dst.amount, is_change
             )

@@ -124,12 +124,12 @@ class RctSigPrunable(MessageType):
             raise ValueError("Unknown type")
 
         if type == RctType.SimpleBulletproof or type == RctType.FullBulletproof:
-            if len(self.bulletproofs) != outputs:
-                raise ValueError("Bulletproofs size mismatch")
-
             await ar.prepare_container(
                 outputs, eref(self, "bulletproofs"), elem_type=Bulletproof
             )
+            if len(self.bulletproofs) != outputs:
+                raise ValueError("Bulletproofs size mismatch")
+
             for i in range(len(self.bulletproofs)):
                 await ar.field(elem=eref(self.bulletproofs, i), elem_type=Bulletproof)
 
