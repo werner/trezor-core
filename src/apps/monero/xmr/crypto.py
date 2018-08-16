@@ -148,16 +148,6 @@ def point_double(P):
     return tcry.ge25519_double(P)
 
 
-def point_norm(P):
-    """
-    Normalizes point after multiplication
-    Extended edwards coordinates (X,Y,Z,T)
-    :param P:
-    :return:
-    """
-    return tcry.ge25519_norm(P)
-
-
 #
 # Zmod(order), scalar values field
 #
