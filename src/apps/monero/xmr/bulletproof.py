@@ -8,11 +8,6 @@ from apps.monero.xmr import crypto
 from apps.monero.xmr.serialize.int_serialize import dump_uvarint_b, dump_uvarint_b_into
 from apps.monero.xmr.serialize_messages.tx_rsig_bulletproof import Bulletproof
 
-# curve size
-# 2**252 + 3*610042537739*15158679415041928064055629
-ED25519_ORD = 0x1000000000000000000000000000000014def9dea2f79cd65812631a5cf5d3ed
-
-
 # Constants
 
 BP_LOG_N = 6
@@ -127,11 +122,9 @@ def invert(dst, x):
     :return:
     """
     dst = _ensure_dst_key(dst)
-    xint = 0
-    xint = xint.from_bytes(x, "little")
-    xinv = mul_inverse_used(xint, ED25519_ORD)
-    buff = xinv.to_bytes(32, "little")
-    copy_key(dst, buff)
+    crypto.decodeint_into_noreduce(tmp_sc_1, x)
+    crypto.sc_inv_into(tmp_sc_2, tmp_sc_1)
+    crypto.encodeint_into(tmp_sc_2, dst)
     return dst
 
 
