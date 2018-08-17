@@ -723,14 +723,25 @@ STATIC mp_obj_t mod_trezorcrypto_monero_xmr_random_scalar(size_t n_args, const m
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_monero_xmr_random_scalar_obj, 0, 1, mod_trezorcrypto_monero_xmr_random_scalar);
 
 //xmr_fast_hash
-STATIC mp_obj_t mod_trezorcrypto_monero_xmr_fast_hash(const mp_obj_t arg){
+STATIC mp_obj_t mod_trezorcrypto_monero_xmr_fast_hash(size_t n_args, const mp_obj_t *args){
+    const int off = n_args == 2 ? 0 : -1;
     uint8_t buff[32];
+    uint8_t * buff_use = buff;
+    if (n_args > 1){
+        mp_buffer_info_t odata;
+        mp_get_buffer_raise(args[0], &odata, MP_BUFFER_WRITE);
+        if (odata.len < 32){
+            mp_raise_ValueError("Output buffer too small");
+        }
+        buff_use = odata.buf;
+    }
+
     mp_buffer_info_t data;
-    mp_get_buffer_raise(arg, &data, MP_BUFFER_READ);
-    xmr_fast_hash(buff, data.buf, data.len);
-    return mp_obj_new_bytes(buff, 32);
+    mp_get_buffer_raise(args[1+off], &data, MP_BUFFER_READ);
+    xmr_fast_hash(buff_use, data.buf, data.len);
+    return n_args == 2 ? args[0] : mp_obj_new_bytes(buff, 32);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_monero_xmr_fast_hash_obj, mod_trezorcrypto_monero_xmr_fast_hash);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_monero_xmr_fast_hash_obj, 1, 2, mod_trezorcrypto_monero_xmr_fast_hash);
 
 //xmr_hash_to_ec
 STATIC mp_obj_t mod_trezorcrypto_monero_xmr_hash_to_ec(size_t n_args, const mp_obj_t *args){
