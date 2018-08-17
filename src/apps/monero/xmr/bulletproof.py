@@ -80,21 +80,31 @@ def copy_vector(dst, src):
         copy_key(dst[i], src[i])
 
 
-def mul_inverse_egcd(x, n, s=1, t=0, N=0):
-    return (
-        n < 2 and t % N or mul_inverse_egcd(n, x % n, t, s - x // n * t, N or n),
-        -1,
-    )[n < 1]
+def extended_gcd(aa, bb):
+    lastremainder, remainder = abs(aa), abs(bb)
+    x, lastx, y, lasty = 0, 1, 1, 0
+    while remainder:
+        lastremainder, (quotient, remainder) = remainder, divmod(lastremainder, remainder)
+        x, lastx = lastx - quotient * x, x
+        y, lasty = lasty - quotient * y, y
+    return lastremainder, lastx * (-1 if aa < 0 else 1), lasty * (-1 if bb < 0 else 1)
+
+
+def modinv(a, m):
+    g, x, y = extended_gcd(a, m)
+    if g != 1:
+        raise ValueError
+    return x % m
 
 
 def mul_inverse(x, n):
     return pow(x, n - 2, n)
 
 
-mul_inverse_used = mul_inverse_egcd
+mul_inverse_used = modinv
 try:
     pow(2, 5, 7)
-    mul_inverse_used = mul_inverse_egcd
+    mul_inverse_used = mul_inverse
 except NotImplementedError:
     pass
 
@@ -736,13 +746,15 @@ class BulletProofBuilder(object):
         bprime = r
 
         yinv = invert(None, y)
+        self.gc(20)
+
         yinvpow = _ensure_dst_key()
         copy_key(yinvpow, ONE)
         for i in range(BP_N):
             Gprime[i] = self.Gprec[i]
             scalarmult_key(Hprime[i], self.Hprec[i], yinvpow)
             sc_mul(yinvpow, yinvpow, yinv)
-        self.gc(20)
+        self.gc(21)
 
         round = 0
         nprime = BP_N
@@ -765,7 +777,7 @@ class BulletProofBuilder(object):
             _tmp_vct_2.resize(nprime, chop=True)
             _tmp_vct_3.resize(nprime, chop=True)
             _tmp_vct_4.resize(nprime, chop=True)
-            self.gc(21)
+            self.gc(22)
 
             # PAPER LINES 16-17
             cL = inner_product(
@@ -797,7 +809,7 @@ class BulletProofBuilder(object):
                 bprime.slice(_tmp_vct_4, 0, nprime),
                 R[round],
             )
-            self.gc(22)
+            self.gc(23)
 
             sc_mul(tmp, cR, x_ip)
             add_keys(R[round], R[round], scalarmult_key(_tmp_k_1, XMR_H, tmp))
@@ -807,6 +819,8 @@ class BulletProofBuilder(object):
 
             # PAPER LINES 24-25
             invert(winv, w[round])
+            self.gc(24)
+
             hadamard2(
                 vector_scalar2(Gprime.slice(_tmp_vct_1, 0, nprime), winv, _tmp_vct_3),
                 vector_scalar2(
@@ -824,7 +838,7 @@ class BulletProofBuilder(object):
                 ),
                 Hprime,
             )
-            self.gc(23)
+            self.gc(25)
 
             # PAPER LINES 28-29
             vector_add(
@@ -846,7 +860,7 @@ class BulletProofBuilder(object):
             )
 
             round += 1
-            self.gc(24)
+            self.gc(26)
 
         copy_key(aprime0, aprime[0])
         copy_key(bprime0, bprime[0])
@@ -994,9 +1008,12 @@ class BulletProofBuilder(object):
         copy_key(ypow, ONE)
 
         invert(yinv, y)
+        self.gc(61)
+
         winv = _ensure_dst_keyvect(None, rounds)
         for i in range(rounds):
             invert(winv[i], w[i])
+            self.gc(62)
 
         g_scalar = _ensure_dst_key()
         h_scalar = _ensure_dst_key()
@@ -1031,7 +1048,7 @@ class BulletProofBuilder(object):
 
         del g_scalar
         del h_scalar
-        self.gc(61)
+        self.gc(63)
 
         # PAPER LINE 26
         pprime = _ensure_dst_key()
@@ -1052,7 +1069,7 @@ class BulletProofBuilder(object):
         sc_mul(tmp, tmp, x_ip)
         scalarmult_key(tmp, XMR_H, tmp)
         add_keys(tmp, tmp, inner_prod)
-        self.gc(62)
+        self.gc(64)
 
         if pprime != tmp:
             raise ValueError("Verification failure step 2")
