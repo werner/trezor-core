@@ -268,11 +268,12 @@ class KeyV(object):
     Constant precomputed buffers = bytes, frozen. Same operation as normal.
     """
 
-    def __init__(self, elems=64, src=None, buffer=None):
+    def __init__(self, elems=64, src=None, buffer=None, const=False):
         self.current_idx = 0
         self.d = None
         self.mv = None
         self.size = elems
+        self.const = const
         if src:
             self.d = bytearray(src.d)
             self.size = src.size
@@ -301,6 +302,8 @@ class KeyV(object):
         :param value:
         :return:
         """
+        if self.const:
+            raise ValueError('Constant KeyV')
         ck = self[key]
         for i in range(32):
             ck[i] = value[i]
@@ -542,10 +545,10 @@ class BulletProofBuilder(object):
         self.gamma = None
         self.gamma_enc = None
         self.proof_sec = None
-        self.Gprec = KeyV(buffer=BP_GI_PRE)
-        self.Hprec = KeyV(buffer=BP_HI_PRE)
-        self.oneN = KeyV(buffer=BP_ONE_N)
-        self.twoN = KeyV(buffer=BP_TWO_N)
+        self.Gprec = KeyV(buffer=BP_GI_PRE, const=True)
+        self.Hprec = KeyV(buffer=BP_HI_PRE, const=True)
+        self.oneN = KeyV(buffer=BP_ONE_N, const=True)
+        self.twoN = KeyV(buffer=BP_TWO_N, const=True)
         self.ip12 = BP_IP12
         self.v_aL = None
         self.v_aR = None
