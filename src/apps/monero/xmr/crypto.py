@@ -96,8 +96,20 @@ def pbkdf2(inp, salt, length=32, count=1000, prf=None):
 #
 
 
+def new_point():
+    return tcry.ge25519_set_neutral()
+
+
+def new_scalar():
+    return tcry.init256_modm(0)
+
+
 def decodepoint(x):
     return tcry.ge25519_unpack_vartime(x)
+
+
+def decodepoint_into(r, x):
+    return tcry.ge25519_unpack_vartime(r, x)
 
 
 def encodepoint(pt):
@@ -110,6 +122,14 @@ def encodepoint_into(pt, b):
 
 def decodeint(x):
     return tcry.unpack256_modm(x)
+
+
+def decodeint_into_noreduce(r, x):
+    return tcry.unpack256_modm_noreduce(r, x)
+
+
+def decodeint_into(r, x):
+    return tcry.unpack256_modm(r, x)
 
 
 def encodeint(x):
@@ -128,16 +148,32 @@ def scalarmult_base(a):
     return tcry.ge25519_scalarmult_base(a)
 
 
+def scalarmult_base_into(r, a):
+    return tcry.ge25519_scalarmult_base(r, a)
+
+
 def scalarmult(P, e):
     return tcry.ge25519_scalarmult(P, e)
+
+
+def scalarmult_into(r, P, e):
+    return tcry.ge25519_scalarmult(r, P, e)
 
 
 def point_add(P, Q):
     return tcry.ge25519_add(P, Q, 0)
 
 
+def point_add_into(r, P, Q):
+    return tcry.ge25519_add(r, P, Q, 0)
+
+
 def point_sub(P, Q):
     return tcry.ge25519_add(P, Q, 1)
+
+
+def point_sub_into(r, P, Q):
+    return tcry.ge25519_add(r, P, Q, 1)
 
 
 def point_eq(P, Q):
@@ -161,6 +197,14 @@ def sc_0():
     return tcry.init256_modm(0)
 
 
+def sc_0_into(r):
+    """
+    Sets 0 to the scalar value Zmod(m)
+    :return:
+    """
+    return tcry.init256_modm(r, 0)
+
+
 def sc_init(x):
     """
     Sets x to the scalar value Zmod(m)
@@ -169,6 +213,16 @@ def sc_init(x):
     if x >= (1 << 64):
         raise ValueError("Initialization works up to 64-bit only")
     return tcry.init256_modm(x)
+
+
+def sc_init_into(r, x):
+    """
+    Sets x to the scalar value Zmod(m)
+    :return:
+    """
+    if x >= (1 << 64):
+        raise ValueError("Initialization works up to 64-bit only")
+    return tcry.init256_modm(r, x)
 
 
 def sc_get64(x):
@@ -225,6 +279,17 @@ def sc_add(aa, bb):
     return tcry.add256_modm(aa, bb)
 
 
+def sc_add_into(r, aa, bb):
+    """
+    Scalar addition
+    :param r:
+    :param aa:
+    :param bb:
+    :return:
+    """
+    return tcry.add256_modm(r, aa, bb)
+
+
 def sc_sub(aa, bb):
     """
     Scalar subtraction
@@ -233,6 +298,38 @@ def sc_sub(aa, bb):
     :return:
     """
     return tcry.sub256_modm(aa, bb)
+
+
+def sc_sub_into(r, aa, bb):
+    """
+    Scalar subtraction
+    :param r:
+    :param aa:
+    :param bb:
+    :return:
+    """
+    return tcry.sub256_modm(r, aa, bb)
+
+
+def sc_mul(aa, bb):
+    """
+    Scalar multiplication
+    :param aa:
+    :param bb:
+    :return:
+    """
+    return tcry.mul256_modm(aa, bb)
+
+
+def sc_mul_into(r, aa, bb):
+    """
+    Scalar multiplication
+    :param r:
+    :param aa:
+    :param bb:
+    :return:
+    """
+    return tcry.mul256_modm(r, aa, bb)
 
 
 def sc_isnonzero(c):
@@ -265,8 +362,47 @@ def sc_mulsub(aa, bb, cc):
     return tcry.mulsub256_modm(aa, bb, cc)
 
 
+def sc_mulsub_into(r, aa, bb, cc):
+    """
+    (cc - aa * bb) % l
+    :param r:
+    :param aa:
+    :param bb:
+    :param cc:
+    :return:
+    """
+    return tcry.mulsub256_modm(r, aa, bb, cc)
+
+
+def sc_muladd(aa, bb, cc):
+    """
+    (cc + aa * bb) % l
+    :param aa:
+    :param bb:
+    :param cc:
+    :return:
+    """
+    return tcry.muladd256_modm(aa, bb, cc)
+
+
+def sc_muladd_into(r, aa, bb, cc):
+    """
+    (cc + aa * bb) % l
+    :param r:
+    :param aa:
+    :param bb:
+    :param cc:
+    :return:
+    """
+    return tcry.muladd256_modm(r, aa, bb, cc)
+
+
 def random_scalar():
     return tcry.xmr_random_scalar()
+
+
+def random_scalar_into(r):
+    return tcry.xmr_random_scalar(r)
 
 
 #
@@ -433,6 +569,18 @@ def hash_to_scalar(data, length=None):
     return tcry.xmr_hash_to_scalar(bytes(dt))
 
 
+def hash_to_scalar_into(r, data, length=None):
+    """
+    H_s(P)
+    :param r:
+    :param data:
+    :param length:
+    :return:
+    """
+    dt = data[:length] if length else data
+    return tcry.xmr_hash_to_scalar(r, bytes(dt))
+
+
 def hash_to_ec(buf):
     """
     H_p(buf)
@@ -444,6 +592,20 @@ def hash_to_ec(buf):
     :return:
     """
     return tcry.xmr_hash_to_ec(buf)
+
+
+def hash_to_ec_into(r, buf):
+    """
+    H_p(buf)
+
+    Code adapted from MiniNero: https://github.com/monero-project/mininero
+    https://github.com/monero-project/research-lab/blob/master/whitepaper/ge_fromfe_writeup/ge_fromfe.pdf
+    http://archive.is/yfINb
+    :param r:
+    :param buf:
+    :return:
+    """
+    return tcry.xmr_hash_to_ec(r, buf)
 
 
 #
@@ -475,6 +637,18 @@ def add_keys2(a, b, B):
     return tcry.xmr_add_keys2_vartime(a, b, B)
 
 
+def add_keys2_into(r, a, b, B):
+    """
+    aG + bB, G is basepoint
+    :param r:
+    :param a:
+    :param b:
+    :param B:
+    :return:
+    """
+    return tcry.xmr_add_keys2_vartime(r, a, b, B)
+
+
 def add_keys3(a, A, b, B):
     """
     aA + bB
@@ -485,6 +659,19 @@ def add_keys3(a, A, b, B):
     :return:
     """
     return tcry.xmr_add_keys3_vartime(a, A, b, B)
+
+
+def add_keys3_into(r, a, A, b, B):
+    """
+    aA + bB
+    :param r:
+    :param a:
+    :param A:
+    :param b:
+    :param B:
+    :return:
+    """
+    return tcry.xmr_add_keys3_vartime(r, a, A, b, B)
 
 
 def gen_c(a, amount):
