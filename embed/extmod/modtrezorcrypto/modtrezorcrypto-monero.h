@@ -22,6 +22,8 @@
 #include "py/mpz.h"
 
 #include "monero/monero.h"
+#include "bignum.h"
+
 #define RSIG_SIZE 6176
 
 typedef struct _mp_obj_hasher_t {
@@ -408,6 +410,29 @@ STATIC mp_obj_t mod_trezorcrypto_monero_muladd256_modm(size_t n_args, const mp_o
     return res;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_monero_muladd256_modm_obj, 3, 4, mod_trezorcrypto_monero_muladd256_modm);
+
+//void inv256_modm
+STATIC mp_obj_t mod_trezorcrypto_monero_inv256_modm(size_t n_args, const mp_obj_t *args){
+    mp_obj_t res = n_args == 2 ? args[0] : mp_obj_new_scalar();
+    const int off = n_args == 2 ? 0 : -1;
+
+    assert_scalar(res);
+    assert_scalar(args[1+off]);
+
+    uint8_t buff[32];
+    bignum256 bn_prime;
+    bignum256 bn_x;
+    const char * L = "\xed\xd3\xf5\x5c\x1a\x63\x12\x58\xd6\x9c\xf7\xa2\xde\xf9\xde\x14\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x10";
+
+    contract256_modm(buff, MP_OBJ_C_SCALAR(args[1+off]));
+    bn_read_le((const uint8_t *)L, &bn_prime);
+    bn_read_le(buff, &bn_x);
+    bn_inverse(&bn_x, &bn_prime);
+    bn_write_le(&bn_x, buff);
+    expand_raw256_modm(MP_OBJ_SCALAR(res), buff);
+    return res;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_monero_inv256_modm_obj, 1, 2, mod_trezorcrypto_monero_inv256_modm);
 
 //void contract256_modm_r
 STATIC mp_obj_t mod_trezorcrypto_monero_pack256_modm(const mp_obj_t arg){
@@ -1049,6 +1074,7 @@ STATIC const mp_rom_map_elem_t mod_trezorcrypto_monero_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR_mul256_modm), MP_ROM_PTR(&mod_trezorcrypto_monero_mul256_modm_obj) },
     { MP_ROM_QSTR(MP_QSTR_mulsub256_modm), MP_ROM_PTR(&mod_trezorcrypto_monero_mulsub256_modm_obj) },
     { MP_ROM_QSTR(MP_QSTR_muladd256_modm), MP_ROM_PTR(&mod_trezorcrypto_monero_muladd256_modm_obj) },
+    { MP_ROM_QSTR(MP_QSTR_inv256_modm), MP_ROM_PTR(&mod_trezorcrypto_monero_inv256_modm_obj) },
     { MP_ROM_QSTR(MP_QSTR_pack256_modm), MP_ROM_PTR(&mod_trezorcrypto_monero_pack256_modm_obj) },
     { MP_ROM_QSTR(MP_QSTR_pack256_modm_into), MP_ROM_PTR(&mod_trezorcrypto_monero_pack256_modm_into_obj) },
     { MP_ROM_QSTR(MP_QSTR_unpack256_modm), MP_ROM_PTR(&mod_trezorcrypto_monero_unpack256_modm_obj) },
