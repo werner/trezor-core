@@ -528,6 +528,8 @@ class BulletProofBuilder(object):
         self.v_sL = None
         self.v_sR = None
         self.tmp_sc_1 = crypto.new_scalar()
+        self.tmp_det_buff = bytearray(64 + 1 + 1)
+        self.tmp_h_buff1 = bytearray(32)
         self.gc_fnc = gc.collect
         self.gc_trace = None
 
@@ -542,7 +544,7 @@ class BulletProofBuilder(object):
         self.value_enc = crypto.encodeint(value)
         self.gamma = mask
         self.gamma_enc = crypto.encodeint(mask)
-        self.proof_sec = crypto.random_bytes(128)
+        self.proof_sec = crypto.random_bytes(64)
 
     def aL(self, i, dst=None):
         dst = _ensure_dst_key(dst)
@@ -566,10 +568,12 @@ class BulletProofBuilder(object):
 
     def _det_mask(self, i, is_sL=True, dst=None):
         dst = _ensure_dst_key(dst)
-        src = crypto.keccak_2hash(
-            self.proof_sec + (b"sL" if is_sL else b"sR") + dump_uvarint_b(i)
-        )
-        crypto.decodeint_into(self.tmp_sc_1, src)
+        self.tmp_det_buff[0] = int(is_sL)
+        memcpy(self.tmp_det_buff, 1, self.proof_sec, 0, len(self.proof_sec))
+        dump_uvarint_b_into(i, self.tmp_det_buff, 65)
+        crypto.keccak_hash_into(self.tmp_h_buff1, self.tmp_det_buff)
+        crypto.keccak_hash_into(self.tmp_h_buff1, self.tmp_h_buff1)
+        crypto.decodeint_into(self.tmp_sc_1, self.tmp_h_buff1)
         crypto.encodeint_into(self.tmp_sc_1, dst)
         return dst
 
@@ -698,7 +702,8 @@ class BulletProofBuilder(object):
         self.gc(7)
 
         # PAPER LINES 54-57
-        vector_add(aL_vpIz, vector_scalar(self.v_sL, x), l)
+        vector_scalar(self.v_sL, x, tmp_vct)
+        vector_add(aL_vpIz, tmp_vct, l)
         self.v_sL = None
         del aL_vpIz
         self.gc(8)
