@@ -362,9 +362,12 @@ class KeyVEval(KeyV):
     def __init__(self, elems=64, src=None):
         self.size = elems
         self.fnc = src
+        self.buff = _ensure_dst_key()
+        self.mv = memoryview(self.buff)
 
     def __getitem__(self, item):
-        return memoryview(self.fnc(item))
+        self.fnc(item, self.mv)
+        return self.mv
 
     def __setitem__(self, key, value):
         raise ValueError("Constant vector")
