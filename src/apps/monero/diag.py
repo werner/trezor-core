@@ -12,7 +12,18 @@ PREV_MEM = gc.mem_free()
 CUR_MES = 0
 
 
-def check_mem(x):
+def log_trace(x=None):
+    log.debug(
+        __name__,
+        "Log trace %s, ... F: %s A: %s, S: %s",
+        x,
+        gc.mem_free(),
+        gc.mem_alloc(),
+        micropython.stack_use(),
+    )
+
+
+def check_mem(x=''):
     global PREV_MEM, CUR_MES
 
     gc.collect()
@@ -66,5 +77,32 @@ async def dispatch_diag(ctx, msg, **kwargs):
                 monero += 1
         log.info(__name__, "Total modules: %s, Monero modules: %s", total, monero)
         return retit()
+
+    elif msg.ins == 5:
+        check_mem()
+        from apps.monero.xmr import bulletproof as bp
+        check_mem('BP Imported')
+        from apps.monero.xmr import crypto
+        check_mem('Crypto Imported')
+
+        bpi = bp.BulletProofBuilder()
+        bpi.gc_fnc = gc.collect
+        bpi.gc_trace = log_trace
+
+        val = crypto.sc_init((1 << 30) - 1 + 16)
+        mask = crypto.random_scalar()
+        check_mem('BP pre input')
+
+        bpi.set_input(val, mask)
+        check_mem('BP post input')
+
+        bp_res = bpi.prove()
+        check_mem('BP post prove')
+
+        bpi.verify(bp_res)
+        check_mem('BP post verify')
+
+        return retit()
+
 
     return retit()
