@@ -591,10 +591,10 @@ class BulletProofBuilder(object):
         return dst
 
     def aL_vct(self):
-        return KeyVEval(64, lambda x: self.aL(x))
+        return KeyVEval(64, lambda x, r: self.aL(x, r))
 
     def aR_vct(self):
-        return KeyVEval(64, lambda x: self.aR(x))
+        return KeyVEval(64, lambda x, r: self.aR(x, r))
 
     def _det_mask(self, i, is_sL=True, dst=None):
         dst = _ensure_dst_key(dst)
@@ -615,12 +615,16 @@ class BulletProofBuilder(object):
 
     def sL_vct(self):
         return (
-            KeyVEval(64, lambda x: self.sL(x)) if self.use_det_masks else self.sX_gen()
+            KeyVEval(64, lambda x, r: self.sL(x, r))
+            if self.use_det_masks
+            else self.sX_gen()
         )
 
     def sR_vct(self):
         return (
-            KeyVEval(64, lambda x: self.sR(x)) if self.use_det_masks else self.sX_gen()
+            KeyVEval(64, lambda x, r: self.sR(x, r))
+            if self.use_det_masks
+            else self.sX_gen()
         )
 
     def sX_gen(self):
