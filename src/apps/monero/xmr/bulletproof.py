@@ -91,6 +91,14 @@ def mul_inverse(x, n):
     return pow(x, n - 2, n)
 
 
+mul_inverse_used = mul_inverse_egcd
+try:
+    pow(2, 5, 7)
+    mul_inverse_used = mul_inverse_egcd
+except NotImplementedError:
+    pass
+
+
 def invert(dst, x):
     """
     Modular inversion mod curve order.
@@ -104,7 +112,7 @@ def invert(dst, x):
     dst = _ensure_dst_key(dst)
     xint = 0
     xint = xint.from_bytes(x, "little")
-    xinv = mul_inverse(xint, ED25519_ORD)
+    xinv = mul_inverse_used(xint, ED25519_ORD)
     buff = xinv.to_bytes(32, "little")
     copy_key(dst, buff)
     return dst
