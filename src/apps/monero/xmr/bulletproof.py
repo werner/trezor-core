@@ -85,7 +85,10 @@ def extended_gcd(aa, bb):
     x, lastx, y, lasty = 0, 1, 1, 0
     gc_ctr = 0
     while remainder:
-        lastremainder, (quotient, remainder) = remainder, divmod(lastremainder, remainder)
+        lastremainder, (quotient, remainder) = (
+            remainder,
+            divmod(lastremainder, remainder),
+        )
         x, lastx = lastx - quotient * x, x
         y, lasty = lasty - quotient * y, y
         gc_ctr += 1
