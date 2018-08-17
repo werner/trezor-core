@@ -405,6 +405,16 @@ def sc_muladd_into(r, aa, bb, cc):
     return tcry.muladd256_modm(r, aa, bb, cc)
 
 
+def sc_inv_into(r, x):
+    """
+    Modular inversion mod curve order L
+    :param r:
+    :param x:
+    :return:
+    """
+    return tcry.inv256_modm(r, x)
+
+
 def random_scalar():
     return tcry.xmr_random_scalar()
 
