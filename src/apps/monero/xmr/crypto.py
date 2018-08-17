@@ -51,7 +51,7 @@ def keccak_hash_into(r, inp):
     Hashesh input in one call
     :return:
     """
-    return tcry.xmr_fast_hash(r,inp)
+    return tcry.xmr_fast_hash(r, inp)
 
 
 def keccak_2hash(inp):
@@ -759,6 +759,21 @@ def derive_secret_key(derivation, output_index, base):
     if sc_check(base) != 0:
         raise ValueError("cs_check in derive_secret_key")
     return tcry.xmr_derive_private_key(derivation, output_index, base)
+
+
+def get_subaddress_secret_key(secret_key, major=0, minor=0):
+    """
+    Builds subaddress secret key from the subaddress index
+    Hs(SubAddr || a || index_major || index_minor)
+
+    :param secret_key:
+    :param index:
+    :param major:
+    :param minor:
+    :param little_endian:
+    :return:
+    """
+    return tcry.xmr_get_subaddress_secret_key(major, minor, secret_key)
 
 
 def prove_range(amount, last_mask=None, *args, **kwargs):
