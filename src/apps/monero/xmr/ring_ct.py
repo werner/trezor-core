@@ -8,21 +8,22 @@ import gc
 from apps.monero.xmr import crypto
 
 
-def prove_range_bp(amount, last_mask=None):
+async def prove_range_bp(amount, last_mask=None):
     from apps.monero.xmr import bulletproof as bp
 
     bpi = bp.BulletProofBuilder()
 
     mask = last_mask if last_mask is not None else crypto.random_scalar()
-    bpi.set_input(amount, mask)
+    bpi.set_input(crypto.sc_init(amount), mask)
     bp_proof = bpi.prove()
-    C = bp_proof.V[0]
+    C = crypto.decodepoint(bp_proof.V[0])
 
     gc.collect()
-    from apps.monero.controller.misc import dump_msg
 
-    bp_ser = dump_msg(bp_proof, preallocate=9 * 32 + 2 * 6 * 32 + 64)
-    return C, mask, bp_ser
+    # Return as struct as the hash(BP_struct) != hash(BP_serialized)
+    # as the original hashing does not take vector lengths into account which are dynamic
+    # in the serialization scheme (and thus extraneous)
+    return C, mask, bp_proof
 
 
 def prove_range(

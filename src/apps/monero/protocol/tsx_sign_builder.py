@@ -935,11 +935,16 @@ class TTransactionBuilder(object):
 
         # Rangeproof
         self._log_trace("pre-rproof", collect=True)
-
         if self.use_bulletproof:
-            self._log_trace("pre-bp", collect=True)
-            C, mask, rsig = ring_ct.prove_range_bp(amount, last_mask)
+            C, mask, rsig = await ring_ct.prove_range_bp(amount, last_mask)
             self._log_trace("post-bp", collect=True)
+
+            # Incremental hashing
+            await self.full_message_hasher.rsig_val(rsig, True, raw=False)
+            self._log_trace("post-bp-hash", collect=True)
+
+            rsig = await misc.dump_msg(rsig, preallocate=9 * 32 + 2 * 6 * 32 + 2)
+            self._log_trace("post-bp-ser", collect=True)
 
         else:
             rsig_buff = bytearray(32 * (64 + 64 + 64 + 1))
@@ -950,6 +955,10 @@ class TTransactionBuilder(object):
             )
             rsig = memoryview(rsig)
 
+            # Incremental hashing
+            await self.full_message_hasher.rsig_val(rsig, False, raw=True)
+
+        self._log_trace("rproof", collect=True)
         self.assrt(
             crypto.point_eq(
                 C,
@@ -959,12 +968,6 @@ class TTransactionBuilder(object):
             ),
             "rproof",
         )
-
-        # Incremental hashing
-        await self.full_message_hasher.rsig_val(rsig, self.use_bulletproof, raw=True)
-
-        gc.collect()
-        self._log_trace("rproof")
 
         # Mask sum
         out_pk.mask = crypto.encodepoint(C)
