@@ -15,9 +15,7 @@ class XmrNoSuchAddressException(common.XmrException):
         super().__init__(*args, **kwargs)
 
 
-def get_subaddress_secret_key(
-    secret_key, index=None, major=None, minor=None, little_endian=True
-):
+def get_subaddress_secret_key(secret_key, index=None, major=None, minor=None):
     """
     Builds subaddress secret key from the subaddress index
     Hs(SubAddr || a || index_major || index_minor)
@@ -26,7 +24,6 @@ def get_subaddress_secret_key(
     :param index:
     :param major:
     :param minor:
-    :param little_endian:
     :return:
     """
     if index:
