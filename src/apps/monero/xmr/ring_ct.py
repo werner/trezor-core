@@ -10,6 +10,7 @@ from apps.monero.xmr import crypto
 
 def prove_range_bp(amount, last_mask=None):
     from apps.monero.xmr import bulletproof as bp
+
     bpi = bp.BulletProofBuilder()
 
     mask = crypto.random_scalar()
@@ -22,7 +23,8 @@ def prove_range_bp(amount, last_mask=None):
 
     gc.collect()
     from apps.monero.controller.misc import dump_msg
-    bp_ser = dump_msg(bp_proof, preallocate=9*32 + 2*6*32 + 64)
+
+    bp_ser = dump_msg(bp_proof, preallocate=9 * 32 + 2 * 6 * 32 + 64)
     return C, mask, bp_ser
 
 

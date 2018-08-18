@@ -23,7 +23,7 @@ def log_trace(x=None):
     )
 
 
-def check_mem(x=''):
+def check_mem(x=""):
     global PREV_MEM, CUR_MES
 
     gc.collect()
@@ -81,9 +81,11 @@ async def dispatch_diag(ctx, msg, **kwargs):
     elif msg.ins == 5:
         check_mem()
         from apps.monero.xmr import bulletproof as bp
-        check_mem('BP Imported')
+
+        check_mem("BP Imported")
         from apps.monero.xmr import crypto
-        check_mem('Crypto Imported')
+
+        check_mem("Crypto Imported")
 
         bpi = bp.BulletProofBuilder()
         bpi.gc_fnc = gc.collect
@@ -91,18 +93,17 @@ async def dispatch_diag(ctx, msg, **kwargs):
 
         val = crypto.sc_init((1 << 30) - 1 + 16)
         mask = crypto.random_scalar()
-        check_mem('BP pre input')
+        check_mem("BP pre input")
 
         bpi.set_input(val, mask)
-        check_mem('BP post input')
+        check_mem("BP post input")
 
         bp_res = bpi.prove()
-        check_mem('BP post prove')
+        check_mem("BP post prove")
 
         bpi.verify(bp_res)
-        check_mem('BP post verify')
+        check_mem("BP post verify")
 
         return retit()
-
 
     return retit()

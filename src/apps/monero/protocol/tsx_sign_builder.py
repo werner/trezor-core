@@ -961,9 +961,7 @@ class TTransactionBuilder(object):
         )
 
         # Incremental hashing
-        await self.full_message_hasher.rsig_val(
-            rsig, self.use_bulletproof, raw=True
-        )
+        await self.full_message_hasher.rsig_val(rsig, self.use_bulletproof, raw=True)
 
         gc.collect()
         self._log_trace("rproof")
