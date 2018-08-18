@@ -3,7 +3,27 @@
 # Author: https://github.com/monero-project/mininero
 # Author: Dusan Klinec, ph4r05, 2018
 
+import gc
+
 from apps.monero.xmr import crypto
+
+
+def prove_range_bp(amount, last_mask=None):
+    from apps.monero.xmr import bulletproof as bp
+    bpi = bp.BulletProofBuilder()
+
+    mask = crypto.random_scalar()
+    if last_mask is not None:
+        mask = crypto.sc_sub(last_mask, last_mask)
+
+    bpi.set_input(amount, mask)
+    bp_proof = bpi.prove()
+    C = bp_proof.V[0]
+
+    gc.collect()
+    from apps.monero.controller.misc import dump_msg
+    bp_ser = dump_msg(bp_proof, preallocate=9*32 + 2*6*32 + 64)
+    return C, mask, bp_ser
 
 
 def prove_range(
