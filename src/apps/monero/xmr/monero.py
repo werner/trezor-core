@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 # Author: Dusan Klinec, ph4r05, 2018
 
-import ustruct as struct
 from micropython import const
 
 from apps.monero.xmr import common, crypto
