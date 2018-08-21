@@ -5,14 +5,9 @@ from trezor.crypto import bip32
 from trezor.messages.CardanoPublicKey import CardanoPublicKey
 from trezor.messages.HDNodeType import HDNodeType
 
-from .address import (
-    _break_address_n_to_lines,
-    _derive_hd_passphrase,
-    derive_address_and_node,
-)
-from .ui import show_swipable_with_confirmation
+from .address import _derive_hd_passphrase, derive_address_and_node
 
-from apps.common import seed, storage
+from apps.common import seed, show, storage
 
 
 async def cardano_get_public_key(ctx, msg):
@@ -28,11 +23,8 @@ async def cardano_get_public_key(ctx, msg):
     mnemonic = None
     root_node = None
 
-    lines = ["For BIP32 path: ", ""]
-    lines.extend(_break_address_n_to_lines(msg.address_n))
-    if not await show_swipable_with_confirmation(ctx, lines, "Export xpub key"):
-        raise wire.ActionCancelled("Exporting cancelled")
-
+    if msg.show_display:
+        await show.show_pubkey(ctx, key.node.public_key)
     return key
 
 
