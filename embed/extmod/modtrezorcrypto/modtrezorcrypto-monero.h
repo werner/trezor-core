@@ -419,17 +419,14 @@ STATIC mp_obj_t mod_trezorcrypto_monero_inv256_modm(size_t n_args, const mp_obj_
     assert_scalar(res);
     assert_scalar(args[1+off]);
 
-    uint8_t buff[32];
-    bignum256 bn_prime;
+    // bn_prime = curve order, little endian encoded
+    bignum256 bn_prime = {.val={0x1cf5d3ed, 0x20498c69, 0x2f79cd65, 0x37be77a8, 0x14, 0x0, 0x0, 0x0, 0x1000}};
     bignum256 bn_x;
-    const char * L = "\xed\xd3\xf5\x5c\x1a\x63\x12\x58\xd6\x9c\xf7\xa2\xde\xf9\xde\x14\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x10";
 
-    contract256_modm(buff, MP_OBJ_C_SCALAR(args[1+off]));
-    bn_read_le((const uint8_t *)L, &bn_prime);
-    bn_read_le(buff, &bn_x);
+    memcpy(&bn_x.val, MP_OBJ_C_SCALAR(args[1+off]), sizeof(bignum256modm));
     bn_inverse(&bn_x, &bn_prime);
-    bn_write_le(&bn_x, buff);
-    expand_raw256_modm(MP_OBJ_SCALAR(res), buff);
+    memcpy(MP_OBJ_SCALAR(res), bn_x.val, sizeof(bignum256modm));
+
     return res;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_monero_inv256_modm_obj, 1, 2, mod_trezorcrypto_monero_inv256_modm);
