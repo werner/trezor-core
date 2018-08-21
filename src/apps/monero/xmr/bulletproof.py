@@ -347,9 +347,8 @@ def _ensure_dst_keyvect(dst=None, size=None):
 def vector_exponent_custom(A, B, a, b, dst=None):
     dst = _ensure_dst_key(dst)
 
-    crypto.sc_init_into(tmp_sc_1, 0)
-    crypto.scalarmult_base_into(tmp_pt_1, tmp_sc_1)  # identity set
-    crypto.scalarmult_base_into(tmp_pt_2, tmp_sc_1)
+    crypto.identity_into(tmp_pt_1)
+    crypto.identity_into(tmp_pt_2)
 
     for i in range(len(a)):
         crypto.decodeint_into_noreduce(tmp_sc_1, a[i])
