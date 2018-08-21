@@ -5,7 +5,7 @@
 import gc
 
 from apps.monero.xmr import crypto
-from apps.monero.xmr.serialize.int_serialize import dump_uvarint_b, dump_uvarint_b_into
+from apps.monero.xmr.serialize.int_serialize import dump_uvarint_b_into
 from apps.monero.xmr.serialize_messages.tx_rsig_bulletproof import Bulletproof
 
 # Constants
