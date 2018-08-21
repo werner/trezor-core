@@ -414,21 +414,6 @@ def random_scalar_into(r):
 #
 
 
-def ge_scalarmult(a, A):
-    check_ed25519point(A)
-    return scalarmult(A, a)
-
-
-def ge_mul8(P):
-    check_ed25519point(P)
-    return tcry.ge25519_mul8(P)
-
-
-def ge_scalarmult_base(a):
-    a = sc_reduce32(a)
-    return scalarmult_base(a)
-
-
 def ge_double_scalarmult_base_vartime(a, A, b):
     """
     void ge25519_double_scalarmult_vartime(ge25519 *r, const ge25519 *p1, const bignum256modm s1, const bignum256modm s2);
@@ -443,23 +428,6 @@ def ge_double_scalarmult_base_vartime(a, A, b):
     :return:
     """
     R = tcry.ge25519_double_scalarmult_vartime(A, a, b)
-    tcry.ge25519_norm(R, R)
-    return R
-
-
-def ge_double_scalarmult_base_vartime2(a, A, b, B):
-    """
-    void ge25519_double_scalarmult_vartime2(ge25519 *r, const ge25519 *p1, const bignum256modm s1, const ge25519 *p2, const bignum256modm s2);
-    r = a * A + b * B
-
-    :param a:
-    :param A:
-    :param b:
-    :param B:
-    :return:
-    """
-    R = tcry.ge25519_double_scalarmult_vartime2(A, a, B, b)
-    tcry.ge25519_norm(R, R)
     return R
 
 
