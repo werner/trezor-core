@@ -263,20 +263,6 @@ def check_sc(key):
         raise ValueError("Invalid scalar value")
 
 
-def sc_reduce32(data):
-    """
-    Exactly the same as sc_reduce (which is default lib sodium)
-    except it is assumed that your input s is alread in the form:
-    s[0]+256*s[1]+...+256^31*s[31] = s
-
-    And the rest is reducing mod l,
-    so basically take a 32 byte input, and reduce modulo the prime.
-    :param data:
-    :return:
-    """
-    return tcry.reduce256_modm(data)
-
-
 def sc_add(aa, bb):
     """
     Scalar addition
@@ -845,8 +831,6 @@ def check_signature(data, c, r, pub):
     :return:
     """
     check_ed25519point(pub)
-    c = sc_reduce32(c)
-    r = sc_reduce32(r)
     if sc_check(c) != 0 or sc_check(r) != 0:
         raise ValueError("Signature error")
 

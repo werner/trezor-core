@@ -180,7 +180,7 @@ def gen_mlsag_rows(message, rv, pk, xx, kLRki, index, dsRows, rows, cols):
         hash_point(hasher, aGi)
 
     c_old = hasher.digest()
-    c_old = crypto.sc_reduce32(crypto.decodeint(c_old))
+    c_old = crypto.decodeint(c_old)
     return c_old, Ip, alpha
 
 
@@ -231,7 +231,7 @@ def gen_mlsag_ext(message, pk, xx, kLRki, mscout, index, dsRows):
             hash_point(hasher, pk[i][j])
             hash_point(hasher, L)
 
-        c = crypto.sc_reduce32(crypto.decodeint(hasher.digest()))
+        c = crypto.decodeint(hasher.digest())
         c_old = c
         i = (i + 1) % cols
 
