@@ -641,7 +641,7 @@ STATIC mp_obj_t mod_trezorcrypto_monero_ge25519_scalarmult_base(size_t n_args, c
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_monero_ge25519_scalarmult_base_obj, 1, 2, mod_trezorcrypto_monero_ge25519_scalarmult_base);
 
-//void ge25519_scalarmult_wrapper(ge25519 *r, const ge25519 *P, const bignum256modm a);
+//void ge25519_scalarmult(ge25519 *r, const ge25519 *P, const bignum256modm a);
 STATIC mp_obj_t mod_trezorcrypto_monero_ge25519_scalarmult(size_t n_args, const mp_obj_t *args){
     mp_obj_t res = n_args == 3 ? args[0] : mp_obj_new_ge25519();
     const int off = n_args == 3 ? 0 : -1;
@@ -649,11 +649,11 @@ STATIC mp_obj_t mod_trezorcrypto_monero_ge25519_scalarmult(size_t n_args, const 
     assert_ge25519(args[1+off]);
 
     if (MP_OBJ_IS_SCALAR(args[2+off])){
-        ge25519_scalarmult_wrapper(&MP_OBJ_GE25519(res), &MP_OBJ_C_GE25519(args[1+off]), MP_OBJ_C_SCALAR(args[2+off]));
+        ge25519_scalarmult(&MP_OBJ_GE25519(res), &MP_OBJ_C_GE25519(args[1+off]), MP_OBJ_C_SCALAR(args[2+off]));
     } else if (mp_obj_is_integer(args[2+off])){
         bignum256modm mlt;
         set256_modm(mlt, mp_obj_get_int(args[2+off]));
-        ge25519_scalarmult_wrapper(&MP_OBJ_GE25519(res), &MP_OBJ_C_GE25519(args[1+off]), mlt);
+        ge25519_scalarmult(&MP_OBJ_GE25519(res), &MP_OBJ_C_GE25519(args[1+off]), mlt);
     } else {
         mp_raise_ValueError("unknown mult type");
     }
