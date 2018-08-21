@@ -8,7 +8,7 @@ import micropython
 from trezor import log
 
 
-async def layout_key_image_sync(state, ctx, msg):
+async def key_image_sync(ctx, msg, state):
     log.debug(
         __name__,
         "### KI SYNC. Free: {} Allocated: {}".format(gc.mem_free(), gc.mem_alloc()),

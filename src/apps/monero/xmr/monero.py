@@ -28,6 +28,10 @@ def get_subaddress_secret_key(secret_key, index=None, major=None, minor=None):
     if index:
         major = index.major
         minor = index.minor
+
+    if major == 0 and minor == 0:
+        return secret_key
+
     return crypto.get_subaddress_secret_key(secret_key, major, minor)
 
 
@@ -40,6 +44,9 @@ def get_subaddress_spend_public_key(view_private, spend_public, major, minor):
     :param minor:
     :return:
     """
+    if major == 0 and minor == 0:
+        return spend_public
+
     m = get_subaddress_secret_key(view_private, major=major, minor=minor)
     M = crypto.scalarmult_base(m)
     D = crypto.point_add(spend_public, M)
@@ -135,7 +142,7 @@ def generate_key_image_helper_precomp(
     :param received_index: subaddress index this payment was received to
     :return:
     """
-    if ack.spend_key_private == 0:
+    if not crypto.sc_isnonzero(ack.spend_key_private):
         raise ValueError("Watch-only wallet not supported")
 
     # derive secret key with subaddress - step 1: original CN derivation
@@ -194,8 +201,8 @@ def generate_key_image_helper(
     :param creds:
     :param subaddresses:
     :param out_key: real output (from input RCT) destination key
-    :param tx_public_key: real output (from input RCT) public key
-    :param additional_tx_public_keys:
+    :param tx_public_key: R, transaction public key
+    :param additional_tx_public_keys: Additional Rs, for subaddress destinations
     :param real_output_index: index of the real output in the RCT
     :return:
     """

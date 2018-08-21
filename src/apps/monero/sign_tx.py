@@ -8,11 +8,11 @@ import micropython
 from trezor import log
 
 
-async def layout_sign_tx(state, ctx, msg):
+async def sign_tx(ctx, msg, state):
     gc.threshold(gc.mem_free() // 4 + gc.mem_alloc())
     log.debug(
         __name__,
-        "############################ TSX. Free: {} Allocated: {} thr: {}".format(
+        "############################ TSX. F: {} A: {} thr: {}".format(
             gc.mem_free(), gc.mem_alloc(), gc.mem_free() // 4 + gc.mem_alloc()
         ),
     )
@@ -21,21 +21,20 @@ async def layout_sign_tx(state, ctx, msg):
 
     from apps.monero.protocol.tsx_sign import TsxSigner
 
-    log.debug(
-        __name__,
-        "TsxSigner. Free: {} Allocated: {}".format(gc.mem_free(), gc.mem_alloc()),
-    )
+    log.debug(__name__, "TsxSigner. F: {} A: {}".format(gc.mem_free(), gc.mem_alloc()))
     log.debug(__name__, "TsxState: %s", state.ctx_sign)
     gc.collect()
 
     try:
         signer = TsxSigner()
-        res = await signer.sign(ctx, state.ctx_sign, msg)
-        if await signer.should_purge():
-            state.ctx_sign = None
-        else:
-            state.ctx_sign = await signer.state_save()
+        await signer.wake_up(ctx, state.ctx_sign, msg)
+        state.ctx_sign = None
 
+        res = await signer.sign(msg)
+        gc.collect()
+
+        if not await signer.should_purge():
+            state.ctx_sign = await signer.state_save()
         return res
 
     except Exception as e:

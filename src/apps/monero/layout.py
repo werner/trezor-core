@@ -30,13 +30,45 @@ async def require_confirm_tx_plain(ctx, to, value, is_change=False):
     return await require_confirm(ctx, content, code=ButtonRequestType.SignTx)
 
 
+def paginate_lines(lines, lines_per_page=5):
+    pages = []
+    cpage = []
+    nlines = 0
+    last_modifier = None
+    for line in lines:
+        cpage.append(line)
+        if not isinstance(line, int):
+            nlines += 1
+        else:
+            last_modifier = line
+
+        if nlines >= lines_per_page:
+            pages.append(cpage)
+            cpage = []
+            nlines = 0
+            if last_modifier is not None:
+                cpage.append(last_modifier)
+
+    if nlines > 0:
+        pages.append(cpage)
+    return pages
+
+
 @ui.layout
 async def tx_dialog(
-    ctx, code, content, cancel_btn, confirm_btn, cancel_style, confirm_style
+    ctx,
+    code,
+    content,
+    cancel_btn,
+    confirm_btn,
+    cancel_style,
+    confirm_style,
+    scroll_tuple=None,
 ):
     from trezor.messages import MessageType
     from trezor.messages.ButtonRequest import ButtonRequest
     from trezor.ui.confirm import ConfirmDialog
+    from trezor.ui.scroll import Scrollpage
 
     await ctx.call(ButtonRequest(code=code), MessageType.ButtonAck)
     dialog = ConfirmDialog(
@@ -46,93 +78,101 @@ async def tx_dialog(
         cancel_style=cancel_style,
         confirm_style=confirm_style,
     )
+
+    if scroll_tuple and scroll_tuple[1] > 1:
+        dialog = Scrollpage(dialog, scroll_tuple[0], scroll_tuple[1])
+
     return await ctx.wait(dialog)
 
 
-async def require_confirm_tx(ctx, to, value, is_change=False):
-    from trezor import loop
+async def naive_pagination(
+    ctx, lines, title, icon=ui.ICON_RESET, icon_color=ui.ORANGE, per_page=5
+):
+    from trezor import res
+    from trezor.ui.confirm import CANCELLED, CONFIRMED, DEFAULT_CANCEL, DEFAULT_CONFIRM
 
+    if isinstance(lines, (list, tuple)):
+        lines = lines
+    else:
+        lines = list(chunks(lines, 16))
+
+    pages = paginate_lines(lines, per_page)
+    npages = len(pages)
+    cur_step = 0
+    code = ButtonRequestType.SignTx
+    iback = res.load(ui.ICON_BACK)
+    inext = res.load(ui.ICON_CLICK)
+
+    while cur_step <= npages:
+        text = pages[cur_step]
+        fst_page = cur_step == 0
+        lst_page = cur_step + 1 >= npages
+
+        cancel_btn = DEFAULT_CANCEL if fst_page else iback
+        cancel_style = ui.BTN_CANCEL if fst_page else ui.BTN_DEFAULT
+        confirm_btn = DEFAULT_CONFIRM if lst_page else inext
+        confirm_style = ui.BTN_CONFIRM if lst_page else ui.BTN_DEFAULT
+
+        paging = ("%d/%d" % (cur_step + 1, npages)) if npages > 1 else ""
+        content = Text("%s %s" % (title, paging), icon, icon_color=icon_color)
+        content.normal(*text)
+
+        # render_scrollbar(cur_step, npages)
+        reaction = await tx_dialog(
+            ctx,
+            code,
+            content,
+            cancel_btn,
+            confirm_btn,
+            cancel_style,
+            confirm_style,
+            (cur_step, npages),
+        )
+
+        if fst_page and reaction == CANCELLED:
+            return False
+        elif not lst_page and reaction == CONFIRMED:
+            cur_step += 1
+        elif lst_page and reaction == CONFIRMED:
+            return True
+        elif reaction == CANCELLED:
+            cur_step -= 1
+        elif reaction == CONFIRMED:
+            cur_step += 1
+
+
+async def require_confirm_payment_id(ctx, payment_id):
+    from ubinascii import hexlify
+    from trezor import wire
+
+    if not await naive_pagination(
+        ctx,
+        [ui.MONO] + list(chunks(hexlify((payment_id)), 16)),
+        "Payment ID",
+        ui.ICON_SEND,
+        ui.GREEN,
+    ):
+        raise wire.ActionCancelled("Cancelled")
+
+
+async def require_confirm_tx(ctx, to, value, is_change=False):
     len_addr = (len(to) + 15) // 16
     if len_addr <= 2:
         return await require_confirm_tx_plain(ctx, to, value, is_change)
 
     else:
         to_chunks = list(split_address(to))
-        from trezor import res, wire
-        from trezor.ui.confirm import (
-            CONFIRMED,
-            CANCELLED,
-            DEFAULT_CANCEL,
-            DEFAULT_CONFIRM,
-        )
+        from trezor import wire
 
-        npages = 1 + ((len_addr - 2) + 3) // 4
-        cur_step = 0
-        code = ButtonRequestType.SignTx
-        iback = res.load(ui.ICON_BACK)
-        inext = res.load(ui.ICON_CLICK)
+        text = [ui.BOLD, format_amount(value), ui.MONO] + to_chunks
 
-        while cur_step <= npages:
-            text = []
-            if cur_step == 0:
-                text = [
-                    ui.BOLD,
-                    format_amount(value),
-                    ui.NORMAL,
-                    "to",
-                    ui.MONO,
-                ] + to_chunks[:2]
-            else:
-                off = 4 * (cur_step - 1)
-                cur_chunks = to_chunks[2 + off : 2 + off + 4]
-                ctext = [list(x) for x in zip([ui.MONO] * len(cur_chunks), cur_chunks)]
-                for x in ctext:
-                    text += x
-
-            if cur_step == 0:
-                cancel_btn = DEFAULT_CANCEL
-                cancel_style = ui.BTN_CANCEL
-                confirm_btn = inext
-                confirm_style = ui.BTN_DEFAULT
-            elif cur_step + 1 < npages:
-                cancel_btn = iback
-                cancel_style = ui.BTN_DEFAULT
-                confirm_btn = inext
-                confirm_style = ui.BTN_DEFAULT
-            else:
-                cancel_btn = iback
-                cancel_style = ui.BTN_DEFAULT
-                confirm_btn = DEFAULT_CONFIRM
-                confirm_style = ui.BTN_CONFIRM
-
-            conf_text = "Confirm send" if not is_change else "Con. change"
-            content = Text(
-                "%s %d/%d" % (conf_text, cur_step + 1, npages),
-                ui.ICON_SEND,
-                icon_color=ui.GREEN,
-            )
-            content.normal(*text)
-
-            reaction = await tx_dialog(
-                ctx, code, content, cancel_btn, confirm_btn, cancel_style, confirm_style
-            )
-
-            if cur_step == 0 and reaction == CANCELLED:
-                raise wire.ActionCancelled("Cancelled")
-            elif cur_step + 1 < npages and reaction == CONFIRMED:
-                cur_step += 1
-            elif cur_step + 1 >= npages and reaction == CONFIRMED:
-                await loop.sleep(1000 * 1000)
-                return
-            elif reaction == CANCELLED:
-                cur_step -= 1
-            elif reaction == CONFIRMED:
-                cur_step += 1
+        conf_text = "Confirm send" if not is_change else "Con. change"
+        if not await naive_pagination(ctx, text, conf_text, ui.ICON_SEND, ui.GREEN, 4):
+            raise wire.ActionCancelled("Cancelled")
 
 
 async def require_confirm_fee(ctx, fee):
     content = Text("Confirm fee", ui.ICON_SEND, icon_color=ui.GREEN)
-    content.normal("Fee: ")
     content.bold(format_amount(fee))
     await require_hold_to_confirm(ctx, content, ButtonRequestType.ConfirmOutput)
 

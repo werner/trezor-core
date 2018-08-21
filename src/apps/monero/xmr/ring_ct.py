@@ -8,15 +8,21 @@ import gc
 from apps.monero.xmr import crypto
 
 
+def bp_size(outputs):
+    M, logM = 1, 0
+    while M <= 16 and M < outputs:
+        logM += 1
+        M = 1 << logM
+
+    return 32 * (21 + outputs + 2 * logM)
+
+
 async def prove_range_bp(amount, last_mask=None):
-    from apps.monero.xmr import bulletproof as bp
-
-    bpi = bp.BulletProofBuilder()
-
     mask = last_mask if last_mask is not None else crypto.random_scalar()
-    bpi.set_input(crypto.sc_init(amount), mask)
-    bp_proof = bpi.prove()
+    bp_proof = await prove_range_bp_batch([amount], [mask])
+
     C = crypto.decodepoint(bp_proof.V[0])
+    C = crypto.point_mul8(C)
 
     gc.collect()
 
@@ -24,6 +30,37 @@ async def prove_range_bp(amount, last_mask=None):
     # as the original hashing does not take vector lengths into account which are dynamic
     # in the serialization scheme (and thus extraneous)
     return C, mask, bp_proof
+
+
+async def prove_range_bp_batch(amounts, masks):
+    from apps.monero.xmr import bulletproof as bp
+
+    bpi = bp.BulletProofBuilder()
+    bp_proof = bpi.prove_batch([crypto.sc_init(a) for a in amounts], masks)
+    del (bpi, bp)
+    gc.collect()
+
+    return bp_proof
+
+
+async def verify_bp(bp_proof, amounts=None, masks=None):
+    from apps.monero.xmr import bulletproof as bp
+
+    if amounts:
+        bp_proof.V = []
+        for i in range(len(amounts)):
+            C = crypto.gen_c(masks[i], amounts[i])
+            crypto.scalarmult_into(C, C, crypto.sc_inv_eight())
+            bp_proof.V.append(crypto.encodepoint(C))
+
+    bpi = bp.BulletProofBuilder()
+    res = bpi.verify(bp_proof)
+    gc.collect()
+
+    # Return as struct as the hash(BP_struct) != hash(BP_serialized)
+    # as the original hashing does not take vector lengths into account which are dynamic
+    # in the serialization scheme (and thus extraneous)
+    return res
 
 
 def prove_range(
@@ -176,26 +213,26 @@ def generate_ring_signature(prefix_hash, image, pubs, sec, sec_idx, test=False):
         if i == sec_idx:
             k = crypto.random_scalar()
             tmp3 = crypto.scalarmult_base(k)
-            crypto.encodepoint_into(tmp3, mvbuff[buff_off : buff_off + 32])
+            crypto.encodepoint_into(mvbuff[buff_off : buff_off + 32], tmp3)
             buff_off += 32
 
             tmp3 = crypto.hash_to_ec(crypto.encodepoint(pubs[i]))
             tmp2 = crypto.scalarmult(tmp3, k)
-            crypto.encodepoint_into(tmp2, mvbuff[buff_off : buff_off + 32])
+            crypto.encodepoint_into(mvbuff[buff_off : buff_off + 32], tmp2)
             buff_off += 32
 
         else:
             sig[i] = [crypto.random_scalar(), crypto.random_scalar()]
             tmp3 = crypto.ge_frombytes_vartime(pubs[i])
             tmp2 = crypto.ge_double_scalarmult_base_vartime(sig[i][0], tmp3, sig[i][1])
-            crypto.encodepoint_into(tmp2, mvbuff[buff_off : buff_off + 32])
+            crypto.encodepoint_into(mvbuff[buff_off : buff_off + 32], tmp2)
             buff_off += 32
 
             tmp3 = crypto.hash_to_ec(crypto.encodepoint(tmp3))
             tmp2 = crypto.ge_double_scalarmult_precomp_vartime(
                 sig[i][1], tmp3, sig[i][0], image_pre
             )
-            crypto.encodepoint_into(tmp2, mvbuff[buff_off : buff_off + 32])
+            crypto.encodepoint_into(mvbuff[buff_off : buff_off + 32], tmp2)
             buff_off += 32
 
             sum = crypto.sc_add(sum, sig[i][0])
@@ -232,14 +269,14 @@ def check_ring_singature(prefix_hash, image, pubs, sig):
 
         tmp3 = crypto.ge_frombytes_vartime(pubs[i])
         tmp2 = crypto.ge_double_scalarmult_base_vartime(sig[i][0], tmp3, sig[i][1])
-        crypto.encodepoint_into(tmp2, mvbuff[buff_off : buff_off + 32])
+        crypto.encodepoint_into(mvbuff[buff_off : buff_off + 32], tmp2)
         buff_off += 32
 
         tmp3 = crypto.hash_to_ec(crypto.encodepoint(pubs[i]))
         tmp2 = crypto.ge_double_scalarmult_precomp_vartime(
             sig[i][1], tmp3, sig[i][0], image_pre
         )
-        crypto.encodepoint_into(tmp2, mvbuff[buff_off : buff_off + 32])
+        crypto.encodepoint_into(mvbuff[buff_off : buff_off + 32], tmp2)
         buff_off += 32
 
         sum = crypto.sc_add(sum, sig[i][0])

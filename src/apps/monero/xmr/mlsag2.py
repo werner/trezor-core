@@ -7,18 +7,6 @@
 from apps.monero.xmr import crypto
 
 
-def key_zero_vector(rows):
-    """
-    Empty key vector
-    :param rows:
-    :return:
-    """
-    vct = []
-    for i in range(rows):
-        vct.append(crypto.sc_0())
-    return vct
-
-
 def key_vector(rows):
     """
     Empty key vector
@@ -39,27 +27,6 @@ def key_matrix(rows, cols):
     for i in range(0, cols):
         rv[i] = key_vector(rows)
     return rv
-
-
-def hash_key_vector(v):
-    """
-    Hashes key vector
-    :param v:
-    :return:
-    """
-    return [crypto.hash_to_ec(vi) for vi in v]
-
-
-def key_image_vector(x):
-    """
-    Takes as input a keyvector, returns the keyimage-vector
-    TODO: use crypto for generating key images
-    :param x:
-    :return:
-    """
-    return [
-        crypto.scalarmult(crypto.hash_to_ec(crypto.scalarmult_base(xx)), xx) for xx in x
-    ]
 
 
 def scalar_gen_vector(n):
@@ -92,7 +59,7 @@ def hasher_message(message):
 
 
 def hash_point(hasher, point):
-    crypto.encodepoint_into(point, hasher.zbuff)
+    crypto.encodepoint_into(hasher.zbuff, point)
     hasher.update(hasher.zbuff)
 
 

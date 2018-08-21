@@ -12,7 +12,18 @@ PREV_MEM = gc.mem_free()
 CUR_MES = 0
 
 
-def check_mem(x):
+def log_trace(x=None):
+    log.debug(
+        __name__,
+        "Log trace %s, ... F: %s A: %s, S: %s",
+        x,
+        gc.mem_free(),
+        gc.mem_alloc(),
+        micropython.stack_use(),
+    )
+
+
+def check_mem(x=""):
     global PREV_MEM, CUR_MES
 
     gc.collect()
@@ -36,7 +47,10 @@ def retit(**kwargs):
     return Failure(**kwargs)
 
 
-async def dispatch_diag(ctx, msg, **kwargs):
+async def diag(ctx, msg, **kwargs):
+    log.debug(__name__, "----diagnostics")
+    gc.collect()
+
     if msg.ins == 0:
         check_mem(0)
         return retit()
@@ -65,6 +79,43 @@ async def dispatch_diag(ctx, msg, **kwargs):
             if k.startswith("apps.monero"):
                 monero += 1
         log.info(__name__, "Total modules: %s, Monero modules: %s", total, monero)
+        return retit()
+
+    elif msg.ins in [5, 6, 7]:
+        check_mem()
+        from apps.monero.xmr import bulletproof as bp
+
+        check_mem("BP Imported")
+        from apps.monero.xmr import crypto
+
+        check_mem("Crypto Imported")
+
+        bpi = bp.BulletProofBuilder()
+        bpi.gc_fnc = gc.collect
+        bpi.gc_trace = log_trace
+
+        vals = [crypto.sc_init((1 << 30) - 1 + 16), crypto.sc_init(22222)]
+        masks = [crypto.random_scalar(), crypto.random_scalar()]
+        check_mem("BP pre input")
+
+        if msg.ins == 5:
+            bp_res = bpi.prove_testnet(vals[0], masks[0])
+            check_mem("BP post prove")
+            bpi.verify_testnet(bp_res)
+            check_mem("BP post verify")
+
+        elif msg.ins == 6:
+            bp_res = bpi.prove(vals[0], masks[0])
+            check_mem("BP post prove")
+            bpi.verify(bp_res)
+            check_mem("BP post verify")
+
+        elif msg.ins == 7:
+            bp_res = bpi.prove_batch(vals, masks)
+            check_mem("BP post prove")
+            bpi.verify(bp_res)
+            check_mem("BP post verify")
+
         return retit()
 
     return retit()

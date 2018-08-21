@@ -1,8 +1,4 @@
 from apps.monero.xmr import crypto
-from apps.monero.xmr.serialize_messages.base import ECKey
-from apps.monero.xmr.serialize_messages.ct_keys import KeyV
-from apps.monero.xmr.serialize_messages.tx_ecdh import EcdhInfo
-from apps.monero.xmr.serialize_messages.tx_full import RctSigBase
 
 
 class PreMlsagHasher(object):
@@ -11,7 +7,7 @@ class PreMlsagHasher(object):
     """
 
     def __init__(self, state=None):
-        from apps.monero.xmr.sub.keccak_hasher import KeccakArchive, HashWrapper
+        from apps.monero.xmr.sub.keccak_hasher import KeccakXmrArchive, HashWrapper
 
         self.is_simple = state[0] if state else None
         self.state = state[1] if state else 0
@@ -19,9 +15,9 @@ class PreMlsagHasher(object):
         self.rsig_hasher = state[3] if state else crypto.get_keccak()
         self.rtcsig_hasher = None
         if state:
-            self.rtcsig_hasher = KeccakArchive(state[4]) if state[4] else None
+            self.rtcsig_hasher = KeccakXmrArchive(state[4]) if state[4] else None
         else:
-            self.rtcsig_hasher = KeccakArchive()
+            self.rtcsig_hasher = KeccakXmrArchive()
 
     def state_save(self):
         return (
@@ -33,14 +29,14 @@ class PreMlsagHasher(object):
         )
 
     def state_load(self, x):
-        from apps.monero.xmr.sub.keccak_hasher import KeccakArchive, HashWrapper
+        from apps.monero.xmr.sub.keccak_hasher import KeccakXmrArchive, HashWrapper
 
         self.is_simple = x[0]
         self.state = x[1]
         self.kc_master = HashWrapper(x[2])
         self.rsig_hasher = x[3]
         if x[4]:
-            self.rtcsig_hasher = KeccakArchive(x[4])
+            self.rtcsig_hasher = KeccakXmrArchive(x[4])
         else:
             self.rtcsig_hasher = None
 
@@ -59,39 +55,45 @@ class PreMlsagHasher(object):
             raise ValueError("State error")
         self.state = 2
 
+        from apps.monero.xmr.serialize_messages.tx_full import RctSigBase
+
         rfields = RctSigBase.f_specs()
-        await self.rtcsig_hasher.ar.message_field(
-            None, field=rfields[0], fvalue=rv_type
-        )
-        await self.rtcsig_hasher.ar.message_field(None, field=rfields[1], fvalue=fee)
+        await self.rtcsig_hasher.message_field(None, field=rfields[0], fvalue=rv_type)
+        await self.rtcsig_hasher.message_field(None, field=rfields[1], fvalue=fee)
 
     async def set_pseudo_out(self, out):
         if self.state != 2 and self.state != 3:
             raise ValueError("State error")
         self.state = 3
 
-        await self.rtcsig_hasher.ar.field(out, KeyV.ELEM_TYPE)
+        from apps.monero.xmr.serialize_messages.ct_keys import KeyV
+
+        await self.rtcsig_hasher.field(out, KeyV.ELEM_TYPE)
 
     async def set_ecdh(self, ecdh):
         if self.state != 2 and self.state != 3 and self.state != 4:
             raise ValueError("State error")
         self.state = 4
 
-        await self.rtcsig_hasher.ar.field(ecdh, EcdhInfo.ELEM_TYPE)
+        from apps.monero.xmr.serialize_messages.tx_ecdh import EcdhInfo
+
+        await self.rtcsig_hasher.field(ecdh, EcdhInfo.ELEM_TYPE)
 
     async def set_out_pk(self, out_pk, mask=None):
         if self.state != 4 and self.state != 5:
             raise ValueError("State error")
         self.state = 5
 
-        await self.rtcsig_hasher.ar.field(mask if mask else out_pk.mask, ECKey)
+        from apps.monero.xmr.serialize_messages.base import ECKey
+
+        await self.rtcsig_hasher.field(mask if mask else out_pk.mask, ECKey)
 
     async def rctsig_base_done(self):
         if self.state != 5:
             raise ValueError("State error")
         self.state = 6
 
-        c_hash = self.rtcsig_hasher.kwriter.get_digest()
+        c_hash = self.rtcsig_hasher.get_digest()
         self.kc_master.update(c_hash)
         self.rtcsig_hasher = None
 
