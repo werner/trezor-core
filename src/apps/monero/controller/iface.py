@@ -21,7 +21,7 @@ class TrezorInterface(object):
         :param dst:
         :return:
         """
-        from apps.monero.xmr.sub.addr import encode_addr, get_change_addr_idx
+        from apps.monero.xmr.sub.addr import encode_addr
         from apps.monero.xmr.sub.xmr_net import net_version
         from apps.monero import layout
 
