@@ -3,16 +3,15 @@ import micropython
 import ustruct
 
 from trezor import log
+from trezor.crypto.hashlib import sha256
+
+from .consts import *
 
 from apps.monero import layout
 from apps.monero.controller import misc
 from apps.monero.xmr import common, crypto, monero
 from apps.monero.xmr.enc import aescbc
-from apps.monero.xmr.serialize.int_serialize import dump_uvarint_b, load_uvarint_b
-
-from trezor.crypto.hashlib import sha256
-
-from .consts import *
+from apps.monero.xmr.serialize.int_serialize import load_uvarint_b
 
 
 def memcpy(dst, dst_off, src, src_off, ln):
@@ -34,6 +33,7 @@ class LiteProtocol(object):
         self.state = None
         self.options = None
         self.sig_mode = 0
+        self.account = 0
         self.a = None
         self.A = None
         self.b = None
@@ -481,7 +481,7 @@ class LiteProtocol(object):
 
     async def open_tx(self):
         self.ctx_amount = sha256()
-        account = self._fetch_u32()
+        self.account = self._fetch_u32()
 
         self.r = crypto.random_scalar()
         self.R = crypto.scalarmult_base(self.r)
@@ -642,7 +642,7 @@ class LiteProtocol(object):
 
         sw = 0x6F01
         try:
-            log.debug(__name__, 'Ins: %s, %s %s', ins, p1, p2)
+            log.debug(__name__, "Ins: %s, %s %s", ins, p1, p2)
             sw = await self._sub_dispatch(ins, p1)
         except Exception as e:
             log.error(__name__, "Exception dispatching: %s", e)
