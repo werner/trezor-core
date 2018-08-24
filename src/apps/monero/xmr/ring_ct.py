@@ -14,9 +14,9 @@ async def prove_range_bp(amount, last_mask=None):
     bpi = bp.BulletProofBuilder()
 
     mask = last_mask if last_mask is not None else crypto.random_scalar()
-    bpi.set_input(crypto.sc_init(amount), mask)
-    bp_proof = bpi.prove()
+    bp_proof = bpi.prove(crypto.sc_init(amount), mask)
     C = crypto.decodepoint(bp_proof.V[0])
+    C = crypto.point_mul8(C)
 
     gc.collect()
 

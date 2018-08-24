@@ -14,7 +14,7 @@ import ubinascii as binascii
 from trezor.crypto import hmac, monero as tcry, pbkdf2 as tpbkdf2, random
 from trezor.crypto.hashlib import sha3_256
 
-NULL_KEY_ENC = [0] * 32
+NULL_KEY_ENC = b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
 
 
 def random_bytes(by):
@@ -190,6 +190,14 @@ def point_eq(P, Q):
 
 def point_double(P):
     return tcry.ge25519_double(P)
+
+
+def point_mul8(P):
+    return tcry.ge25519_mul8(P)
+
+
+def point_mul8_into(r, P):
+    return tcry.ge25519_mul8(r, P)
 
 
 #
@@ -418,9 +426,6 @@ def ge_double_scalarmult_base_vartime(a, A, b):
     """
     void ge25519_double_scalarmult_vartime(ge25519 *r, const ge25519 *p1, const bignum256modm s1, const bignum256modm s2);
     r = a * A + b * B
-        where a = a[0]+256*a[1]+...+256^31 a[31].
-        and b = b[0]+256*b[1]+...+256^31 b[31].
-        B is the Ed25519 base point (x,4/5) with x positive.
 
     :param a:
     :param A:
@@ -473,24 +478,9 @@ def ge_frombytes_vartime_check(point):
     https://www.imperialviolet.org/2013/12/25/elligator.html
     http://elligator.cr.yp.to/
     http://elligator.cr.yp.to/elligator-20130828.pdf
-
-    Basically it takes some bytes of data
-    converts to a point on the edwards curve
-    if the bytes aren't on the curve
-    also does some checking on the numbers
-    ex. your secret key has to be at least >= 4294967277
-    also it rejects certain curve points, i.e. "if x = 0, sign must be positive"
-
-    sqrt(s) = s^((q+3) / 8) if s^((q+3)/4) == s
-            = sqrt(-1) s ^((q+3) / 8) otherwise
-
     :param point:
     :return:
     """
-    # if tcry.ge25519_check(point) != 1:
-    #     raise ValueError('Point check failed')
-    #
-    # return 0
     tcry.ge25519_check(point)
     return 0
 
@@ -498,7 +488,6 @@ def ge_frombytes_vartime_check(point):
 def ge_frombytes_vartime(point):
     """
     https://www.imperialviolet.org/2013/12/25/elligator.html
-
     :param point:
     :return:
     """
