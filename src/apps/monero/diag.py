@@ -78,7 +78,7 @@ async def dispatch_diag(ctx, msg, **kwargs):
         log.info(__name__, "Total modules: %s, Monero modules: %s", total, monero)
         return retit()
 
-    elif msg.ins == 5:
+    elif msg.ins in [5, 6, 7]:
         check_mem()
         from apps.monero.xmr import bulletproof as bp
 
@@ -91,18 +91,27 @@ async def dispatch_diag(ctx, msg, **kwargs):
         bpi.gc_fnc = gc.collect
         bpi.gc_trace = log_trace
 
-        val = crypto.sc_init((1 << 30) - 1 + 16)
-        mask = crypto.random_scalar()
+        vals = [crypto.sc_init((1 << 30) - 1 + 16), crypto.sc_init(22222)]
+        masks = [crypto.random_scalar(), crypto.random_scalar()]
         check_mem("BP pre input")
 
-        bpi.set_input(val, mask)
-        check_mem("BP post input")
+        if msg.ins == 5:
+            bp_res = bpi.prove_testnet(vals[0], masks[0])
+            check_mem("BP post prove")
+            bpi.verify_testnet(bp_res)
+            check_mem("BP post verify")
 
-        bp_res = bpi.prove()
-        check_mem("BP post prove")
+        elif msg.ins == 6:
+            bp_res = bpi.prove(vals[0], masks[0])
+            check_mem("BP post prove")
+            bpi.verify(bp_res)
+            check_mem("BP post verify")
 
-        bpi.verify(bp_res)
-        check_mem("BP post verify")
+        elif msg.ins == 7:
+            bp_res = bpi.prove_batch(vals, masks)
+            check_mem("BP post prove")
+            bpi.verify(bp_res)
+            check_mem("BP post verify")
 
         return retit()
 
