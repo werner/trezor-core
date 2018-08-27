@@ -535,7 +535,7 @@ def hash_to_scalar(data, length=None):
     :return:
     """
     dt = data[:length] if length else data
-    return tcry.xmr_hash_to_scalar(bytes(dt))
+    return tcry.xmr_hash_to_scalar(dt)
 
 
 def hash_to_scalar_into(r, data, length=None):
@@ -547,7 +547,7 @@ def hash_to_scalar_into(r, data, length=None):
     :return:
     """
     dt = data[:length] if length else data
-    return tcry.xmr_hash_to_scalar(r, bytes(dt))
+    return tcry.xmr_hash_to_scalar(r, dt)
 
 
 def hash_to_ec(buf):
