@@ -4,7 +4,7 @@
 
 import gc
 
-from trezor.utils import memcpy as _memcpy
+from trezorutils import memcpy as _memcpy
 
 from apps.monero.xmr import crypto
 from apps.monero.xmr.serialize.int_serialize import dump_uvarint_b_into, uvarint_size
@@ -12,7 +12,7 @@ from apps.monero.xmr.serialize.int_serialize import dump_uvarint_b_into, uvarint
 # Constants
 
 BP_LOG_N = 6
-BP_N = 1 << BP_LOG_N  # 64
+BP_N = 64  # 1 << BP_LOG_N
 BP_M = 16  # maximal number of bulletproofs
 
 ZERO = b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
@@ -75,10 +75,6 @@ def memcpy(dst, dst_off, src, src_off, len):
     return dst
 
 
-def alloc_keys(num=1):
-    return (_ensure_dst_key() for _ in range(num))
-
-
 def alloc_scalars(num=1):
     return (crypto.new_scalar() for _ in range(num))
 
@@ -86,18 +82,6 @@ def alloc_scalars(num=1):
 def copy_key(dst, src):
     for i in range(32):
         dst[i] = src[i]
-    return dst
-
-
-def copy_key_ifex(dst, src):
-    if dst is None:
-        return src
-    return copy_key(dst, src)
-
-
-def copy_vector(dst, src):
-    for i in range(len(src)):
-        copy_key(dst[i], src[i])
     return dst
 
 
@@ -133,14 +117,6 @@ def scalarmult_key(dst, P, s):
     crypto.decodepoint_into(tmp_pt_1, P)
     crypto.decodeint_into_noreduce(tmp_sc_1, s)
     crypto.scalarmult_into(tmp_pt_2, tmp_pt_1, tmp_sc_1)
-    crypto.encodepoint_into(tmp_pt_2, dst)
-    return dst
-
-
-def scalarmult8(dst, P):
-    dst = _ensure_dst_key(dst)
-    crypto.decodepoint_into(tmp_pt_1, P)
-    crypto.point_mul8_into(tmp_pt_2, tmp_pt_1)
     crypto.encodepoint_into(tmp_pt_2, dst)
     return dst
 
@@ -675,14 +651,6 @@ def hadamard(a, b, dst=None):
     return dst
 
 
-def hadamard2(a, b, dst=None):
-    dst = _ensure_dst_keyvect(dst, len(a))
-    for i in range(len(a)):
-        add_keys(dst[i], a[i], b[i])
-        gc_iter(i)
-    return dst
-
-
 def hadamard_fold(v, a, b, into=None, into_offset=0):
     """
     Folds a curvepoint array using a two way scaled Hadamard product
@@ -782,35 +750,10 @@ def vector_subtract(a, b, dst=None):
     return dst
 
 
-def vector_scalar(a, x, dst=None):
-    dst = _ensure_dst_keyvect(dst, len(a))
-    for i in range(len(a)):
-        sc_mul(dst[i], a[i], x)
-        gc_iter(i)
-    return dst
-
-
-def vector_scalar2(a, x, dst=None):
-    dst = _ensure_dst_keyvect(dst, len(a))
-    for i in range(len(a)):
-        scalarmult_key(dst[i], a[i], x)
-        gc_iter(i)
-    return dst
-
-
 def vector_dup(x, n, dst=None):
     dst = _ensure_dst_keyvect(dst, n)
     for i in range(n):
         dst[i] = x
-        gc_iter(i)
-    return dst
-
-
-def vector_sum(a, dst=None):
-    dst = _ensure_dst_key(dst)
-    copy_key(dst, ZERO)
-    for i in range(len(a)):
-        sc_add(dst, dst, a[i])
         gc_iter(i)
     return dst
 
@@ -826,23 +769,14 @@ def vector_z_two_i(logN, zpow, twoN, i, dst_sc=None):
     crypto.decodeint_into_noreduce(tmp_sc_1, zpow.to(j + 2))
     crypto.decodeint_into_noreduce(tmp_sc_2, twoN.to(i & ((1 << logN) - 1)))
     crypto.sc_mul_into(dst_sc, tmp_sc_1, tmp_sc_2)
+    return dst_sc
 
 
 def vector_z_two(N, logN, M, zpow, twoN, zero_twos=None, dynamic=False, **kwargs):
     if dynamic:
         return KeyVZtwo(N, logN, M, zpow, twoN, **kwargs)
-
-    # Original algorithm from Monero
-    zero_twos = _ensure_dst_keyvect(zero_twos, M * N)
-    for i in range(M * N):
-        zero_twos[i] = ZERO
-        for j in range(1, M + 1):
-            if i >= (j - 1) * N and i < j * N:
-                sc_muladd(
-                    zero_twos[i], zpow[1 + j], twoN[i - (j - 1) * N], zero_twos[i]
-                )
-        gc_iter(i)
-    return zero_twos
+    else:
+        raise NotImplementedError()
 
 
 def hash_cache_mash(dst, hash_cache, *args):
@@ -868,7 +802,7 @@ def is_reduced(sc):
     return crypto.encodeint(crypto.decodeint(sc)) == sc
 
 
-class MultiExpEval(object):
+class MultiExpSequential(object):
     """
     MultiExp object similar to MultiExp array of [(scalar, point), ]
     MultiExp computes simply: res = \sum_i scalar_i * point_i
@@ -877,115 +811,29 @@ class MultiExpEval(object):
 
     Moreover, Monero needs speed for very fast verification for blockchain verification which is not
     priority in this use case.
-    """
 
-    def __init__(self, size=None):
-        self.size = size if size else None
-
-    def __len__(self):
-        return self.size
-
-    def __getitem__(self, item):
-        raise IndexError()
-
-    @staticmethod
-    def eval_data(dst, data, GiHi=False):
-        dst = _ensure_dst_key(dst)
-        crypto.identity_into(tmp_pt_1)
-        for i in range(len(data)):
-            sci, pti = data[i]
-            crypto.decodeint_into_noreduce(tmp_sc_1, sci)
-            crypto.decodepoint_into(tmp_pt_2, pti)
-            crypto.scalarmult_into(tmp_pt_3, tmp_pt_2, tmp_sc_1)
-            crypto.point_add_into(tmp_pt_1, tmp_pt_1, tmp_pt_3)
-        crypto.encodepoint_into(tmp_pt_1, dst)
-        return dst
-
-    def eval(self, dst, GiHi=False):
-        return MultiExpEval.eval_data(dst, self, GiHi)
-
-
-class MultiExp(MultiExpEval):
-    """
-    Simple MultiExp holder
-    Supports on the fly evaluation and/or static array
+    MultiExp holder with sequential evaluation
     """
 
     def __init__(
-        self, size=None, scalars=None, points=None, scalar_fnc=None, point_fnc=None
+        self, size=None, points=None, point_fnc=None
     ):
-        super().__init__(size)
         self.current_idx = 0
-
-        self.scalars = scalars if scalars else []
+        self.size = size if size else None
         self.points = points if points else []
-        self.scalar_fnc = scalar_fnc
         self.point_fnc = point_fnc
-        if (scalars or points) and size is None:
-            self.size = max(
-                len(scalars) if scalars else 0, len(points) if points else 0
-            )
+        if points and size is None:
+            self.size = len(points) if points else 0
         else:
             self.size = 0
 
-    def add_pair(self, scalar, point):
-        self.scalars.append(scalar)
-        self.points.append(point)
-        self.size = len(self.scalars)
-
-    def add_scalar(self, scalar):
-        self.scalars.append(init_key(scalar))
-        self.size = len(self.scalars)
-
-    def get_scalar(self, idx):
-        return (
-            self.scalar_fnc(idx, None)
-            if idx >= len(self.scalars)
-            else self.scalars[idx]
-        )
+        self.acc = crypto.identity()
+        self.tmp = _ensure_dst_key()
 
     def get_point(self, idx):
         return (
             self.point_fnc(idx, None) if idx >= len(self.points) else self.points[idx]
         )
-
-    def get_idx(self, idx):
-        return self.get_scalar(idx), self.get_point(idx)
-
-    def __getitem__(self, item):
-        return self.get_idx(item)
-
-    def __iter__(self):
-        self.current_idx = 0
-        return self
-
-    def __next__(self):
-        if self.current_idx >= self.size:
-            raise StopIteration
-        else:
-            self.current_idx += 1
-            return self[self.current_idx - 1]
-
-
-class MultiExpSequential(MultiExp):
-    """
-    MultiExp holder with sequential evaluation
-    """
-
-    def __init__(
-        self, size=None, scalars=None, points=None, scalar_fnc=None, point_fnc=None
-    ):
-        super().__init__(
-            size,
-            scalars=scalars,
-            points=points,
-            scalar_fnc=scalar_fnc,
-            point_fnc=point_fnc,
-        )
-        self.current_idx = 0
-        self.acc = crypto.identity()
-        self.tmp = _ensure_dst_key()
-        self.eval_idx = 0
 
     def add_pair(self, scalar, point):
         self._acc(scalar, point)
