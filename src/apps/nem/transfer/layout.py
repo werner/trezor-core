@@ -16,10 +16,11 @@ from ..helpers import (
     NEM_MAX_DIVISIBILITY,
     NEM_MOSAIC_AMOUNT_DIVISOR,
 )
-from ..layout import require_confirm_final, require_confirm_text, split_address
+from ..layout import require_confirm_final, require_confirm_text
 from ..mosaic.helpers import get_mosaic_definition, is_nem_xem_mosaic
 
 from apps.common.confirm import require_confirm
+from apps.common.layout import split_address
 
 
 async def ask_transfer(
@@ -132,8 +133,6 @@ async def _require_confirm_transfer(ctx, recipient, value):
 async def _require_confirm_payload(ctx, payload: bytearray, encrypt=False):
     payload = bytes(payload).decode()
 
-    if len(payload) > 48:
-        payload = payload[:48] + ".."
     if encrypt:
         text = Text("Confirm payload", ui.ICON_SEND, icon_color=ui.GREEN)
         text.bold("Encrypted:")

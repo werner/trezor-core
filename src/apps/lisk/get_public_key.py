@@ -2,10 +2,10 @@ from trezor.messages.LiskPublicKey import LiskPublicKey
 
 from .helpers import LISK_CURVE
 
-from apps.common import seed, show
+from apps.common import layout, seed
 
 
-async def lisk_get_public_key(ctx, msg):
+async def get_public_key(ctx, msg):
     address_n = msg.address_n or ()
 
     node = await seed.derive_node(ctx, address_n, LISK_CURVE)
@@ -13,6 +13,6 @@ async def lisk_get_public_key(ctx, msg):
     pubkey = pubkey[1:]  # skip ed25519 pubkey marker
 
     if msg.show_display:
-        await show.show_pubkey(ctx, pubkey)
+        await layout.show_pubkey(ctx, pubkey)
 
     return LiskPublicKey(public_key=pubkey)

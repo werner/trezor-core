@@ -6,13 +6,12 @@ from trezor.messages.Success import Success
 from trezor.ui.text import Text
 
 from apps.common.confirm import require_confirm
-from apps.common.show import split_address
+from apps.common.layout import split_address
 from apps.common.signverify import split_message
 from apps.ethereum.sign_message import message_digest
 
 
-async def ethereum_verify_message(ctx, msg):
-
+async def verify_message(ctx, msg):
     digest = message_digest(msg.message)
     sig = bytearray([msg.signature[64]]) + msg.signature[:64]
     pubkey = secp256k1.verify_recover(sig, digest)
