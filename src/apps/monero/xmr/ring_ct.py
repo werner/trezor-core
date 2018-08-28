@@ -8,13 +8,19 @@ import gc
 from apps.monero.xmr import crypto
 
 
+def bp_size(outputs):
+    M, logM = 1, 0
+    while M <= 16 and M < outputs:
+        logM += 1
+        M = 1 << logM
+
+    return 32 * (21 + outputs + 2 * logM)
+
+
 async def prove_range_bp(amount, last_mask=None):
-    from apps.monero.xmr import bulletproof as bp
-
-    bpi = bp.BulletProofBuilder()
-
     mask = last_mask if last_mask is not None else crypto.random_scalar()
-    bp_proof = bpi.prove(crypto.sc_init(amount), mask)
+    bp_proof = await prove_range_bp_batch([amount], [mask])
+
     C = crypto.decodepoint(bp_proof.V[0])
     C = crypto.point_mul8(C)
 
@@ -24,6 +30,33 @@ async def prove_range_bp(amount, last_mask=None):
     # as the original hashing does not take vector lengths into account which are dynamic
     # in the serialization scheme (and thus extraneous)
     return C, mask, bp_proof
+
+
+async def prove_range_bp_batch(amounts, masks):
+    from apps.monero.xmr import bulletproof as bp
+
+    bpi = bp.BulletProofBuilder()
+    bp_proof = bpi.prove_batch([crypto.sc_init(a) for a in amounts], masks)
+    gc.collect()
+
+    return bp_proof
+
+
+async def verify_bp(bp_proof, amounts=None, masks=None):
+    from apps.monero.xmr import bulletproof as bp
+
+    if amounts:
+        bp_proof.V = []
+        for i in range(len(amounts)):
+            C = crypto.gen_c(masks[i], amounts[i])
+            crypto.scalarmult_into(C, C, crypto.sc_inv_eight())
+            bp_proof.V.append(crypto.encodepoint(C))
+
+    bpi = bp.BulletProofBuilder()
+    res = bpi.verify(bp_proof)
+    gc.collect()
+
+    return res
 
 
 def prove_range(

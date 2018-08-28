@@ -106,6 +106,9 @@ class TsxSigner(object):
         elif msg.input_vini:
             log.debug(__name__, "sign_vin")
             return await self.tsx_input_vini(msg.input_vini)
+        elif msg.all_in_set:
+            log.debug(__name__, "all_in_set")
+            return await self.tsx_all_in_set(msg.all_in_set)
         elif msg.set_output:
             log.debug(__name__, "sign_out")
             return await self.tsx_set_output1(msg.set_output)
@@ -185,6 +188,19 @@ class TsxSigner(object):
             await self.tsx_exc_handler(e)
             raise
 
+    async def tsx_all_in_set(self, msg):
+        """
+        All inputs set. Defining rsig parameters.
+
+        :param msg:
+        :return:
+        """
+        try:
+            return await self.tsx_obj.all_in_set(msg.rsig_data)
+        except Exception as e:
+            await self.tsx_exc_handler(e)
+            raise
+
     async def tsx_set_output1(self, msg):
         """
         Set destination entry one by one.
@@ -194,7 +210,9 @@ class TsxSigner(object):
         :return:
         """
         try:
-            return await self.tsx_obj.set_out1(msg.dst_entr, msg.dst_entr_hmac)
+            return await self.tsx_obj.set_out1(
+                msg.dst_entr, msg.dst_entr_hmac, msg.rsig_data
+            )
         except Exception as e:
             await self.tsx_exc_handler(e)
             raise
