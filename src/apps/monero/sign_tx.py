@@ -30,12 +30,14 @@ async def layout_sign_tx(state, ctx, msg):
 
     try:
         signer = TsxSigner()
-        res = await signer.sign(ctx, state.ctx_sign, msg)
-        if await signer.should_purge():
-            state.ctx_sign = None
-        else:
-            state.ctx_sign = await signer.state_save()
+        await signer.wake_up(ctx, state.ctx_sign, msg)
+        state.ctx_sign = None
 
+        res = await signer.sign(msg)
+        gc.collect()
+
+        if not await signer.should_purge():
+            state.ctx_sign = await signer.state_save()
         return res
 
     except Exception as e:

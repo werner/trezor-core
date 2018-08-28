@@ -1,5 +1,4 @@
 import gc
-import micropython
 from micropython import const
 
 from trezor import log
@@ -96,11 +95,8 @@ class TTransactionBuilder(object):
         self.full_message_hasher = PreMlsagHasher()
 
     def state_load(self, t):
-        from apps.monero.xmr.sub.keccak_hasher import KeccakArchive
-        from apps.monero.xmr.sub.mlsag_hasher import PreMlsagHasher
         from apps.monero.protocol.tsx_sign_state import TState
-
-        self._log_trace(t.state)
+        self._log_trace("Restore: %s" % str(t.state), True)
 
         for attr in t.__dict__:
             if attr.startswith("_"):
@@ -115,11 +111,14 @@ class TTransactionBuilder(object):
                 self.state = TState()
                 self.state.state_load(t.state)
             elif attr == "tx_prefix_hasher":
+                from apps.monero.xmr.sub.keccak_hasher import KeccakArchive
                 self.tx_prefix_hasher = KeccakArchive(ctx=t.tx_prefix_hasher)
             elif attr == "full_message_hasher":
+                from apps.monero.xmr.sub.mlsag_hasher import PreMlsagHasher
                 self.full_message_hasher = PreMlsagHasher(state=t.full_message_hasher)
             else:
                 setattr(self, attr, cval)
+            gc.collect()
 
     def state_save(self):
         from apps.monero.protocol.tsx_sign_state_holder import TsxSignStateHolder
@@ -152,11 +151,11 @@ class TTransactionBuilder(object):
     def _log_trace(self, x=None, collect=False):
         log.debug(
             __name__,
-            "Log trace %s, ... F: %s A: %s, S: %s",
+            "Log trace: %s, ... F: %s A: %s, S: %s",
             x,
             gc.mem_free(),
             gc.mem_alloc(),
-            micropython.stack_use(),
+            0,  # micropython.stack_use(),
         )
         if collect:
             gc.collect()
@@ -523,7 +522,7 @@ class TTransactionBuilder(object):
         self.need_additional_txkeys = num_subaddresses > 0 and (
             num_stdaddresses > 0 or num_subaddresses > 1
         )
-        self._log_trace(4)
+        self._log_trace(4, True)
 
         # Extra processing, payment id
         self.tx.version = 2
@@ -543,7 +542,7 @@ class TTransactionBuilder(object):
         # Sub address precomputation
         if tsx_data.account is not None and tsx_data.minor_indices:
             self.precompute_subaddr(tsx_data.account, tsx_data.minor_indices)
-        self._log_trace(5)
+        self._log_trace(5, True)
 
         # HMAC outputs - pinning
         hmacs = []
@@ -825,6 +824,7 @@ class TTransactionBuilder(object):
         if self.in_memory():
             for idx in range(self.num_inputs()):
                 await self.hash_vini_pseudo_out(self.tx.vin[idx], idx)
+                self._log_trace('i: %s' % idx, True)
 
     async def input_vini(self, src_entr, vini, hmac, pseudo_out, pseudo_out_hmac):
         """
@@ -1228,7 +1228,7 @@ class TTransactionBuilder(object):
 
         self.state.set_output()
         self.out_idx += 1
-        self._log_trace(2)
+        self._log_trace(2, True)
 
         if dst_entr.amount <= 0 and self.tx.version <= 1:
             raise ValueError("Destination with wrong amount: %s" % dst_entr.amount)
@@ -1237,21 +1237,17 @@ class TTransactionBuilder(object):
         dst_entr_hmac_computed = await self.gen_hmac_tsxdest(dst_entr, self.out_idx)
         if not common.ct_equal(dst_entr_hmac, dst_entr_hmac_computed):
             raise ValueError("HMAC invalid")
-        gc.collect()
-        self._log_trace(3)
+        self._log_trace(3, True)
 
         # First output - tx prefix hasher - size of the container
         self.tx_prefix_hasher.refresh(xser=xmrserialize)
         if self.out_idx == 0:
             await self._set_out1_prefix()
-        gc.collect()
+        self._log_trace(4, True)
 
-        self._log_trace(4)
         additional_txkey_priv = await self._set_out1_additional_keys(dst_entr)
         derivation = await self._set_out1_derivation(dst_entr, additional_txkey_priv)
-
-        gc.collect()
-        self._log_trace(5)
+        self._log_trace(5, True)
 
         amount_key = crypto.derivation_to_scalar(derivation, self.out_idx)
         tx_out_key = crypto.derive_public_key(
@@ -1272,13 +1268,11 @@ class TTransactionBuilder(object):
 
         # Hmac dest_entr.
         hmac_vouti = await self.gen_hmac_vouti(dst_entr, tx_out, self.out_idx)
-        gc.collect()
-        self._log_trace(7)
+        self._log_trace(7, True)
 
         # Range proof
         rsig, mask = await self._range_proof(self.out_idx, dst_entr.amount, rsig_data)
-        gc.collect()
-        self._log_trace(8)
+        self._log_trace(8, True)
 
         # Out_pk, ecdh_info
         out_pk, ecdh_info = await self._set_out1_ecdh(
@@ -1288,21 +1282,19 @@ class TTransactionBuilder(object):
             mask=mask,
             amount_key=amount_key,
         )
-        gc.collect()
-        self._log_trace(8)
+        self._log_trace(8, True)
 
         # Incremental hashing of the ECDH info.
         # RctSigBase allows to hash only one of the (ecdh, out_pk) as they are serialized
         # as whole vectors. Hashing ECDH info saves state space.
         await self.full_message_hasher.set_ecdh(ecdh_info)
-        self._log_trace(9)
+        self._log_trace(9, True)
 
         # Output_pk is stored to the state as it is used during the signature and hashed to the
         # RctSigBase later.
         self.output_pk.append(out_pk)
-        gc.collect()
+        self._log_trace(10, True)
 
-        self._log_trace(10)
         from trezor.messages.MoneroTransactionSetOutputAck import (
             MoneroTransactionSetOutputAck
         )
