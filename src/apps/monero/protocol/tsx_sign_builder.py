@@ -293,7 +293,7 @@ class TTransactionBuilder(object):
         if self.use_simple_rct:
             return RctType.FullBulletproof if self.use_bulletproof else RctType.Simple
         else:
-            return RctType.FullBulletproof if self.use_bulletproof else RctType.Full
+            return RctType.Full
 
     def init_rct_sig(self):
         """
@@ -496,7 +496,6 @@ class TTransactionBuilder(object):
         self.mixin = tsx_data.mixin
         self.fee = tsx_data.fee
         self.account_idx = tsx_data.account
-        self.use_simple_rct = self.input_count > 1
         self.multi_sig = tsx_data.is_multisig
         self.state.inp_cnt(self.in_memory())
         self.check_change(tsx_data.outputs)
@@ -507,6 +506,7 @@ class TTransactionBuilder(object):
         self.rsig_grp = tsx_data.rsig_data.grouping
         self.rsig_offload = self.rsig_type > 0 and self.output_count > 2
         self.use_bulletproof = self.rsig_type > 0
+        self.use_simple_rct = self.input_count > 1 or self.rsig_type != 0
 
         # Provided tx key, used mostly in multisig.
         if len(tsx_data.use_tx_keys) > 0:
@@ -892,7 +892,7 @@ class TTransactionBuilder(object):
         await self.tx_prefix_hasher.field(vini, TxInV, xser=xmrserialize)
 
         # Pseudo_out incremental hashing - applicable only in simple rct
-        if not self.use_simple_rct:
+        if not self.use_simple_rct or self.use_bulletproof:
             return
 
         if not self.in_memory():
