@@ -72,6 +72,7 @@ class TsxSigner(object):
         from apps.monero.protocol.tsx_sign_builder import TTransactionBuilder
 
         self.tsx_obj = TTransactionBuilder(self, creds=self.creds, state=state)
+        self._log_trace("Restored", True)
 
     async def state_save(self):
         try:
@@ -101,7 +102,7 @@ class TsxSigner(object):
             await self.setup(msg.init)
 
         await self.restore(state if not msg.init else None)
-        self._log_trace("Restored", True)
+        self._log_trace("wake_up() end", True)
 
     async def sign(self, msg):
         """

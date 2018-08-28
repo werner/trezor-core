@@ -37,6 +37,7 @@ async def prove_range_bp_batch(amounts, masks):
 
     bpi = bp.BulletProofBuilder()
     bp_proof = bpi.prove_batch([crypto.sc_init(a) for a in amounts], masks)
+    del (bpi, bp)
     gc.collect()
 
     return bp_proof
