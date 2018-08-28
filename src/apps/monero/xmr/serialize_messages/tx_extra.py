@@ -1,12 +1,11 @@
 
-from apps.monero.xmr.serialize.base_types import SizeT, UInt8, UVarintType
 from apps.monero.xmr.serialize.message_types import (
     BlobType,
     ContainerType,
     MessageType,
     VariantType,
 )
-from apps.monero.xmr.serialize_messages.base import ECPublicKey, Hash
+from apps.monero.xmr.serialize_messages.base import ECPublicKey
 
 
 class TxExtraNonce(MessageType):
