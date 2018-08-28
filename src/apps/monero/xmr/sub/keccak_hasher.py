@@ -25,6 +25,7 @@ class KeccakXmrArchive(object):
             ar = xser.Archive(self.kwriter, True)
         else:
             from apps.monero.xmr.serialize import xmrserialize
+
             ar = xmrserialize.Archive(self.kwriter, True)
         self.ar = ar if self.keeping else None
         return ar
@@ -43,7 +44,9 @@ class KeccakXmrArchive(object):
         ar = self._ar(xser)
         return await ar.message_field(msg, field, fvalue)
 
-    async def container_size(self, container_len=None, container_type=None, params=None, xser=None):
+    async def container_size(
+        self, container_len=None, container_type=None, params=None, xser=None
+    ):
         ar = self._ar(xser)
         return await ar.container_size(container_len, container_type, params)
 

@@ -21,10 +21,7 @@ async def layout_sign_tx(state, ctx, msg):
 
     from apps.monero.protocol.tsx_sign import TsxSigner
 
-    log.debug(
-        __name__,
-        "TsxSigner. F: {} A: {}".format(gc.mem_free(), gc.mem_alloc()),
-    )
+    log.debug(__name__, "TsxSigner. F: {} A: {}".format(gc.mem_free(), gc.mem_alloc()))
     log.debug(__name__, "TsxState: %s", state.ctx_sign)
     gc.collect()
 

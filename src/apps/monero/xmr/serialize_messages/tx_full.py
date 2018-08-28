@@ -79,4 +79,3 @@ class RctSigBase(MessageType):
 
         for i in range(outputs):
             await ar.field(eref(self.outPk[i], "mask"), ECKey)
-

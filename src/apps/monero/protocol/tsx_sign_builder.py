@@ -97,6 +97,7 @@ class TTransactionBuilder(object):
 
     def state_load(self, t):
         from apps.monero.protocol.tsx_sign_state import TState
+
         self._log_trace("Restore: %s" % str(t.state), True)
 
         for attr in t.__dict__:
@@ -113,9 +114,11 @@ class TTransactionBuilder(object):
                 self.state.state_load(t.state)
             elif attr == "tx_prefix_hasher":
                 from apps.monero.xmr.sub.keccak_hasher import KeccakXmrArchive
+
                 self.tx_prefix_hasher = KeccakXmrArchive(ctx=t.tx_prefix_hasher)
             elif attr == "full_message_hasher":
                 from apps.monero.xmr.sub.mlsag_hasher import PreMlsagHasher
+
                 self.full_message_hasher = PreMlsagHasher(state=t.full_message_hasher)
             else:
                 setattr(self, attr, cval)
@@ -320,6 +323,7 @@ class TTransactionBuilder(object):
 
         if index is not None:
             from apps.monero.xmr.serialize.int_serialize import dump_uvarint_b_into
+
             dump_uvarint_b_into(index, key_buff, offset)
 
         return crypto.keccak_2hash(key_buff)
@@ -456,9 +460,7 @@ class TTransactionBuilder(object):
         self.tx_prefix_hasher.keep()
         await self.tx_prefix_hasher.message_field(self.tx, tx_fields[0])
         await self.tx_prefix_hasher.message_field(self.tx, tx_fields[1])
-        await self.tx_prefix_hasher.container_size(
-            self.num_inputs(), tx_fields[2][1]
-        )
+        await self.tx_prefix_hasher.container_size(self.num_inputs(), tx_fields[2][1])
         self.tx_prefix_hasher.release()
         self._log_trace(10, True)
 
@@ -831,7 +833,7 @@ class TTransactionBuilder(object):
         if self.in_memory():
             for idx in range(self.num_inputs()):
                 await self.hash_vini_pseudo_out(self.tx.vin[idx], idx)
-                self._log_trace('i: %s' % idx, True)
+                self._log_trace("i: %s" % idx, True)
 
     async def input_vini(self, src_entr, vini, hmac, pseudo_out, pseudo_out_hmac):
         """
@@ -886,6 +888,7 @@ class TTransactionBuilder(object):
         # Serialize particular input type
         from apps.monero.xmr.serialize import xmrserialize
         from apps.monero.xmr.serialize_messages.tx_prefix import TxInV
+
         await self.tx_prefix_hasher.field(vini, TxInV, xser=xmrserialize)
 
         # Pseudo_out incremental hashing - applicable only in simple rct
@@ -1339,9 +1342,7 @@ class TTransactionBuilder(object):
     async def all_out1_set_tx_prefix(self):
         from apps.monero.xmr.serialize.message_types import BlobType
 
-        await self.tx_prefix_hasher.message_field(
-            self.tx, ("extra", BlobType)
-        )  # extra
+        await self.tx_prefix_hasher.message_field(self.tx, ("extra", BlobType))  # extra
 
         self.tx_prefix_hash = self.tx_prefix_hasher.get_digest()
         self.tx_prefix_hasher = None

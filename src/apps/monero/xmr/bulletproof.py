@@ -815,9 +815,7 @@ class MultiExpSequential(object):
     MultiExp holder with sequential evaluation
     """
 
-    def __init__(
-        self, size=None, points=None, point_fnc=None
-    ):
+    def __init__(self, size=None, points=None, point_fnc=None):
         self.current_idx = 0
         self.size = size if size else None
         self.points = points if points else []
