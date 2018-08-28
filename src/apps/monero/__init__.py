@@ -1,16 +1,5 @@
-import gc
-
-from trezor import log
-from trezor.messages.MessageType import (
-    DebugMoneroDiagRequest,
-    MoneroGetAddress,
-    MoneroGetWatchKey,
-    MoneroKeyImageSyncRequest,
-    MoneroLiteInitRequest,
-    MoneroLiteRequest,
-    MoneroTransactionSignRequest,
-)
-from trezor.wire import protobuf_workflow, register
+from trezor.messages import MessageType
+from trezor import wire
 
 
 # persistent state objects
@@ -22,18 +11,6 @@ class Holder(object):
 
 
 STATE = Holder()
-
-
-def dispatch_MoneroGetAddress(*args, **kwargs):
-    from apps.monero.get_address import layout_monero_get_address
-
-    return layout_monero_get_address(*args, **kwargs)
-
-
-def dispatch_MoneroGetWatchKey(*args, **kwargs):
-    from apps.monero.get_watch_only import layout_monero_get_watch_only
-
-    return layout_monero_get_watch_only(*args, **kwargs)
 
 
 def dispatch_MoneroTsxSign(*args, **kwargs):
@@ -60,19 +37,19 @@ def dispatch_MoneroLiteRequest(*args, **kwargs):
     return layout_lite_protocol(STATE, *args, **kwargs)
 
 
-def dispatch_MoneroDiag(*args, **kwargs):
-    log.debug(__name__, "----diagnostics")
-    gc.collect()
-    from apps.monero.diag import dispatch_diag
-
-    return dispatch_diag(*args, **kwargs)
+def add_stfl(msg_type, handler):
+    wire.register(msg_type, wire.protobuf_workflow, handler)
 
 
 def boot():
-    register(MoneroGetAddress, protobuf_workflow, dispatch_MoneroGetAddress)
-    register(MoneroGetWatchKey, protobuf_workflow, dispatch_MoneroGetWatchKey)
-    register(MoneroTransactionSignRequest, protobuf_workflow, dispatch_MoneroTsxSign)
-    register(MoneroKeyImageSyncRequest, protobuf_workflow, dispatch_MoneroKeyImageSync)
-    register(MoneroLiteInitRequest, protobuf_workflow, dispatch_MoneroLiteInitRequest)
-    register(MoneroLiteRequest, protobuf_workflow, dispatch_MoneroLiteRequest)
-    register(DebugMoneroDiagRequest, protobuf_workflow, dispatch_MoneroDiag)
+    wire.add(MessageType.MoneroGetAddress, __name__, "get_address")
+    wire.add(MessageType.MoneroGetWatchKey, __name__, "get_watch_only")
+    add_stfl(MessageType.MoneroTransactionSignRequest, dispatch_MoneroTsxSign)
+    add_stfl(MessageType.MoneroKeyImageSyncRequest, dispatch_MoneroKeyImageSync)
+
+    if hasattr(MessageType, "MoneroLiteInitRequest"):
+        add_stfl(MessageType.MoneroLiteInitRequest, dispatch_MoneroLiteInitRequest)
+        add_stfl(MessageType.MoneroLiteRequest, dispatch_MoneroLiteRequest)
+
+    if hasattr(MessageType, "DebugMoneroDiagRequest"):
+        wire.add(MessageType.DebugMoneroDiagRequest, __name__, "diag")

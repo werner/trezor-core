@@ -47,7 +47,10 @@ def retit(**kwargs):
     return Failure(**kwargs)
 
 
-async def dispatch_diag(ctx, msg, **kwargs):
+async def diag(ctx, msg, **kwargs):
+    log.debug(__name__, "----diagnostics")
+    gc.collect()
+
     if msg.ins == 0:
         check_mem(0)
         return retit()

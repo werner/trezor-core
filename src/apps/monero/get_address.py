@@ -1,10 +1,10 @@
 from trezor.messages.MoneroAddress import MoneroAddress
 
-from apps.common.show import show_address, show_qr
+from apps.common.layout import show_address, show_qr
 from apps.monero.controller import wrapper
 
 
-async def layout_monero_get_address(ctx, msg):
+async def get_address(ctx, msg):
     address_n = msg.address_n or ()
     creds = await wrapper.monero_get_creds(ctx, address_n, msg.network_type)
 
