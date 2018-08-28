@@ -57,6 +57,9 @@ async def verify_bp(bp_proof, amounts=None, masks=None):
     res = bpi.verify(bp_proof)
     gc.collect()
 
+    # Return as struct as the hash(BP_struct) != hash(BP_serialized)
+    # as the original hashing does not take vector lengths into account which are dynamic
+    # in the serialization scheme (and thus extraneous)
     return res
 
 
