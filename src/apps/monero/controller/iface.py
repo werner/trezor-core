@@ -79,7 +79,7 @@ class TrezorInterface(object):
         text.normal("Signing...")
 
         try:
-            layout = await layout.simple_text(text, tm=1000)
+            layout = await layout.simple_text(text, tm=500)
             log.debug(__name__, "layout: %s", layout)
             workflow.closedefault()
             workflow.onlayoutstart(layout)
@@ -91,7 +91,7 @@ class TrezorInterface(object):
             # loop.close(slide)
             # workflow.onlayoutclose(layout)
 
-        await loop.sleep(500 * 1000)
+        await loop.sleep(200 * 1000)
         return True
 
     async def transaction_error(self, *args, **kwargs):
@@ -106,7 +106,7 @@ class TrezorInterface(object):
         text = Text("Error", ui.ICON_SEND, icon_color=ui.RED)
         text.normal("Transaction failed")
 
-        await layout.ui_text(text, tm=3 * 1000 * 1000)
+        await layout.ui_text(text, tm=500 * 1000)
         await self.restore_default()
 
     async def transaction_signed(self, ctx=None):
@@ -127,7 +127,7 @@ class TrezorInterface(object):
         text = Text("Success", ui.ICON_SEND, icon_color=ui.GREEN)
         text.normal("Transaction signed")
 
-        await layout.ui_text(text, tm=3 * 1000 * 1000)
+        await layout.ui_text(text, tm=500 * 1000)
         await self.restore_default()
 
     async def transaction_step(self, step, sub_step=None, sub_step_total=None):
