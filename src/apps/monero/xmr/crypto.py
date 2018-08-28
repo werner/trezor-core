@@ -200,6 +200,14 @@ def point_mul8_into(r, P):
     return tcry.ge25519_mul8(r, P)
 
 
+INV_EIGHT = b"\x79\x2f\xdc\xe2\x29\xe5\x06\x61\xd0\xda\x1c\x7d\xb3\x9d\xd3\x07\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x06"
+INV_EIGHT_SC = decodeint(INV_EIGHT)
+
+
+def sc_inv_eight():
+    return INV_EIGHT_SC
+
+
 #
 # Zmod(order), scalar values field
 #
