@@ -1,5 +1,5 @@
-from trezor.messages import MessageType
 from trezor import wire
+from trezor.messages import MessageType
 
 
 # persistent state objects
