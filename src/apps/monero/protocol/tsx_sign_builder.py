@@ -987,9 +987,9 @@ class TTransactionBuilder(object):
         """
         Computes Pedersen commitment - pseudo outs
         Here is slight deviation from the original protocol.
-        We want that \sum Alpha = \sum A_{i,j} where A_{i,j} is a mask from range proof for output i, bit j.
+        We want that \\sum Alpha = \\sum A_{i,j} where A_{i,j} is a mask from range proof for output i, bit j.
 
-        Previously this was computed in such a way that Alpha_{last} = \sum A{i,j} - \sum_{i=0}^{last-1} Alpha
+        Previously this was computed in such a way that Alpha_{last} = \\sum A{i,j} - \\sum_{i=0}^{last-1} Alpha
         But we would prefer to compute commitment before range proofs so alphas are generated completely randomly
         and the last A mask is computed in this special way.
         Returns pseudo_out
@@ -1034,7 +1034,7 @@ class TTransactionBuilder(object):
         after range proof in such a way summed masks for commitments (alpha) and rangeproofs (ai) are equal.
 
         In order to save roundtrips we compute commitments randomly and then for the last rangeproof
-        a[63] = (\sum_{i=0}^{num_inp}alpha_i - \sum_{i=0}^{num_outs-1} amasks_i) - \sum_{i=0}^{62}a_i
+        a[63] = (\\sum_{i=0}^{num_inp}alpha_i - \\sum_{i=0}^{num_outs-1} amasks_i) - \\sum_{i=0}^{62}a_i
 
         The range proof is incrementally hashed to the final_message.
 
