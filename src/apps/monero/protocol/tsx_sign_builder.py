@@ -1,8 +1,7 @@
 import gc
 from micropython import const
 
-from trezor import log
-from trezor import utils
+from trezor import log, utils
 
 from apps.monero.controller import misc
 from apps.monero.xmr import common, crypto, monero

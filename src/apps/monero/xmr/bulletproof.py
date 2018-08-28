@@ -3,7 +3,6 @@
 # Author: Dusan Klinec, ph4r05, 2018
 
 import gc
-
 from trezorutils import memcpy as _memcpy
 
 from apps.monero.xmr import crypto
