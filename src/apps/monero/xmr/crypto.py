@@ -116,36 +116,36 @@ def decodepoint(x):
     return tcry.ge25519_unpack_vartime(x)
 
 
-def decodepoint_into(r, x):
-    return tcry.ge25519_unpack_vartime(r, x)
+def decodepoint_into(r, x, offset=0):
+    return tcry.ge25519_unpack_vartime(r, x, offset)
 
 
 def encodepoint(pt):
     return tcry.ge25519_pack(pt)
 
 
-def encodepoint_into(pt, b):
-    return tcry.ge25519_pack_into(pt, b)
+def encodepoint_into(b, pt, offset=0):
+    return tcry.ge25519_pack_into(b, pt, offset)
 
 
 def decodeint(x):
     return tcry.unpack256_modm(x)
 
 
-def decodeint_into_noreduce(r, x):
-    return tcry.unpack256_modm_noreduce(r, x)
+def decodeint_into_noreduce(r, x, offset=0):
+    return tcry.unpack256_modm_noreduce(r, x, offset)
 
 
-def decodeint_into(r, x):
-    return tcry.unpack256_modm(r, x)
+def decodeint_into(r, x, offset=0):
+    return tcry.unpack256_modm(r, x, offset)
 
 
 def encodeint(x):
     return tcry.pack256_modm(x)
 
 
-def encodeint_into(x, b):
-    return tcry.pack256_modm_into(x, b)
+def encodeint_into(b, x, offset=0):
+    return tcry.pack256_modm_into(b, x, offset)
 
 
 def check_ed25519point(x):

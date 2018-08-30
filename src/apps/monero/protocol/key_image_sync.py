@@ -89,9 +89,9 @@ class KeyImageSync(object):
                 self.creds, self.subaddresses, td
             )
 
-            crypto.encodepoint_into(ki, buff_mv[0:32])
-            crypto.encodeint_into(sig[0][0], buff_mv[32:64])
-            crypto.encodeint_into(sig[0][1], buff_mv[64:])
+            crypto.encodepoint_into(buff_mv[0:32], ki)
+            crypto.encodeint_into(buff_mv[32:64], sig[0][0])
+            crypto.encodeint_into(buff_mv[64:], sig[0][1])
 
             nonce, ciph, _ = chacha_poly.encrypt(self.enc_key, buff)
             eki = MoneroExportedKeyImage(iv=nonce, tag=b"", blob=ciph)

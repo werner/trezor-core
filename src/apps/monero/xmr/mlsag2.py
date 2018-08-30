@@ -59,7 +59,7 @@ def hasher_message(message):
 
 
 def hash_point(hasher, point):
-    crypto.encodepoint_into(point, hasher.zbuff)
+    crypto.encodepoint_into(hasher.zbuff, point)
     hasher.update(hasher.zbuff)
 
 
