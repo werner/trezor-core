@@ -1,13 +1,13 @@
 from common import *
 from apps.common import seed
-from trezor import wire
 
+from apps.common import HARDENED
 from apps.cardano.address import (
     _derive_hd_passphrase,
     _encrypt_derivation_path,
     _get_address_root,
     _address_hash,
-    validate_derivation_path,
+    validate_full_path,
     derive_address_and_node
 )
 from trezor.crypto import bip32
@@ -100,7 +100,6 @@ class TestCardanoAddress(unittest.TestCase):
             self.assertEqual(unhexlify(pub), seed.remove_ed25519_prefix(n.public_key()))
             self.assertEqual(unhexlify(chain), n.chain_code())
 
-
     def test_root_address_derivation(self):
         mnemonic = "plastic that delay conduct police ticket swim gospel intact harsh obtain entire"
         node = bip32.from_mnemonic_cardano(mnemonic)
@@ -122,27 +121,30 @@ class TestCardanoAddress(unittest.TestCase):
         self.assertEqual(unhexlify(pub), seed.remove_ed25519_prefix(n.public_key()))
         self.assertEqual(unhexlify(chain), n.chain_code())
 
-    def test_validate_derivation_path(self):
+    def test_paths(self):
         incorrect_derivation_paths = [
-            [0x80000000 | 44],
-            [0x80000000 | 44, 0x80000000 | 1815, 0x80000000 | 1815, 0x80000000 | 1815, 0x80000000 | 1815, 0x80000000 | 1815],
-            [0x80000000 | 43, 0x80000000 | 1815, 0x80000000 | 1815, 0x80000000 | 1815, 0x80000000 | 1815],
-            [0x80000000 | 44, 0x80000000 | 1816, 0x80000000 | 1815, 0x80000000 | 1815, 0x80000000 | 1815],
+            [HARDENED | 44],
+            [HARDENED | 44, HARDENED | 1815, HARDENED | 1815, HARDENED | 1815, HARDENED | 1815, HARDENED | 1815],
+            [HARDENED | 43, HARDENED | 1815, HARDENED | 1815, HARDENED | 1815, HARDENED | 1815],
+            [HARDENED | 44, HARDENED | 1816, HARDENED | 1815, HARDENED | 1815, HARDENED | 1815],
+            [HARDENED | 44, HARDENED | 1815, 0],
+            [HARDENED | 44, HARDENED | 1815, 0, 0],
+            [HARDENED | 44, HARDENED | 1815],
+            [HARDENED | 44, HARDENED | 1815, HARDENED | 0],
+            [HARDENED | 44, HARDENED | 1815, HARDENED | 1815, 1, 1],
+            [HARDENED | 44, HARDENED | 1815, HARDENED | 1815, 0, 0],  # a too large
         ]
-
         correct_derivation_paths = [
-            [0x80000000 | 44, 0x80000000 | 1815, 0x80000000 | 1815, 0x80000000 | 1815, 0x80000000 | 1815],
-            [0x80000000 | 44, 0x80000000 | 1815],
-            [0x80000000 | 44, 0x80000000 | 1815, 0x80000000],
-            [0x80000000 | 44, 0x80000000 | 1815, 0],
-            [0x80000000 | 44, 0x80000000 | 1815, 0, 0],
+            [HARDENED | 44, HARDENED | 1815, HARDENED | 0, 0, 1],
+            [HARDENED | 44, HARDENED | 1815, HARDENED | 9, 0, 4],
+            [HARDENED | 44, HARDENED | 1815, HARDENED | 0, 0, 9],
         ]
 
-        for derivation_path in incorrect_derivation_paths:
-            self.assertRaises(wire.ProcessError, validate_derivation_path, derivation_path)
+        for path in incorrect_derivation_paths:
+            self.assertFalse(validate_full_path(path))
 
-        for derivation_path in correct_derivation_paths:
-            self.assertEqual(derivation_path, validate_derivation_path(derivation_path))
+        for path in correct_derivation_paths:
+            self.assertTrue(validate_full_path(path))
 
     def test_derive_hd_passphrase(self):
         mnemonic = "plastic that delay conduct police ticket swim gospel intact harsh obtain entire"

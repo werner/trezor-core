@@ -5,10 +5,15 @@ from trezor.crypto.curve import ed25519
 from trezor.messages.Failure import Failure
 from trezor.messages.Success import Success
 
+from .address import validate_full_path
 from .layout import confirm_with_pagination
+
+from apps.common import paths
 
 
 async def verify_message(ctx, msg):
+    await paths.validate_path(ctx, validate_full_path, path=msg.address_n)
+
     try:
         res = _verify_message(msg.public_key, msg.signature, msg.message)
     except ValueError as e:

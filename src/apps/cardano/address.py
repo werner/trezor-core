@@ -1,6 +1,5 @@
 from micropython import const
 
-from trezor import wire
 from trezor.crypto import base58, chacha20poly1305, crc, hashlib, pbkdf2
 
 from . import cbor
@@ -8,14 +7,25 @@ from . import cbor
 from apps.common import HARDENED, seed
 
 
-def validate_derivation_path(path: list):
-    if len(path) < 2 or len(path) > 5:
-        raise wire.ProcessError("Derivation path must be composed from 2-5 indices")
-
-    if path[0] != HARDENED | 44 or path[1] != HARDENED | 1815:
-        raise wire.ProcessError("This is not cardano derivation path")
-
-    return path
+def validate_full_path(path: list) -> bool:
+    """
+    Validates derivation path to fit 44'/1815'/a'/0/i,
+    where `a` is an account number and i an address index.
+    The max value for `a` is 10, 1 000 000 for `i`.
+    """
+    if len(path) != 5:
+        return False
+    if path[0] != 44 | HARDENED:
+        return False
+    if path[1] != 1815 | HARDENED:
+        return False
+    if path[2] < HARDENED or path[2] > 10 | HARDENED:
+        return False
+    if path[3] != 0:
+        return False
+    if path[4] > 1000000:
+        return False
+    return True
 
 
 def _derive_hd_passphrase(node) -> bytes:
@@ -51,8 +61,6 @@ def _encrypt_derivation_path(path: list, hd_passphrase: bytes) -> bytes:
 
 
 def derive_address_and_node(root_node, path: list):
-    validate_derivation_path(path)
-
     derived_node = root_node.clone()
 
     # this means empty derivation path m/44'/1815'
@@ -82,23 +90,3 @@ def derive_address_and_node(root_node, path: list):
         )
     )
     return (address, derived_node)
-
-
-def _break_address_n_to_lines(address_n: list) -> list:
-    def path_item(i: int):
-        if i & HARDENED:
-            return str(i ^ HARDENED) + "'"
-        else:
-            return str(i)
-
-    lines = []
-    path_str = "m/" + "/".join([path_item(i) for i in address_n])
-
-    per_line = const(17)
-    while len(path_str) > per_line:
-        i = path_str[:per_line].rfind("/")
-        lines.append(path_str[:i])
-        path_str = path_str[i:]
-    lines.append(path_str)
-
-    return lines

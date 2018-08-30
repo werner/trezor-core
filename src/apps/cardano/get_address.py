@@ -2,13 +2,15 @@ from trezor import log, ui, wire
 from trezor.crypto import bip32
 from trezor.messages.CardanoAddress import CardanoAddress
 
-from .address import derive_address_and_node
+from .address import derive_address_and_node, validate_full_path
 from .layout import confirm_with_pagination
 
-from apps.common import storage
+from apps.common import paths, storage
 
 
 async def get_address(ctx, msg):
+    await paths.validate_path(ctx, validate_full_path, path=msg.address_n)
+
     mnemonic = storage.get_mnemonic()
     root_node = bip32.from_mnemonic_cardano(mnemonic)
 
