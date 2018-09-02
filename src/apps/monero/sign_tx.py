@@ -8,7 +8,7 @@ import micropython
 from trezor import log
 
 
-async def layout_sign_tx(state, ctx, msg):
+async def sign_tx(ctx, msg, state):
     gc.threshold(gc.mem_free() // 4 + gc.mem_alloc())
     log.debug(
         __name__,

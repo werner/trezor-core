@@ -7,7 +7,7 @@ import gc
 from trezor import log
 
 
-async def layout_lite_init_protocol(state, ctx, msg):
+async def lite_init_protocol(ctx, msg, state):
     from apps.monero.protocol_lite import lite
     from trezor.messages.MoneroLiteInitAck import MoneroLiteInitAck
 
@@ -16,7 +16,10 @@ async def layout_lite_init_protocol(state, ctx, msg):
     return MoneroLiteInitAck()
 
 
-async def layout_lite_protocol(state, ctx, msg):
+async def lite_protocol(ctx, msg, state, is_init=False):
+    if is_init:
+        return await lite_init_protocol(ctx, msg, state)
+
     from trezor.messages.MoneroLiteAck import MoneroLiteAck
 
     log.debug(
