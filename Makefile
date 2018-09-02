@@ -33,7 +33,7 @@ FIRMWARE_P1_MAXSIZE = 786432
 FIRMWARE_P2_MAXSIZE = 917504
 FIRMWARE_MAXSIZE    = 1703936
 
-GITREV=$(shell git describe --always --dirty)
+GITREV=$(shell git describe --always --dirty | tr '-' '_')
 CFLAGS += -DGITREV=$(GITREV)
 
 ## help commands:
@@ -83,6 +83,14 @@ black:
 
 cstyle: ## run code style check on low-level C code
 	./tools/clang-format-check $(shell find embed -type f -name *.[ch])
+
+## code generation ##
+
+templates: ## render Mako templates (for lists of coins, tokens, etc.)
+	./tools/build_templates
+
+templates_check: ## check that Mako-rendered files match their templates
+	./tools/build_templates --check
 
 ## build commands:
 
