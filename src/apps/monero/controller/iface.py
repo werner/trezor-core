@@ -60,6 +60,8 @@ class TrezorInterface(object):
             is_change = change_idx and idx == change_idx
             if is_change:
                 continue
+            if change_idx is None and dst.amount == 0 and len(outs) == 2:
+                continue  # sweep, dummy tsx
             await self.confirm_out(dst, is_change, creds, ctx)
 
         await layout.require_confirm_fee(self.gctx(ctx), tsx_data.fee)
