@@ -213,15 +213,16 @@ class TTransactionBuilder(object):
         :return:
         """
         from apps.monero.xmr.sub.addr import addr_eq, get_change_addr_idx
+
         change_idx = get_change_addr_idx(outputs, self.output_change)
 
         change_addr = self.change_address()
         if change_addr is None:
-            self._log_trace('No change')
+            self._log_trace("No change")
             return
 
         if change_idx is None and self.output_change.amount == 0 and len(outputs) == 2:
-            self._log_trace('Sweep tsx')
+            self._log_trace("Sweep tsx")
             return  # sweep dummy tsx
 
         found = False
