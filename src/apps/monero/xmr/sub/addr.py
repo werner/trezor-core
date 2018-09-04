@@ -12,7 +12,7 @@ def addr_to_hash(addr):
     return bytes(addr.spend_public_key + addr.view_public_key)
 
 
-def encode_addr(version, spend_pub, view_pub):
+def encode_addr(version, spend_pub, view_pub, payment_id=None):
     """
     Encodes public keys as versions
     :param version:
@@ -21,6 +21,8 @@ def encode_addr(version, spend_pub, view_pub):
     :return:
     """
     buf = spend_pub + view_pub
+    if payment_id:
+        buf += bytes(payment_id)
     return tcry.xmr_base58_addr_encode_check(ord(version), bytes(buf))
 
 
