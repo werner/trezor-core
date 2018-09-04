@@ -72,7 +72,7 @@ class TrezorInterface(object):
         has_payment = tsx_data.payment_id is not None and len(tsx_data.payment_id) > 0
 
         for idx, dst in enumerate(outs):
-            is_change = change_idx and idx == change_idx
+            is_change = change_idx is not None and idx == change_idx
             if is_change:
                 continue
             if change_idx is None and dst.amount == 0 and len(outs) == 2:
