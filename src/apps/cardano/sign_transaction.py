@@ -73,8 +73,6 @@ async def request_transaction(ctx, tx_req: CardanoTxRequest, index: int):
 
 
 async def sign_transaction(ctx, msg):
-    await validate_path(ctx, validate_full_path, path=msg.address_n)
-
     mnemonic = storage.get_mnemonic()
     root_node = bip32.from_mnemonic_cardano(mnemonic)
 
@@ -91,6 +89,9 @@ async def sign_transaction(ctx, msg):
 
         # clear progress bar
         display_homescreen()
+
+        for i in msg.inputs:
+            await validate_path(ctx, validate_full_path, path=i.address_n)
 
         # sign the transaction bundle and prepare the result
         transaction = Transaction(msg.inputs, msg.outputs, transactions, root_node)
