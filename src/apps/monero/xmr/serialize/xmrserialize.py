@@ -84,9 +84,6 @@ class Archive(object):
     async def prepare_container(self, size, container, elem_type=None):
         """
         Prepares container for serialization
-        :param size:
-        :param container:
-        :return:
         """
         if not self.writing:
             if container is None:
@@ -102,9 +99,6 @@ class Archive(object):
     async def prepare_message(self, msg, msg_type):
         """
         Prepares message for serialization
-        :param msg:
-        :param msg_type:
-        :return:
         """
         if self.writing:
             return
@@ -113,8 +107,6 @@ class Archive(object):
     async def uvarint(self, elem):
         """
         Uvarint
-        :param elem:
-        :return:
         """
         if self.writing:
             return await dump_uvarint(self.iobj, elem)
@@ -124,10 +116,6 @@ class Archive(object):
     async def uint(self, elem, elem_type, params=None):
         """
         Fixed size int
-        :param elem:
-        :param elem_type:
-        :param params:
-        :return:
         """
         if self.writing:
             return await dump_uint(self.iobj, elem, elem_type.WIDTH)
@@ -137,8 +125,6 @@ class Archive(object):
     async def unicode_type(self, elem):
         """
         Unicode type
-        :param elem:
-        :return:
         """
         if self.writing:
             return await dump_unicode(self.iobj, elem)
@@ -148,7 +134,6 @@ class Archive(object):
     async def blob(self, elem=None, elem_type=None, params=None):
         """
         Loads/dumps blob
-        :return:
         """
         elem_type = elem_type if elem_type else elem.__class__
         if hasattr(elem_type, "serialize_archive"):
@@ -169,7 +154,6 @@ class Archive(object):
     async def container(self, container=None, container_type=None, params=None):
         """
         Loads/dumps container
-        :return:
         """
         if hasattr(container_type, "serialize_archive"):
             container = container_type() if container is None else container
@@ -191,10 +175,6 @@ class Archive(object):
     ):
         """
         Container size
-        :param container_len:
-        :param container_type:
-        :param params:
-        :return:
         """
         if hasattr(container_type, "serialize_archive"):
             raise ValueError("not supported")
@@ -209,10 +189,6 @@ class Archive(object):
     async def container_val(self, elem, container_type, params=None):
         """
         Single cont value
-        :param elem:
-        :param container_type:
-        :param params:
-        :return:
         """
         if hasattr(container_type, "serialize_archive"):
             raise ValueError("not supported")
@@ -226,7 +202,6 @@ class Archive(object):
     async def tuple(self, elem=None, elem_type=None, params=None):
         """
         Loads/dumps tuple
-        :return:
         """
         if hasattr(elem_type, "serialize_archive"):
             container = elem_type() if elem is None else elem
@@ -244,10 +219,6 @@ class Archive(object):
     async def variant(self, elem=None, elem_type=None, params=None, wrapped=None):
         """
         Loads/dumps variant type
-        :param elem:
-        :param elem_type:
-        :param params:
-        :return:
         """
         elem_type = elem_type if elem_type else elem.__class__
         if hasattr(elem_type, "serialize_archive"):
@@ -275,9 +246,6 @@ class Archive(object):
     async def message(self, msg, msg_type=None):
         """
         Loads/dumps message
-        :param msg:
-        :param msg_type:
-        :return:
         """
         elem_type = msg_type if msg_type is not None else msg.__class__
         if hasattr(elem_type, "serialize_archive"):
@@ -292,10 +260,6 @@ class Archive(object):
     async def message_field(self, msg, field, fvalue=None):
         """
         Dumps/Loads message field
-        :param msg:
-        :param field:
-        :param fvalue: explicit value for dump
-        :return:
         """
         if self.writing:
             await self._dump_message_field(self.iobj, msg, field, fvalue=fvalue)
@@ -305,9 +269,6 @@ class Archive(object):
     async def message_fields(self, msg, fields):
         """
         Load/dump individual message fields
-        :param msg:
-        :param fields:
-        :return:
         """
         for field in fields:
             await self.message_field(msg, field)
@@ -362,13 +323,6 @@ class Archive(object):
         return issubclass(elem_type, test_type)
 
     async def field(self, elem=None, elem_type=None, params=None):
-        """
-        Archive field
-        :param elem:
-        :param elem_type:
-        :param params:
-        :return:
-        """
         elem_type = elem_type if elem_type else elem.__class__
         fvalue = None
 
@@ -425,7 +379,6 @@ class Archive(object):
     async def root(self):
         """
         Root level archive init
-        :return:
         """
 
     async def _dump_container_size(
@@ -433,11 +386,6 @@ class Archive(object):
     ):
         """
         Dumps container size - per element streaming
-        :param writer:
-        :param container_len:
-        :param container_type:
-        :param params:
-        :return:
         """
         if not container_type or not container_type.FIX_SIZE:
             await dump_uvarint(writer, container_len)
@@ -449,11 +397,6 @@ class Archive(object):
     async def _dump_container_val(self, writer, elem, container_type, params=None):
         """
         Single elem dump
-        :param writer:
-        :param elem:
-        :param container_type:
-        :param params:
-        :return:
         """
         elem_type = container_elem_type(container_type, params)
         await self.dump_field(writer, elem, elem_type, params[1:] if params else None)
@@ -461,12 +404,6 @@ class Archive(object):
     async def _dump_container(self, writer, container, container_type, params=None):
         """
         Dumps container of elements to the writer.
-
-        :param writer:
-        :param container:
-        :param container_type:
-        :param params:
-        :return:
         """
         await self._dump_container_size(writer, len(container), container_type)
 
@@ -483,12 +420,6 @@ class Archive(object):
         """
         Loads container of elements from the reader. Supports the container ref.
         Returns loaded container.
-
-        :param reader:
-        :param container_type:
-        :param params:
-        :param container:
-        :return:
         """
 
         c_len = (
@@ -515,12 +446,6 @@ class Archive(object):
     async def _dump_tuple(self, writer, elem, elem_type, params=None):
         """
         Dumps tuple of elements to the writer.
-
-        :param writer:
-        :param elem:
-        :param elem_type:
-        :param params:
-        :return:
         """
         if len(elem) != len(elem_type.f_specs()):
             raise ValueError(
@@ -540,12 +465,6 @@ class Archive(object):
         """
         Loads tuple of elements from the reader. Supports the tuple ref.
         Returns loaded tuple.
-
-        :param reader:
-        :param elem_type:
-        :param params:
-        :param container:
-        :return:
         """
 
         c_len = await load_uvarint(reader)
@@ -573,12 +492,6 @@ class Archive(object):
     async def _dump_message_field(self, writer, msg, field, fvalue=None):
         """
         Dumps a message field to the writer. Field is defined by the message field specification.
-
-        :param writer:
-        :param msg:
-        :param field:
-        :param fvalue:
-        :return:
         """
         fname, ftype, params = field[0], field[1], field[2:]
         fvalue = getattr(msg, fname, None) if fvalue is None else fvalue
@@ -588,11 +501,6 @@ class Archive(object):
         """
         Loads message field from the reader. Field is defined by the message field specification.
         Returns loaded value, supports field reference.
-
-        :param reader:
-        :param msg:
-        :param field:
-        :return:
         """
         fname, ftype, params = field[0], field[1], field[2:]
         await self.load_field(reader, ftype, params, eref(msg, fname))
@@ -600,11 +508,6 @@ class Archive(object):
     async def _dump_message(self, writer, msg, msg_type=None):
         """
         Dumps message to the writer.
-
-        :param writer:
-        :param msg:
-        :param msg_type:
-        :return:
         """
         mtype = msg.__class__ if msg_type is None else msg_type
         fields = mtype.f_specs()
@@ -618,11 +521,6 @@ class Archive(object):
         """
         Loads message if the given type from the reader.
         Supports reading directly to existing message.
-
-        :param reader:
-        :param msg_type:
-        :param msg:
-        :return:
         """
         msg = msg_type() if msg is None else msg
         fields = msg_type.f_specs() if msg_type else msg.__class__.f_specs()
@@ -640,12 +538,6 @@ class Archive(object):
         """
         Dumps variant type to the writer.
         Supports both wrapped and raw variant.
-
-        :param writer:
-        :param elem:
-        :param elem_type:
-        :param params:
-        :return:
         """
         if isinstance(elem, VariantType) or elem_type.WRAPS_VALUE:
             await dump_uint(writer, elem.variant_elem_type.VARIANT_CODE, 1)
@@ -664,13 +556,6 @@ class Archive(object):
         """
         Loads variant type from the reader.
         Supports both wrapped and raw variant.
-
-        :param reader:
-        :param elem_type:
-        :param params:
-        :param elem:
-        :param wrapped:
-        :return:
         """
         is_wrapped = (
             (isinstance(elem, VariantType) or elem_type.WRAPS_VALUE)
@@ -697,12 +582,6 @@ async def dump_blob(writer, elem, elem_type, params=None):
     """
     Dumps blob message to the writer.
     Supports both blob and raw value.
-
-    :param writer:
-    :param elem:
-    :param elem_type:
-    :param params:
-    :return:
     """
     elem_is_blob = isinstance(elem, BlobType)
     elem_params = elem if elem_is_blob or elem_type is None else elem_type
@@ -718,12 +597,6 @@ async def dump_blob(writer, elem, elem_type, params=None):
 async def load_blob(reader, elem_type, params=None, elem=None):
     """
     Loads blob from reader to the element. Returns the loaded blob.
-
-    :param reader:
-    :param elem_type:
-    :param params:
-    :param elem:
-    :return:
     """
     ivalue = elem_type.SIZE if elem_type.FIX_SIZE else await load_uvarint(reader)
     fvalue = bytearray(ivalue)
@@ -743,22 +616,11 @@ async def load_blob(reader, elem_type, params=None, elem=None):
 
 
 async def dump_unicode(writer, elem):
-    """
-    Dumps string as UTF8 encoded string
-    :param writer:
-    :param elem:
-    :return:
-    """
     await dump_uvarint(writer, len(elem))
     await writer.awrite(bytes(elem, "utf8"))
 
 
 async def load_unicode(reader):
-    """
-    Loads UTF8 string
-    :param reader:
-    :return:
-    """
     ivalue = await load_uvarint(reader)
     fvalue = bytearray(ivalue)
     await reader.areadinto(fvalue)
