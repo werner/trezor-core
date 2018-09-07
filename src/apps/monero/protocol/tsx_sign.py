@@ -212,9 +212,8 @@ class TsxSigner(object):
             await self.tsx_exc_handler(e)
 
             from trezor.messages.Failure import Failure
-            from apps.monero.controller.wrapper import exc2str
 
-            return Failure(code=10, message=exc2str(e))
+            return Failure(code=10, message=str(e))
 
         except Exception as e:
             await self.tsx_exc_handler(e)

@@ -25,7 +25,3 @@ def get_interface(ctx):
     from apps.monero.controller import iface
 
     return iface.get_iface(ctx)
-
-
-def exc2str(e):
-    return str(e)
