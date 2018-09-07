@@ -6,30 +6,6 @@ from trezor.utils import chunks
 from apps.common.confirm import require_confirm, require_hold_to_confirm
 
 
-async def require_confirm_watchkey(ctx):
-    content = Text("Confirm export", ui.ICON_SEND, icon_color=ui.GREEN)
-    content.normal(*["Do you really want to", "export watch-only", "credentials?"])
-    return await require_confirm(ctx, content, ButtonRequestType.SignTx)
-
-
-async def require_confirm_keyimage_sync(ctx):
-    content = Text("Confirm ki sync", ui.ICON_SEND, icon_color=ui.GREEN)
-    content.normal(*["Do you really want to", "sync key images?"])
-    return await require_confirm(ctx, content, ButtonRequestType.SignTx)
-
-
-async def require_confirm_tx_plain(ctx, to, value, is_change=False):
-    content = Text(
-        "Confirm " + ("sending" if not is_change else "change"),
-        ui.ICON_SEND,
-        icon_color=ui.GREEN,
-    )
-    content.bold(format_amount(value))
-    content.normal("to")
-    content.mono(*split_address(to))
-    return await require_confirm(ctx, content, code=ButtonRequestType.SignTx)
-
-
 def paginate_lines(lines, lines_per_page=5):
     pages = []
     cpage = []
@@ -117,7 +93,6 @@ async def naive_pagination(
         content = Text("%s %s" % (title, paging), icon, icon_color=icon_color)
         content.normal(*text)
 
-        # render_scrollbar(cur_step, npages)
         reaction = await tx_dialog(
             ctx,
             code,
@@ -141,6 +116,18 @@ async def naive_pagination(
             cur_step += 1
 
 
+async def require_confirm_watchkey(ctx):
+    content = Text("Confirm export", ui.ICON_SEND, icon_color=ui.GREEN)
+    content.normal(*["Do you really want to", "export watch-only", "credentials?"])
+    return await require_confirm(ctx, content, ButtonRequestType.SignTx)
+
+
+async def require_confirm_keyimage_sync(ctx):
+    content = Text("Confirm ki sync", ui.ICON_SEND, icon_color=ui.GREEN)
+    content.normal(*["Do you really want to", "sync key images?"])
+    return await require_confirm(ctx, content, ButtonRequestType.SignTx)
+
+
 async def require_confirm_payment_id(ctx, payment_id):
     from ubinascii import hexlify
     from trezor import wire
@@ -156,39 +143,19 @@ async def require_confirm_payment_id(ctx, payment_id):
 
 
 async def require_confirm_tx(ctx, to, value, is_change=False):
-    len_addr = (len(to) + 15) // 16
-    if len_addr <= 2:
-        return await require_confirm_tx_plain(ctx, to, value, is_change)
+    from trezor import wire
 
-    else:
-        to_chunks = list(split_address(to))
-        from trezor import wire
-
-        text = [ui.BOLD, format_amount(value), ui.MONO] + to_chunks
-
-        conf_text = "Confirm send" if not is_change else "Con. change"
-        if not await naive_pagination(ctx, text, conf_text, ui.ICON_SEND, ui.GREEN, 4):
-            raise wire.ActionCancelled("Cancelled")
+    to_chunks = list(split_address(to))
+    text = [ui.BOLD, format_amount(value), ui.MONO] + to_chunks
+    conf_text = "Confirm send" if not is_change else "Con. change"
+    if not await naive_pagination(ctx, text, conf_text, ui.ICON_SEND, ui.GREEN, 4):
+        raise wire.ActionCancelled("Cancelled")
 
 
 async def require_confirm_fee(ctx, fee):
     content = Text("Confirm fee", ui.ICON_SEND, icon_color=ui.GREEN)
     content.bold(format_amount(fee))
     await require_hold_to_confirm(ctx, content, ButtonRequestType.ConfirmOutput)
-
-
-@ui.layout
-async def simple_wait(tm):
-    from trezor import loop
-
-    await loop.sleep(tm)
-
-
-async def light_on():
-    from trezor import loop
-
-    slide = await ui.backlight_slide(ui.BACKLIGHT_NORMAL, delay=0)
-    loop.schedule(slide)
 
 
 @ui.layout
