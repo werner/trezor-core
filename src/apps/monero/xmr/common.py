@@ -2,8 +2,7 @@ from trezor.crypto import monero, random
 
 
 class XmrException(Exception):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    pass
 
 
 def random_bytes(by):

@@ -6,18 +6,15 @@ class TrezorError(Exception):
 
 
 class TrezorSecurityError(TrezorError):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    pass
 
 
 class TrezorTxPrefixHashNotMatchingError(TrezorError):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    pass
 
 
 class TrezorChangeAddressError(TrezorError):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    pass
 
 
 class StdObj(object):
