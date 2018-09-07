@@ -12,8 +12,6 @@ from apps.monero.xmr.serialize_messages.tx_extra import (
 async def parse_extra_fields(extra_buff):
     """
     Parses extra buffer to the extra fields vector
-    :param extra_buff:
-    :return:
     """
     extras = []
     rw = MemoryReaderWriter(extra_buff)
@@ -26,10 +24,6 @@ async def parse_extra_fields(extra_buff):
 def find_tx_extra_field_by_type(extra_fields, msg, idx=0):
     """
     Finds given message type in the extra array, or returns None if not found
-    :param extra_fields:
-    :param msg:
-    :param idx:
-    :return:
     """
     cur_idx = 0
     for x in extra_fields:
@@ -43,8 +37,6 @@ def find_tx_extra_field_by_type(extra_fields, msg, idx=0):
 def has_encrypted_payment_id(extra_nonce):
     """
     Returns true if encrypted payment id is present
-    :param extra_nonce:
-    :return:
     """
     return len(extra_nonce) == 9 and extra_nonce[0] == 1
 
@@ -52,8 +44,6 @@ def has_encrypted_payment_id(extra_nonce):
 def has_payment_id(extra_nonce):
     """
     Returns true if payment id is present
-    :param extra_nonce:
-    :return:
     """
     return len(extra_nonce) == 33 and extra_nonce[0] == 0
 
@@ -61,8 +51,6 @@ def has_payment_id(extra_nonce):
 def get_payment_id_from_tx_extra_nonce(extra_nonce):
     """
     Extracts encrypted payment id from extra
-    :param extra_nonce:
-    :return:
     """
     if 33 != len(extra_nonce):
         raise ValueError("Nonce size mismatch")
@@ -74,8 +62,6 @@ def get_payment_id_from_tx_extra_nonce(extra_nonce):
 def get_encrypted_payment_id_from_tx_extra_nonce(extra_nonce):
     """
     Extracts encrypted payment id from extra
-    :param extra_nonce:
-    :return:
     """
     if 9 != len(extra_nonce):
         raise ValueError("Nonce size mismatch")
@@ -87,8 +73,6 @@ def get_encrypted_payment_id_from_tx_extra_nonce(extra_nonce):
 def set_payment_id_to_tx_extra_nonce(payment_id):
     """
     Sets payment ID to the extra
-    :param payment_id:
-    :return:
     """
     return b"\x00" + payment_id
 
@@ -97,8 +81,6 @@ def absolute_output_offsets_to_relative(off):
     """
     Relative offsets, prev + cur = next.
     Helps with varint encoding size.
-    :param off:
-    :return:
     """
     if len(off) == 0:
         return off
@@ -111,10 +93,6 @@ def absolute_output_offsets_to_relative(off):
 def get_destination_view_key_pub(destinations, change_addr=None):
     """
     Returns destination address public view key
-    :param destinations:
-    :type destinations: list[apps.monero.xmr.serialize_messages.tx_construct.TxDestinationEntry]
-    :param change_addr:
-    :return:
     """
     from apps.monero.xmr.sub.addr import addr_eq
 
@@ -140,10 +118,6 @@ def encrypt_payment_id(payment_id, public_key, secret_key):
     """
     Encrypts payment_id hex.
     Used in the transaction extra. Only recipient is able to decrypt.
-    :param payment_id:
-    :param public_key:
-    :param secret_key:
-    :return:
     """
     derivation_p = crypto.generate_key_derivation(public_key, secret_key)
     derivation = bytearray(33)
@@ -164,9 +138,6 @@ async def remove_field_from_tx_extra(extra, mtype):
     """
     Removes extra field of fiven type from the buffer
     Reserializes with skipping the given mtype.
-    :param extra:
-    :param mtype:
-    :return:
     """
     if len(extra) == 0:
         return []
@@ -186,9 +157,6 @@ async def remove_field_from_tx_extra(extra, mtype):
 def add_extra_nonce_to_tx_extra(extra, extra_nonce):
     """
     Appends nonce extra to the extra buffer
-    :param extra:
-    :param extra_nonce:
-    :return:
     """
     if len(extra_nonce) > 255:
         raise ValueError("Nonce could be 255 bytes max")
@@ -199,9 +167,6 @@ def add_extra_nonce_to_tx_extra(extra, extra_nonce):
 def add_tx_pub_key_to_extra(tx_extra, pub_key):
     """
     Adds public key to the extra
-    :param tx_extra:
-    :param pub_key:
-    :return:
     """
     to_add = bytearray(33)
     to_add[0] = 1
@@ -214,10 +179,6 @@ async def add_additional_tx_pub_keys_to_extra(
 ):
     """
     Adds all pubkeys to the extra
-    :param tx_extra:
-    :param additional_pub_keys:
-    :param pub_enc: None
-    :return:
     """
     pubs_msg = TxExtraAdditionalPubKeys(
         data=pub_enc

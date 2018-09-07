@@ -28,9 +28,6 @@ class TsxSigner(object):
         Handles the exception thrown in the Trezor processing. Clears transaction state.
         We could use decorator/wrapper for message calls but not sure how uPython handles them
         so now are entry points wrapped in try-catch.
-
-        :param e:
-        :return:
         """
         if self.debug:
             log.warning(__name__, "Transaction exception: %s: %s", type(e), e)
@@ -43,7 +40,6 @@ class TsxSigner(object):
     async def should_purge(self):
         """
         Delete global state?
-        :return:
         """
         return self.purge or (self.tsx_obj and self.tsx_obj.is_terminal())
 

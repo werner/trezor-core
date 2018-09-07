@@ -109,10 +109,6 @@ class MessageType(XmrType):
 def container_elem_type(container_type, params):
     """
     Returns container element type
-
-    :param container_type:
-    :param params:
-    :return:
     """
     elem_type = params[0] if params else None
     if elem_type is None:
@@ -124,9 +120,6 @@ def gen_elem_array(size, elem_type=None):
     """
     Generates element array of given size and initializes with given type.
     Supports container type, used for pre-allocation before deserialization.
-    :param size:
-    :param elem_type:
-    :return:
     """
     if elem_type is None or not callable(elem_type):
         return [elem_type] * size
