@@ -1,7 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-# Author: Dusan Klinec, ph4r05, 2018
-
 import gc
 from trezorutils import memcpy as _memcpy
 
@@ -95,15 +91,6 @@ def gc_iter(i):
 
 
 def invert(dst, x):
-    """
-    Modular inversion mod curve order.
-
-    Naive approach using large arithmetics in Python.
-    Should be moved to the crypto provider later.
-    :param x: 32byte contracted
-    :param dst:
-    :return:
-    """
     dst = _ensure_dst_key(dst)
     crypto.decodeint_into_noreduce(tmp_sc_1, x)
     crypto.sc_inv_into(tmp_sc_2, tmp_sc_1)
@@ -656,7 +643,6 @@ def hadamard_fold(v, a, b, into=None, into_offset=0):
 
     ln = len(v); h = ln // 2
     v[i] = a * v[i] + b * v[h + i]
-    :return:
     """
     h = len(v) // 2
     crypto.decodeint_into_noreduce(tmp_sc_1, a)
@@ -678,7 +664,6 @@ def scalar_fold(v, a, b, into=None, into_offset=0):
     """
     ln = len(v); h = ln // 2
     v[i] = v[i] * a + v[h+i] * b)
-    :return:
     """
     h = len(v) // 2
     crypto.decodeint_into_noreduce(tmp_sc_1, a)

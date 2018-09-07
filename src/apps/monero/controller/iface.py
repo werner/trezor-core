@@ -1,8 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-# Author: Dusan Klinec, ph4r05, 2018
-
-
 class TrezorInterface(object):
     def __init__(self, ctx=None):
         self.ctx = ctx
@@ -39,9 +34,6 @@ class TrezorInterface(object):
     async def confirm_payment_id(self, payment_id, ctx=None):
         """
         Confirm payment ID
-        :param payment_id:
-        :param ctx:
-        :return:
         """
         if payment_id is None:
             return
@@ -53,10 +45,6 @@ class TrezorInterface(object):
     async def confirm_transaction(self, tsx_data, creds=None, ctx=None):
         """
         Ask for confirmation from user
-        :param tsx_data:
-        :param creds:
-        :param ctx:
-        :return:
         """
         from apps.monero.xmr.sub.addr import get_change_addr_idx
 
@@ -121,10 +109,6 @@ class TrezorInterface(object):
         return True
 
     async def transaction_error(self, *args, **kwargs):
-        """
-        Transaction error
-        :return:
-        """
         from trezor import ui
         from trezor.ui.text import Text
         from apps.monero import layout
@@ -138,13 +122,11 @@ class TrezorInterface(object):
     async def transaction_signed(self, ctx=None):
         """
         Notifies the transaction was completely signed
-        :return:
         """
 
     async def transaction_finished(self, ctx=None):
         """
         Notifies the transaction has been completed (all data were sent)
-        :return:
         """
         from trezor import ui
         from trezor.ui.text import Text
@@ -157,13 +139,6 @@ class TrezorInterface(object):
         await self.restore_default()
 
     async def transaction_step(self, step, sub_step=None, sub_step_total=None):
-        """
-        Transaction progress
-        :param step:
-        :param sub_step:
-        :param sub_step_total:
-        :return:
-        """
         from trezor import ui
         from trezor.ui.text import Text
         from apps.monero import layout
@@ -196,35 +171,19 @@ class TrezorInterface(object):
         await layout.simple_text(text, tm=10 * 1000)
 
     async def confirm_ki_sync(self, init_msg, ctx=None):
-        """
-        Ask confirmation on key image sync
-        :param init_msg:
-        :return:
-        """
         from apps.monero import layout
 
         await layout.require_confirm_keyimage_sync(self.gctx(ctx))
         return True
 
     async def ki_error(self, e, ctx=None):
-        """
-        Key image sync error
-        :param e:
-        :return:
-        """
+        pass
 
     async def ki_step(self, i, ctx=None):
-        """
-        Key image sync step
-        :param i:
-        :return:
-        """
+        pass
 
     async def ki_finished(self, ctx=None):
-        """
-        Ki sync finished
-        :return:
-        """
+        pass
 
 
 def get_iface(ctx=None):

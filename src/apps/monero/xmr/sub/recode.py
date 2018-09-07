@@ -3,11 +3,6 @@ from apps.monero.xmr.serialize_messages.tx_ecdh import EcdhTuple
 
 
 def copy_ecdh(ecdh):
-    """
-    Clones ECDH tuple
-    :param ecdh:
-    :return:
-    """
     return EcdhTuple(mask=ecdh.mask, amount=ecdh.amount)
 
 

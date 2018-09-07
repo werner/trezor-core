@@ -4,9 +4,6 @@ _UINT_BUFFER = bytearray(1)
 async def load_uint(reader, width):
     """
     Constant-width integer serialization
-    :param reader:
-    :param width:
-    :return:
     """
     buffer = _UINT_BUFFER
     result = 0
@@ -21,10 +18,6 @@ async def load_uint(reader, width):
 async def dump_uint(writer, n, width):
     """
     Constant-width integer serialization
-    :param writer:
-    :param n:
-    :param width:
-    :return:
     """
     buffer = _UINT_BUFFER
     for _ in range(width):
@@ -36,8 +29,6 @@ async def dump_uint(writer, n, width):
 def uvarint_size(n):
     """
     Returns size in bytes n would occupy serialized as varint
-    :param n:
-    :return:
     """
     bts = 0 if n != 0 else 1
     while n:
@@ -49,8 +40,6 @@ def uvarint_size(n):
 def load_uvarint_b(buffer):
     """
     Variable int deserialization, synchronous from buffer.
-    :param buffer:
-    :return:
     """
     result = 0
     idx = 0
@@ -65,8 +54,6 @@ def load_uvarint_b(buffer):
 def dump_uvarint_b(n):
     """
     Serializes uvarint to the buffer
-    :param n:
-    :return:
     """
     buffer = bytearray(uvarint_size(n))
     return dump_uvarint_b_into(n, buffer, 0)
@@ -75,11 +62,6 @@ def dump_uvarint_b(n):
 def dump_uvarint_b_into(n, buffer, offset=0):
     """
     Serializes n as variable size integer to the provided buffer.
-    Buffer has to ha
-    :param n:
-    :param buffer:
-    :param offset:
-    :return:
     """
     shifted = True
     while shifted:
@@ -93,8 +75,6 @@ def dump_uvarint_b_into(n, buffer, offset=0):
 def load_uint_b(buffer, width):
     """
     Loads fixed size integer from the buffer
-    :param buffer:
-    :return:
     """
     result = 0
     for idx in range(width):
@@ -105,9 +85,6 @@ def load_uint_b(buffer, width):
 def dump_uint_b(n, width):
     """
     Serializes fixed size integer to the buffer
-    :param n:
-    :param width:
-    :return:
     """
     buffer = bytearray(width)
     return dump_uvarint_b_into(n, buffer, 0)
@@ -116,9 +93,6 @@ def dump_uint_b(n, width):
 def dump_uint_b_into(n, width, buffer, offset=0):
     """
     Serializes fixed size integer to the buffer
-    :param n:
-    :param width:
-    :return:
     """
     for idx in range(width):
         buffer[idx + offset] = n & 0xff

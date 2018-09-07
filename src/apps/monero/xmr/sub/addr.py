@@ -6,8 +6,6 @@ from apps.monero.xmr.sub.xmr_net import NetworkTypes, net_version
 def addr_to_hash(addr):
     """
     Creates hashable address representation
-    :param addr:
-    :return:
     """
     return bytes(addr.spend_public_key + addr.view_public_key)
 
@@ -15,10 +13,6 @@ def addr_to_hash(addr):
 def encode_addr(version, spend_pub, view_pub, payment_id=None):
     """
     Encodes public keys as versions
-    :param version:
-    :param spend_pub:
-    :param view_pub:
-    :return:
     """
     buf = spend_pub + view_pub
     if payment_id:
@@ -29,9 +23,6 @@ def encode_addr(version, spend_pub, view_pub, payment_id=None):
 def decode_addr(addr):
     """
     Given address, get version and public spend and view keys.
-
-    :param addr:
-    :return:
     """
     d, version = tcry.xmr_base58_addr_decode_check(bytes(addr))
     pub_spend_key = d[0:32]
@@ -42,10 +33,6 @@ def decode_addr(addr):
 def public_addr_encode(pub_addr, is_sub=False, net=NetworkTypes.MAINNET):
     """
     Encodes public address to Monero address
-    :param pub_addr:
-    :param is_sub:
-    :param net:
-    :return:
     """
     net_ver = net_version(net, is_sub)
     return encode_addr(net_ver, pub_addr.spend_public_key, pub_addr.view_public_key)
@@ -54,11 +41,6 @@ def public_addr_encode(pub_addr, is_sub=False, net=NetworkTypes.MAINNET):
 def classify_subaddresses(tx_dests, change_addr):
     """
     Classify destination subaddresses
-    void classify_addresses()
-    :param tx_dests:
-    :type tx_dests: list[apps.monero.xmr.serialize_messages.tx_construct.TxDestinationEntry]
-    :param change_addr:
-    :return:
     """
     num_stdaddresses = 0
     num_subaddresses = 0
@@ -82,9 +64,6 @@ def classify_subaddresses(tx_dests, change_addr):
 def addr_eq(a, b):
     """
     Address comparisson. Allocation free.
-    :param a:
-    :param b:
-    :return:
     """
     return pub_eq(a.spend_public_key, b.spend_public_key) and pub_eq(
         a.view_public_key, b.view_public_key
@@ -94,9 +73,6 @@ def addr_eq(a, b):
 def pub_eq(a, b):
     """
     Simple non-constant time public key compare
-    :param a:
-    :param b:
-    :return:
     """
     if a == b:
         return True
@@ -113,8 +89,6 @@ def pub_eq(a, b):
 def get_change_addr_idx(outputs, change_dts):
     """
     Returns ID of the change output from the change_dts and outputs
-    :param tsx_data:
-    :return:
     """
     if change_dts is None:
         return None

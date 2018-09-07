@@ -28,7 +28,6 @@ def net_version(
 ):
     """
     Network version bytes used for address construction
-    :return:
     """
     if is_integrated and is_subaddr:
         raise ValueError("Subaddress cannot be integrated")

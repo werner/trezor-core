@@ -1,8 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-# Author: Dusan Klinec, ph4r05, 2018
-
-
 class TrezorError(Exception):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -11,18 +6,15 @@ class TrezorError(Exception):
 
 
 class TrezorSecurityError(TrezorError):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    pass
 
 
 class TrezorTxPrefixHashNotMatchingError(TrezorError):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    pass
 
 
 class TrezorChangeAddressError(TrezorError):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    pass
 
 
 class StdObj(object):

@@ -34,9 +34,22 @@ Signs a Monero transaction on the TREZOR.
 Key Image is computed with the spend key which is stored on the TREZOR.
 
 In order to detect if the UTXO has been already spent (thus computing balance due to change transactions)
-and correct spending UTXOs the key images are required.
+and correct spending UTXOs the key images are required. Without the key images the Monero view only
+wallet incorrectly computes balance as it sees all ever received transactions as unspent.
 
 Key image sync is a protocol that allows to compute key images for incoming transfers by TREZOR.
+
+Example: 20 XMR in the single UTXO is received, thus real balance is 20. 1 XMR is sent to a different
+address and remaining 19 are sent back with a change transaction. Correct balance is 19 but without
+correct key image the view only wallet shows balance 39. Without knowing which UTXO is spent
+the newly constructed spending transactions can pick already spent input. Such transaction is
+rejected by a Monero daemon as a double spending transaction.
+
+Normally, the Key image sync is not needed as the key image computation is done by
+the transaction signing algorithm. However, if the wallet file is somehow corrupted
+or the wallet is used on a new host / restored from the TREZOR the key
+image sync is required for correct function of the wallet. It recomputes key images
+for all received transaction inputs.
 
 
 ## Integration rationale
@@ -169,7 +182,8 @@ dedicated class so the memory consumption is minimal between round trips.
 
 ### `MoneroTransactionInitRequest`:
 
-- Contains basic construction data for the transaction, e.g., transaction destinations, fee, mixin level.
+- Contains basic construction data for the transaction, e.g., transaction destinations, fee, mixin level,
+range proof details (type of the range proof, batching scheme).
 
 After receiving this message:
 - The TREZOR prompts user for verification of the destination addresses and amounts.
@@ -195,12 +209,24 @@ This message caries permutation on the key images so they are sorted in the desi
 - Contains `MoneroTransactionSourceEntry` and `TxinToKey` computed in the previous step.
 - TREZOR Computes `tx_prefix_hash` is part of the signed data.
 
+
+### `MoneroTransactionAllInputsSetRequest`
+
+- Sent after all inputs have been processed.
+- Mainly used in the range proof offloading to the host. E.g., in case of batched Bulletproofs with more than 2 transaction outputs.
+The message response can carry commitment masks so host can compute range proof correctly.
+
 ### `MoneroTransactionSetOutputRequest`
 
-Sends transaction output, `MoneroTransactionDestinationEntry`, one per message.
-HMAC prevents tampering with previously accepted data (in the init step).
+- Sends transaction output, `MoneroTransactionDestinationEntry`, one per message.
+- HMAC prevents tampering with previously accepted data (in the init step).
+- TREZOR computes data related to transaction output, e.g., range proofs, ECDH info for the receiver, output public key.
+- In case offloaded range proof is used the request can carry computed range proof.
 
-TREZOR computes data related to transaction output, e.g., range proofs, ECDH info for the receiver, output public key.
+### `MoneroTransactionRangeSigRequest`
+
+- Optional protocol message that supports more complicated, several round-trips range proof offloading proposals as described in the [monero-doc].
+- Not used with the basic range proof offloading where the whole range proof is computed on the host.
 
 ### `MoneroTransactionAllOutSetRequest`
 
