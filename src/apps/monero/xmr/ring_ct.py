@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
 # Author: https://github.com/monero-project/mininero
 # Author: Dusan Klinec, ph4r05, 2018
 

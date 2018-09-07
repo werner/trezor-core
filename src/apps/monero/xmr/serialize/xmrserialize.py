@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
 '''
 Minimal streaming codec for a Monero binary serialization.
 Used for a binary serialization in blockchain and for hash computation for signatures.

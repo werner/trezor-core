@@ -1,8 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-# Author: Dusan Klinec, ph4r05, 2018
-
-
 async def monero_get_creds(ctx, address_n=None, network_type=None):
     from apps.common import seed
     from apps.monero.xmr import crypto

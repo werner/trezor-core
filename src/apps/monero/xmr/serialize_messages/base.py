@@ -1,9 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-"""
-XMR types
-"""
-
 from micropython import const
 
 from apps.monero.xmr.serialize.message_types import BlobType

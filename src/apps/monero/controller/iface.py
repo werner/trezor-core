@@ -1,8 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-# Author: Dusan Klinec, ph4r05, 2018
-
-
 class TrezorInterface(object):
     def __init__(self, ctx=None):
         self.ctx = ctx
