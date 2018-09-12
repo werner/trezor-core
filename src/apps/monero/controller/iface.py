@@ -81,7 +81,6 @@ class TrezorInterface:
         from trezor.ui.text import Text
         from trezor import ui
         from trezor import loop
-        from trezor import log
         from trezor import workflow
         from trezor.ui import BACKLIGHT_DIM, BACKLIGHT_NORMAL
 

@@ -49,33 +49,33 @@ def compute_tx_key(spend_key_private, tx_prefix_hash, salt=None, rand_mult=None)
     return tx_key, salt, rand_mult
 
 
-async def parse_msg(bts, msg):
+def parse_msg(bts, msg):
     from apps.monero.xmr.serialize import xmrserialize
     from apps.monero.xmr.serialize.readwriter import MemoryReaderWriter
 
     reader = MemoryReaderWriter(memoryview(bts))
     ar = xmrserialize.Archive(reader, False)
-    return await ar.message(msg)
+    return ar.message(msg)
 
 
-async def parse_vini(bts):
+def parse_vini(bts):
     from apps.monero.xmr.serialize_messages.tx_prefix import TxinToKey
 
-    return await parse_msg(bts, TxinToKey())
+    return parse_msg(bts, TxinToKey())
 
 
-async def dump_msg(msg, preallocate=None, msg_type=None):
+def dump_msg(msg, preallocate=None, msg_type=None):
     from apps.monero.xmr.serialize import xmrserialize
     from apps.monero.xmr.serialize.readwriter import MemoryReaderWriter
 
     writer = MemoryReaderWriter(preallocate=preallocate)
     ar = xmrserialize.Archive(writer, True)
-    await ar.message(msg, msg_type=msg_type)
+    ar.message(msg, msg_type=msg_type)
     return writer.get_buffer()
 
 
-async def dump_msg_gc(msg, preallocate=None, msg_type=None, del_msg=False):
-    b = await dump_msg(msg, preallocate=preallocate, msg_type=msg_type)
+def dump_msg_gc(msg, preallocate=None, msg_type=None, del_msg=False):
+    b = dump_msg(msg, preallocate=preallocate, msg_type=msg_type)
     if del_msg:
         del msg
 

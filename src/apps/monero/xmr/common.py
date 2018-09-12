@@ -1,4 +1,4 @@
-from trezor.crypto import monero, random
+from trezor.crypto import monero
 
 
 class XmrException(Exception):
@@ -41,4 +41,3 @@ def is_empty(inp):
 
 def defval_empty(val, default=None):
     return val if not is_empty(val) else default
-

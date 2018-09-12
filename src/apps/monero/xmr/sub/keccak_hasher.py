@@ -36,19 +36,19 @@ class KeccakXmrArchive:
     def release(self):
         self.ar = None
 
-    async def field(self, elem=None, elem_type=None, params=None, xser=None):
+    def field(self, elem=None, elem_type=None, params=None, xser=None):
         ar = self._ar(xser)
-        return await ar.field(elem, elem_type, params)
+        return ar.field(elem, elem_type, params)
 
-    async def message_field(self, msg, field, fvalue=None, xser=None):
+    def message_field(self, msg, field, fvalue=None, xser=None):
         ar = self._ar(xser)
-        return await ar.message_field(msg, field, fvalue)
+        return ar.message_field(msg, field, fvalue)
 
-    async def container_size(
+    def container_size(
         self, container_len=None, container_type=None, params=None, xser=None
     ):
         ar = self._ar(xser)
-        return await ar.container_size(container_len, container_type, params)
+        return ar.container_size(container_len, container_type, params)
 
 
 class HashWrapper:
@@ -68,15 +68,15 @@ class HashWrapper:
 
 
 class AHashWriter:
-    def __init__(self, hasher, sub_writer=None):
+    def __init__(self, hasher):
         self.hasher = hasher
-        self.sub_writer = sub_writer
+
+    def write(self, buf):
+        self.hasher.update(buf)
+        return len(buf)
 
     async def awrite(self, buf):
-        self.hasher.update(buf)
-        if self.sub_writer:
-            await self.sub_writer.awrite(buf)
-        return len(buf)
+        return self.write(buf)
 
     def get_digest(self, *args) -> bytes:
         return self.hasher.digest(*args)
@@ -85,10 +85,5 @@ class AHashWriter:
         return self.hasher.ctx
 
 
-def get_keccak_writer(sub_writer=None, ctx=None):
-    """
-    Creates new fresh async Keccak writer
-    """
-    return AHashWriter(
-        HashWrapper(crypto.get_keccak() if ctx is None else ctx), sub_writer=sub_writer
-    )
+def get_keccak_writer(ctx=None):
+    return AHashWriter(HashWrapper(crypto.get_keccak() if ctx is None else ctx))

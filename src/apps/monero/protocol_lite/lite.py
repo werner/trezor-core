@@ -1,5 +1,4 @@
 import gc
-import micropython
 import ustruct
 
 from trezor import log

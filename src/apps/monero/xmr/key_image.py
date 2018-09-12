@@ -19,7 +19,7 @@ def compute_hash(rr):
     return kck.digest()
 
 
-async def export_key_image(creds, subaddresses, td):
+def export_key_image(creds, subaddresses, td):
     """
     Key image export
     :param creds:

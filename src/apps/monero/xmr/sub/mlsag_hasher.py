@@ -47,10 +47,10 @@ class PreMlsagHasher:
         self.state = 1
         self.is_simple = is_simple
 
-    async def set_message(self, message):
+    def set_message(self, message):
         self.kc_master.update(message)
 
-    async def set_type_fee(self, rv_type, fee):
+    def set_type_fee(self, rv_type, fee):
         if self.state != 1:
             raise ValueError("State error")
         self.state = 2
@@ -58,37 +58,37 @@ class PreMlsagHasher:
         from apps.monero.xmr.serialize_messages.tx_full import RctSigBase
 
         rfields = RctSigBase.f_specs()
-        await self.rtcsig_hasher.message_field(None, field=rfields[0], fvalue=rv_type)
-        await self.rtcsig_hasher.message_field(None, field=rfields[1], fvalue=fee)
+        self.rtcsig_hasher.message_field(None, field=rfields[0], fvalue=rv_type)
+        self.rtcsig_hasher.message_field(None, field=rfields[1], fvalue=fee)
 
-    async def set_pseudo_out(self, out):
+    def set_pseudo_out(self, out):
         if self.state != 2 and self.state != 3:
             raise ValueError("State error")
         self.state = 3
 
         from apps.monero.xmr.serialize_messages.ct_keys import KeyV
 
-        await self.rtcsig_hasher.field(out, KeyV.ELEM_TYPE)
+        self.rtcsig_hasher.field(out, KeyV.ELEM_TYPE)
 
-    async def set_ecdh(self, ecdh):
+    def set_ecdh(self, ecdh):
         if self.state != 2 and self.state != 3 and self.state != 4:
             raise ValueError("State error")
         self.state = 4
 
         from apps.monero.xmr.serialize_messages.tx_ecdh import EcdhInfo
 
-        await self.rtcsig_hasher.field(ecdh, EcdhInfo.ELEM_TYPE)
+        self.rtcsig_hasher.field(ecdh, EcdhInfo.ELEM_TYPE)
 
-    async def set_out_pk(self, out_pk, mask=None):
+    def set_out_pk(self, out_pk, mask=None):
         if self.state != 4 and self.state != 5:
             raise ValueError("State error")
         self.state = 5
 
         from apps.monero.xmr.serialize_messages.base import ECKey
 
-        await self.rtcsig_hasher.field(mask if mask else out_pk.mask, ECKey)
+        self.rtcsig_hasher.field(mask if mask else out_pk.mask, ECKey)
 
-    async def rctsig_base_done(self):
+    def rctsig_base_done(self):
         if self.state != 5:
             raise ValueError("State error")
         self.state = 6
@@ -97,7 +97,7 @@ class PreMlsagHasher:
         self.kc_master.update(c_hash)
         self.rtcsig_hasher = None
 
-    async def rsig_val(self, p, bulletproof, raw=False):
+    def rsig_val(self, p, bulletproof, raw=False):
         if self.state == 8:
             raise ValueError("State error")
 
@@ -129,7 +129,7 @@ class PreMlsagHasher:
             for i in range(64):
                 self.rsig_hasher.update(p.Ci[i])
 
-    async def get_digest(self):
+    def get_digest(self):
         if self.state != 6:
             raise ValueError("State error")
         self.state = 8

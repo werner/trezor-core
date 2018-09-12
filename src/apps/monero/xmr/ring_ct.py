@@ -15,9 +15,9 @@ def bp_size(outputs):
     return 32 * (21 + outputs + 2 * logM)
 
 
-async def prove_range_bp(amount, last_mask=None):
+def prove_range_bp(amount, last_mask=None):
     mask = last_mask if last_mask is not None else crypto.random_scalar()
-    bp_proof = await prove_range_bp_batch([amount], [mask])
+    bp_proof = prove_range_bp_batch([amount], [mask])
 
     C = crypto.decodepoint(bp_proof.V[0])
     C = crypto.point_mul8(C)
@@ -30,7 +30,7 @@ async def prove_range_bp(amount, last_mask=None):
     return C, mask, bp_proof
 
 
-async def prove_range_bp_batch(amounts, masks):
+def prove_range_bp_batch(amounts, masks):
     from apps.monero.xmr import bulletproof as bp
 
     bpi = bp.BulletProofBuilder()
@@ -41,7 +41,7 @@ async def prove_range_bp_batch(amounts, masks):
     return bp_proof
 
 
-async def verify_bp(bp_proof, amounts=None, masks=None):
+def verify_bp(bp_proof, amounts=None, masks=None):
     from apps.monero.xmr import bulletproof as bp
 
     if amounts:

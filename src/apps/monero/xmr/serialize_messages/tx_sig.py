@@ -16,7 +16,7 @@ class Signature(MessageType):
     def f_specs(cls):
         return (("c", ECKey), ("r", ECKey))
 
-    async def serialize_archive(self, ar):
+    def serialize_archive(self, ar):
         ar.field(eref(self, "c"), ECKey)
         ar.field(eref(self, "r"), ECKey)
         return self

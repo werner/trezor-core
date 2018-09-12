@@ -39,14 +39,14 @@ class RctSigBase(MessageType):
             ("outPk", CtkeyV),
         )
 
-    async def serialize_rctsig_base(self, ar, inputs, outputs):
+    def serialize_rctsig_base(self, ar, inputs, outputs):
         """
         Custom serialization
         :param ar:
         :type ar: x.Archive
         :return:
         """
-        await self._msg_field(ar, idx=0)
+        self._msg_field(ar, idx=0)
         if self.type == RctType.Null:
             return
         if (
@@ -57,25 +57,25 @@ class RctSigBase(MessageType):
         ):
             raise ValueError("Unknown type")
 
-        await self._msg_field(ar, idx=1)
+        self._msg_field(ar, idx=1)
         if self.type == RctType.Simple:
-            await ar.prepare_container(inputs, eref(self, "pseudoOuts"), KeyV)
+            ar.prepare_container(inputs, eref(self, "pseudoOuts"), KeyV)
             if ar.writing and len(self.pseudoOuts) != inputs:
                 raise ValueError("pseudoOuts size mismatch")
 
             for i in range(inputs):
-                await ar.field(eref(self.pseudoOuts, i), KeyV.ELEM_TYPE)
+                ar.field(eref(self.pseudoOuts, i), KeyV.ELEM_TYPE)
 
-        await ar.prepare_container(outputs, eref(self, "ecdhInfo"), EcdhTuple)
+        ar.prepare_container(outputs, eref(self, "ecdhInfo"), EcdhTuple)
         if ar.writing and len(self.ecdhInfo) != outputs:
             raise ValueError("EcdhInfo size mismatch")
 
         for i in range(outputs):
-            await ar.field(eref(self.ecdhInfo, i), EcdhInfo.ELEM_TYPE)
+            ar.field(eref(self.ecdhInfo, i), EcdhInfo.ELEM_TYPE)
 
-        await ar.prepare_container((outputs), eref(self, "outPk"), CtKey)
+        ar.prepare_container((outputs), eref(self, "outPk"), CtKey)
         if ar.writing and len(self.outPk) != outputs:
             raise ValueError("outPk size mismatch")
 
         for i in range(outputs):
-            await ar.field(eref(self.outPk[i], "mask"), ECKey)
+            ar.field(eref(self.outPk[i], "mask"), ECKey)

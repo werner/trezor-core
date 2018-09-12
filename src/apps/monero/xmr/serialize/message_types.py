@@ -102,8 +102,8 @@ class MessageType(XmrType):
             fld = specs[idx]
         return fld
 
-    async def _msg_field(self, ar, fname=None, idx=None, **kwargs):
-        return await ar.message_field(self, self._field(fname=fname, idx=idx), **kwargs)
+    def _msg_field(self, ar, fname=None, idx=None, **kwargs):
+        return ar.message_field(self, self._field(fname=fname, idx=idx), **kwargs)
 
 
 def container_elem_type(container_type, params):

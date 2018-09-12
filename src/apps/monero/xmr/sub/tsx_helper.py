@@ -9,7 +9,7 @@ from apps.monero.xmr.serialize_messages.tx_extra import (
 )
 
 
-async def parse_extra_fields(extra_buff):
+def parse_extra_fields(extra_buff):
     """
     Parses extra buffer to the extra fields vector
     """
@@ -17,7 +17,7 @@ async def parse_extra_fields(extra_buff):
     rw = MemoryReaderWriter(extra_buff)
     ar2 = xmrserialize.Archive(rw, False)
     while len(rw.get_buffer()) > 0:
-        extras.append(await ar2.variant(elem_type=TxExtraField))
+        extras.append(ar2.variant(elem_type=TxExtraField))
     return extras
 
 
@@ -134,7 +134,7 @@ def set_encrypted_payment_id_to_tx_extra_nonce(payment_id):
     return b"\x01" + payment_id
 
 
-async def remove_field_from_tx_extra(extra, mtype):
+def remove_field_from_tx_extra(extra, mtype):
     """
     Removes extra field of fiven type from the buffer
     Reserializes with skipping the given mtype.
@@ -147,9 +147,9 @@ async def remove_field_from_tx_extra(extra, mtype):
     ar_read = xmrserialize.Archive(reader, False)
     ar_write = xmrserialize.Archive(writer, True)
     while len(reader.get_buffer()) > 0:
-        c_extras = await ar_read.variant(elem_type=TxExtraField)
+        c_extras = ar_read.variant(elem_type=TxExtraField)
         if not isinstance(c_extras, mtype):
-            await ar_write.variant(c_extras, elem_type=TxExtraField)
+            ar_write.variant(c_extras, elem_type=TxExtraField)
 
     return writer.get_buffer()
 
@@ -174,7 +174,7 @@ def add_tx_pub_key_to_extra(tx_extra, pub_key):
     return tx_extra + to_add
 
 
-async def add_additional_tx_pub_keys_to_extra(
+def add_additional_tx_pub_keys_to_extra(
     tx_extra, additional_pub_keys=None, pub_enc=None
 ):
     """
@@ -190,6 +190,6 @@ async def add_additional_tx_pub_keys_to_extra(
     ar = xmrserialize.Archive(rw, True)
 
     # format: variant_tag (0x4) | array len varint | 32B | 32B | ...
-    await ar.variant(pubs_msg, TxExtraField)
+    ar.variant(pubs_msg, TxExtraField)
     tx_extra += bytes(rw.get_buffer())
     return tx_extra

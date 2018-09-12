@@ -99,7 +99,7 @@ async def tsx_input_vini(tsx, msg):
     """
     from apps.monero.controller.misc import parse_vini
 
-    vini = await parse_vini(msg.vini)
+    vini = parse_vini(msg.vini)
     del msg.vini
 
     return await tsx.input_vini(
@@ -154,7 +154,7 @@ async def tsx_sign_input(tsx, msg):
     """
     from apps.monero.controller.misc import parse_vini
 
-    vini = await parse_vini(msg.vini)
+    vini = parse_vini(msg.vini)
     del msg.vini
 
     return await tsx.sign_input(

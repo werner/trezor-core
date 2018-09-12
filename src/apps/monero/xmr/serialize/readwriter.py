@@ -38,7 +38,7 @@ class MemoryReaderWriter:
         self.offset = 0
         self.woffset = 0
 
-    async def areadinto(self, buf):
+    def readinto(self, buf):
         ln = len(buf)
         if not self.read_empty and ln > 0 and self.offset == len(self.buffer):
             raise EOFError
@@ -62,7 +62,10 @@ class MemoryReaderWriter:
 
         return nread
 
-    async def awrite(self, buf):
+    async def areadinto(self, buf):
+        return self.readinto(buf)
+
+    def write(self, buf):
         nwritten = len(buf)
         nall = len(self.buffer)
         towrite = nwritten
@@ -94,6 +97,9 @@ class MemoryReaderWriter:
         self.nwritten += nwritten
         self.ndata += nwritten
         return nwritten
+
+    async def awrite(self, buf):
+        return self.write(buf)
 
     def get_buffer(self):
         mv = memoryview(self.buffer)

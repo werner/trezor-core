@@ -83,9 +83,7 @@ class KeyImageSync:
             chash = key_image.compute_hash(td)
 
             self.hasher.update(chash)
-            ki, sig = await key_image.export_key_image(
-                self.creds, self.subaddresses, td
-            )
+            ki, sig = key_image.export_key_image(self.creds, self.subaddresses, td)
 
             crypto.encodepoint_into(buff_mv[0:32], ki)
             crypto.encodeint_into(buff_mv[32:64], sig[0][0])
