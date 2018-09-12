@@ -420,7 +420,7 @@ class TTransactionBuilder:
         hmac_vini = crypto.compute_hmac(hmac_key_vini, kwriter.get_digest())
         return hmac_vini
 
-    async def gen_hmac_vouti(self, dst_entr, tx_out, idx):
+    async def gen_hmac_vouti(self, dst_entr, tx_out_bin, idx):
         """
         Generates HMAC for (TxDestinationEntry[i] || tx.vout[i])
         :param dst_entr:
@@ -430,13 +430,10 @@ class TTransactionBuilder:
         """
         import protobuf
         from apps.monero.xmr.sub.keccak_hasher import get_keccak_writer
-        from apps.monero.xmr.serialize import xmrserialize
-        from apps.monero.xmr.serialize_messages.tx_prefix import TxOut
 
         kwriter = get_keccak_writer()
         await protobuf.dump_message(kwriter, dst_entr)
-        ar = xmrserialize.Archive(kwriter, True)
-        ar.message(tx_out, TxOut)
+        kwriter.write(tx_out_bin)
 
         hmac_key_vouti = self.hmac_key_txout(idx)
         hmac_vouti = crypto.compute_hmac(hmac_key_vouti, kwriter.get_digest())
@@ -1215,22 +1212,25 @@ class TTransactionBuilder:
         return derivation
 
     async def _set_out1_tx_out(self, dst_entr, tx_out_key):
-        from apps.monero.xmr.serialize_messages.tx_prefix import TxoutToKey
-        from apps.monero.xmr.serialize_messages.tx_prefix import TxOut
+        from apps.monero.xmr.serialize import xmrserialize
+        from apps.monero.xmr.serialize.readwriter import MemoryReaderWriter
 
-        tk = TxoutToKey(key=crypto.encodepoint(tx_out_key))
-        tx_out = TxOut(amount=0, target=tk)
+        # Manual serialization of TxOut(0, TxoutToKey(key))
+        writer = MemoryReaderWriter(preallocate=34)
+        xmrserialize.dump_uvarint(writer, 0)  # amount
+        xmrserialize.dump_uint(writer, 2, 1)  # variant code TxoutToKey
+        writer.write(crypto.encodepoint(tx_out_key))
+        tx_out_bin = writer.get_buffer()
+        del(writer, xmrserialize)
         self._mem_trace(8)
 
         # Tx header prefix hashing
-        self.tx_prefix_hasher.field(tx_out, TxOut)
+        self.tx_prefix_hasher.buffer(tx_out_bin)
         self._mem_trace(9, True)
 
         # Hmac dest_entr.
-        hmac_vouti = await self.gen_hmac_vouti(dst_entr, tx_out, self.out_idx)
+        hmac_vouti = await self.gen_hmac_vouti(dst_entr, tx_out_bin, self.out_idx)
         self._mem_trace(10, True)
-
-        tx_out_bin = misc.dump_msg(tx_out, preallocate=34)
         return tx_out_bin, hmac_vouti
 
     async def set_out1(self, dst_entr, dst_entr_hmac, rsig_data=None):

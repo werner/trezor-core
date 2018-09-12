@@ -36,6 +36,9 @@ class KeccakXmrArchive:
     def release(self):
         self.ar = None
 
+    def buffer(self, buf):
+        return self.kwriter.write(buf)
+
     def field(self, elem=None, elem_type=None, params=None, xser=None):
         ar = self._ar(xser)
         return ar.field(elem, elem_type, params)
