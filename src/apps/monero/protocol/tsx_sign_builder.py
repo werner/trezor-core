@@ -457,13 +457,10 @@ class TTransactionBuilder:
         return hmac_tsxdest
 
     def _tprefix_update(self):
-        from apps.monero.xmr.serialize_messages.tx_prefix import TransactionPrefix
-
-        tx_fields = TransactionPrefix.f_specs()
         self.tx_prefix_hasher.keep()
-        self.tx_prefix_hasher.message_field(self.tx, tx_fields[0])
-        self.tx_prefix_hasher.message_field(self.tx, tx_fields[1])
-        self.tx_prefix_hasher.container_size(self.num_inputs(), tx_fields[2][1])
+        self.tx_prefix_hasher.uvarint(self.tx.version)
+        self.tx_prefix_hasher.uvarint(self.tx.unlock_time)
+        self.tx_prefix_hasher.container_size(self.num_inputs())  # ContainerType
         self.tx_prefix_hasher.release()
         self._mem_trace(10, True)
 
