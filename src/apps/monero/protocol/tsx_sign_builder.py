@@ -1306,7 +1306,7 @@ class TTransactionBuilder:
         # Incremental hashing of the ECDH info.
         # RctSigBase allows to hash only one of the (ecdh, out_pk) as they are serialized
         # as whole vectors. Hashing ECDH info saves state space.
-        self.full_message_hasher.set_ecdh(ecdh_info_bin, True)
+        self.full_message_hasher.set_ecdh(ecdh_info_bin)
         self._mem_trace(13, True)
 
         # Output_pk is stored to the state as it is used during the signature and hashed to the

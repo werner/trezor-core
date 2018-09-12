@@ -117,14 +117,14 @@ class Archive:
         else:
             return load_uvarint(self.iobj)
 
-    def uint(self, elem, elem_type, params=None):
+    def uint(self, elem, elem_type=None, width=None):
         """
         Fixed size int
         """
         if self.writing:
-            return dump_uint(self.iobj, elem, elem_type.WIDTH)
+            return dump_uint(self.iobj, elem, width if width else elem_type.WIDTH)
         else:
-            return load_uint(self.iobj, elem_type.WIDTH)
+            return load_uint(self.iobj, width if width else elem_type.WIDTH)
 
     def unicode_type(self, elem):
         """

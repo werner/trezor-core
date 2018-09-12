@@ -39,6 +39,14 @@ class KeccakXmrArchive:
     def buffer(self, buf):
         return self.kwriter.write(buf)
 
+    def uvarint(self, i):
+        ar = self._ar(None)
+        ar.uvarint(i)
+
+    def uint(self, i, width):
+        ar = self._ar(None)
+        ar.uint(i, width=width)
+
     def field(self, elem=None, elem_type=None, params=None, xser=None):
         ar = self._ar(xser)
         return ar.field(elem, elem_type, params)

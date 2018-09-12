@@ -54,12 +54,8 @@ class PreMlsagHasher:
         if self.state != 1:
             raise ValueError("State error")
         self.state = 2
-
-        from apps.monero.xmr.serialize_messages.tx_full import RctSigBase
-
-        rfields = RctSigBase.f_specs()
-        self.rtcsig_hasher.message_field(None, field=rfields[0], fvalue=rv_type)
-        self.rtcsig_hasher.message_field(None, field=rfields[1], fvalue=fee)
+        self.rtcsig_hasher.uint(rv_type, 1)  # UInt8
+        self.rtcsig_hasher.uvarint(fee)  # UVarintType
 
     def set_pseudo_out(self, out):
         if self.state != 2 and self.state != 3:
@@ -70,26 +66,17 @@ class PreMlsagHasher:
 
         self.rtcsig_hasher.field(out, KeyV.ELEM_TYPE)
 
-    def set_ecdh(self, ecdh, raw=False):
+    def set_ecdh(self, ecdh):
         if self.state != 2 and self.state != 3 and self.state != 4:
             raise ValueError("State error")
         self.state = 4
+        self.rtcsig_hasher.buffer(ecdh)
 
-        if raw:
-            self.rtcsig_hasher.buffer(ecdh)
-        else:
-            from apps.monero.xmr.serialize_messages.tx_ecdh import EcdhInfo
-
-            self.rtcsig_hasher.field(ecdh, EcdhInfo.ELEM_TYPE)
-
-    def set_out_pk(self, out_pk, mask=None):
+    def set_out_pk(self, out_pk):
         if self.state != 4 and self.state != 5:
             raise ValueError("State error")
         self.state = 5
-
-        from apps.monero.xmr.serialize_messages.base import ECKey
-
-        self.rtcsig_hasher.field(mask if mask else out_pk.mask, ECKey)
+        self.rtcsig_hasher.buffer(out_pk.mask)  # ECKey
 
     def rctsig_base_done(self):
         if self.state != 5:
