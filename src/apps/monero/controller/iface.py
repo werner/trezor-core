@@ -87,23 +87,14 @@ class TrezorInterface(object):
 
         await ui.backlight_slide(BACKLIGHT_DIM)
         slide = ui.backlight_slide(BACKLIGHT_NORMAL)
-        # await ui.backlight_slide(BACKLIGHT_NORMAL)
 
         text = Text("Signing transaction", ui.ICON_SEND, icon_color=ui.BLUE)
         text.normal("Signing...")
 
-        try:
-            layout = await layout.simple_text(text, tm=500)
-            log.debug(__name__, "layout: %s", layout)
-            workflow.closedefault()
-            workflow.onlayoutstart(layout)
-            loop.schedule(slide)
-            # display.clear()
-
-        finally:
-            pass
-            # loop.close(slide)
-            # workflow.onlayoutclose(layout)
+        layout = await layout.simple_text(text, tm=500)
+        workflow.closedefault()
+        workflow.onlayoutstart(layout)
+        loop.schedule(slide)
 
         await loop.sleep(200 * 1000)
         return True
