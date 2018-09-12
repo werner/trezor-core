@@ -1212,14 +1212,11 @@ class TTransactionBuilder:
         return derivation
 
     async def _set_out1_tx_out(self, dst_entr, tx_out_key):
-        from apps.monero.xmr.serialize.readwriter import MemoryReaderWriter
-
         # Manual serialization of TxOut(0, TxoutToKey(key))
-        writer = MemoryReaderWriter(preallocate=34)
-        writer.write(b"\x00\x02")  # amount, variant code TxoutToKey
-        writer.write(crypto.encodepoint(tx_out_key))
-        tx_out_bin = writer.get_buffer()
-        del(writer)
+        tx_out_bin = bytearray(34)
+        tx_out_bin[0] = 0  # amount varint
+        tx_out_bin[1] = 2  # variant code TxoutToKey
+        crypto.encodepoint_into(tx_out_bin, tx_out_key, 2)
         self._mem_trace(8)
 
         # Tx header prefix hashing
