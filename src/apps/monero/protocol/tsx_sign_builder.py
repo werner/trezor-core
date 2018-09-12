@@ -1147,11 +1147,10 @@ class TTransactionBuilder:
 
         # ECDH masking
         from apps.monero.xmr.sub.recode import recode_ecdh
-        from apps.monero.xmr.serialize_messages.tx_ecdh import EcdhTuple
 
-        ecdh_info = EcdhTuple(mask=mask, amount=crypto.sc_init(amount))
-        ecdh_info = ring_ct.ecdh_encode(
-            ecdh_info, derivation=crypto.encodeint(amount_key)
+        ecdh_info = misc.StdObj(mask=mask, amount=crypto.sc_init(amount))
+        ring_ct.ecdh_encode_into(
+            ecdh_info, ecdh_info, derivation=crypto.encodeint(amount_key)
         )
         recode_ecdh(ecdh_info, encode=True)
         gc.collect()
@@ -1300,11 +1299,14 @@ class TTransactionBuilder:
             amount_key=amount_key,
         )
         self._mem_trace(12, True)
+        ecdh_info_bin = bytearray(64)
+        utils.memcpy(ecdh_info_bin, 0, ecdh_info.mask, 0, 32)
+        utils.memcpy(ecdh_info_bin, 32, ecdh_info.amount, 0, 32)
 
         # Incremental hashing of the ECDH info.
         # RctSigBase allows to hash only one of the (ecdh, out_pk) as they are serialized
         # as whole vectors. Hashing ECDH info saves state space.
-        self.full_message_hasher.set_ecdh(ecdh_info)
+        self.full_message_hasher.set_ecdh(ecdh_info_bin, True)
         self._mem_trace(13, True)
 
         # Output_pk is stored to the state as it is used during the signature and hashed to the
@@ -1315,14 +1317,17 @@ class TTransactionBuilder:
         from trezor.messages.MoneroTransactionSetOutputAck import (
             MoneroTransactionSetOutputAck
         )
-        from apps.monero.xmr.serialize_messages.ct_keys import CtKey
+
+        out_pk_bin = bytearray(64)
+        utils.memcpy(out_pk_bin, 0, out_pk.dest, 0, 32)
+        utils.memcpy(out_pk_bin, 32, out_pk.mask, 0, 32)
 
         return MoneroTransactionSetOutputAck(
             tx_out=tx_out_bin,
             vouti_hmac=hmac_vouti,
             rsig_data=self._return_rsig_data(rsig),
-            out_pk=misc.dump_msg(out_pk, preallocate=64, msg_type=CtKey),
-            ecdh_info=misc.dump_msg(ecdh_info, preallocate=64),
+            out_pk=out_pk_bin,
+            ecdh_info=ecdh_info_bin,
         )
 
     def all_out1_set_tx_extra(self):

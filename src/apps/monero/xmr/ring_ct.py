@@ -111,7 +111,7 @@ def prove_range(
 #   verifies the above sig is created corretly
 
 
-def ecdh_encode(unmasked, receiver_pk=None, derivation=None):
+def ecdh_encode_into(dst, unmasked, receiver_pk=None, derivation=None):
     """
     Elliptic Curve Diffie-Helman: encodes and decodes the amount b and mask a
     where C= aG + bH
@@ -120,20 +120,17 @@ def ecdh_encode(unmasked, receiver_pk=None, derivation=None):
     :param derivation:
     :return:
     """
-    from apps.monero.xmr.serialize_messages.tx_ecdh import EcdhTuple
-
-    rv = EcdhTuple()
     if derivation is None:
         esk = crypto.random_scalar()
-        rv.senderPk = crypto.scalarmult_base(esk)
+        dst.senderPk = crypto.scalarmult_base(esk)
         derivation = crypto.encodepoint(crypto.scalarmult(receiver_pk, esk))
 
     sharedSec1 = crypto.hash_to_scalar(derivation)
     sharedSec2 = crypto.hash_to_scalar(crypto.encodeint(sharedSec1))
 
-    rv.mask = crypto.sc_add(unmasked.mask, sharedSec1)
-    rv.amount = crypto.sc_add(unmasked.amount, sharedSec2)
-    return rv
+    dst.mask = crypto.sc_add(unmasked.mask, sharedSec1)
+    dst.amount = crypto.sc_add(unmasked.amount, sharedSec2)
+    return dst
 
 
 def ecdh_decode(masked, receiver_sk=None, derivation=None):

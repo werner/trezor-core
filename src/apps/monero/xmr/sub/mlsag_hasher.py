@@ -70,14 +70,17 @@ class PreMlsagHasher:
 
         self.rtcsig_hasher.field(out, KeyV.ELEM_TYPE)
 
-    def set_ecdh(self, ecdh):
+    def set_ecdh(self, ecdh, raw=False):
         if self.state != 2 and self.state != 3 and self.state != 4:
             raise ValueError("State error")
         self.state = 4
 
-        from apps.monero.xmr.serialize_messages.tx_ecdh import EcdhInfo
+        if raw:
+            self.rtcsig_hasher.buffer(ecdh)
+        else:
+            from apps.monero.xmr.serialize_messages.tx_ecdh import EcdhInfo
 
-        self.rtcsig_hasher.field(ecdh, EcdhInfo.ELEM_TYPE)
+            self.rtcsig_hasher.field(ecdh, EcdhInfo.ELEM_TYPE)
 
     def set_out_pk(self, out_pk, mask=None):
         if self.state != 4 and self.state != 5:
