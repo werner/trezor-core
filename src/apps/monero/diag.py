@@ -8,7 +8,6 @@ if __debug__:
     PREV_MEM = gc.mem_free()
     CUR_MES = 0
 
-
     def log_trace(x=None):
         log.debug(
             __name__,
@@ -18,7 +17,6 @@ if __debug__:
             gc.mem_alloc(),
             micropython.stack_use(),
         )
-
 
     def check_mem(x=""):
         global PREV_MEM, CUR_MES
@@ -37,12 +35,10 @@ if __debug__:
         CUR_MES += 1
         PREV_MEM = free
 
-
     def retit(**kwargs):
         from trezor.messages.Failure import Failure
 
         return Failure(**kwargs)
-
 
     async def diag(ctx, msg, **kwargs):
         log.debug(__name__, "----diagnostics")
