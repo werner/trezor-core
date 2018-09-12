@@ -55,8 +55,8 @@ def import_def(module, name):
     if module not in sys.modules:
         if not module.startswith("apps.monero"):
             raise ValueError("Module not allowed: %s" % module)
-
-        log.debug(__name__, "Importing: from %s import %s", module, name)
+        if __debug__:
+            log.debug(__name__, "Importing: from %s import %s", module, name)
         __import__(module, None, None, (name,), 0)
 
     r = getattr(sys.modules[module], name)
@@ -300,14 +300,15 @@ class Archive(object):
             m = elem_type.__module__
             r = import_def(m, cname)
             sub_test = issubclass(r, XmrType)
-            log.debug(
-                __name__,
-                "resolved %s, sub: %s, id_e: %s, id_mod: %s",
-                r,
-                sub_test,
-                id(r),
-                id(sys.modules[m]),
-            )
+            if __debug__:
+                log.debug(
+                    __name__,
+                    "resolved %s, sub: %s, id_e: %s, id_mod: %s",
+                    r,
+                    sub_test,
+                    id(r),
+                    id(sys.modules[m]),
+                )
             if not sub_test:
                 log.warning(__name__, "resolution hierarchy broken")
 

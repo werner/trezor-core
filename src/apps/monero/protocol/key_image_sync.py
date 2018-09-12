@@ -60,7 +60,8 @@ class KeyImageSync(object):
         from trezor.messages.MoneroExportedKeyImage import MoneroExportedKeyImage
         from trezor.messages.MoneroKeyImageSyncStepAck import MoneroKeyImageSyncStepAck
 
-        log.debug(__name__, "ki_sync, step i")
+        if __debug__:
+            log.debug(__name__, "ki_sync, step i")
 
         self.ctx = ctx
         if self.blocked:
@@ -77,7 +78,8 @@ class KeyImageSync(object):
             if self.c_idx >= self.num:
                 raise ValueError("Too many outputs")
 
-            log.debug(__name__, "ki_sync, step i: %d", self.c_idx)
+            if __debug__:
+                log.debug(__name__, "ki_sync, step i: %d", self.c_idx)
             chash = key_image.compute_hash(td)
 
             self.hasher.update(chash)

@@ -65,14 +65,14 @@ class LiteProtocol(object):
         self.r_len = 0
 
     def _log_trace(self, x=None, collect=False):
-        log.debug(
-            __name__,
-            "Log trace %s, ... F: %s A: %s, S: %s",
-            x,
-            gc.mem_free(),
-            gc.mem_alloc(),
-            micropython.stack_use(),
-        )
+        if __debug__:
+            log.debug(
+                __name__,
+                "Log trace %s, ... F: %s A: %s",
+                x,
+                gc.mem_free(),
+                gc.mem_alloc(),
+            )
         if collect:
             gc.collect()
 
@@ -642,7 +642,9 @@ class LiteProtocol(object):
 
         sw = 0x6F01
         try:
-            log.debug(__name__, "Ins: %s, %s %s", ins, p1, p2)
+            if __debug__:
+                log.debug(__name__, "Ins: %s, %s %s", ins, p1, p2)
+
             sw = await self._sub_dispatch(ins, p1)
         except Exception as e:
             log.error(__name__, "Exception dispatching: %s", e)

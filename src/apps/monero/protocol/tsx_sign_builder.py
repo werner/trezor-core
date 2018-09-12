@@ -152,14 +152,14 @@ class TTransactionBuilder(object):
         return t
 
     def _log_trace(self, x=None, collect=False):
-        log.debug(
-            __name__,
-            "Log trace: %s, ... F: %s A: %s",
-            x,
-            gc.mem_free(),
-            gc.mem_alloc(),
-            # micropython.stack_use(),
-        )
+        if __debug__:
+            log.debug(
+                __name__,
+                "Log trace: %s, ... F: %s A: %s",
+                x,
+                gc.mem_free(),
+                gc.mem_alloc(),
+            )
         if collect:
             gc.collect()
 
