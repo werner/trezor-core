@@ -178,7 +178,7 @@ def generate_ring_signature(prefix_hash, image, pubs, sec, sec_idx, test=False):
     :param test:
     :return:
     """
-    from apps.monero.xmr.common import memcpy
+    from trezor.utils import memcpy
 
     if test:
         from apps.monero.xmr import monero
@@ -250,7 +250,7 @@ def check_ring_singature(prefix_hash, image, pubs, sig):
     :param sig:
     :return:
     """
-    from apps.monero.xmr.common import memcpy
+    from trezor.utils import memcpy
 
     image_unp = crypto.ge_frombytes_vartime(image)
     image_pre = crypto.ge_dsm_precomp(image_unp)
