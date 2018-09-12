@@ -470,12 +470,11 @@ class TTransactionBuilder(object):
         self.tx_prefix_hasher.release()
         self._log_trace(10, True)
 
-    async def init_transaction(self, tsx_data, tsx_ctr):
+    async def init_transaction(self, tsx_data):
         """
         Initializes a new transaction.
         :param tsx_data:
         :type tsx_data: TsxData
-        :param tsx_ctr:
         :return:
         """
         from apps.monero.xmr.sub.addr import classify_subaddresses
@@ -543,7 +542,7 @@ class TTransactionBuilder(object):
         self.tx.version = 2
         self.tx.unlock_time = tsx_data.unlock_time
         await self.process_payment_id(tsx_data)
-        await self.compute_sec_keys(tsx_data, tsx_ctr)
+        await self.compute_sec_keys(tsx_data)
         gc.collect()
 
         # Iterative tx_prefix_hash hash computation
@@ -618,19 +617,17 @@ class TTransactionBuilder(object):
 
         self.tx.extra = tsx_helper.add_extra_nonce_to_tx_extra(b"", extra_nonce)
 
-    async def compute_sec_keys(self, tsx_data, tsx_ctr):
+    async def compute_sec_keys(self, tsx_data):
         """
-        Generate master key H(TsxData || r || c_tsx)
+        Generate master key H(TsxData || r)
         :return:
         """
         import protobuf
         from apps.monero.xmr.sub.keccak_hasher import get_keccak_writer
-        from apps.monero.xmr.serialize import xmrserialize
 
         writer = get_keccak_writer()
         await protobuf.dump_message(writer, tsx_data)
         await writer.awrite(crypto.encodeint(self.r))
-        await xmrserialize.dump_uvarint(writer, tsx_ctr)
 
         self.key_master = crypto.keccak_2hash(
             writer.get_digest() + crypto.encodeint(crypto.random_scalar())

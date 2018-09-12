@@ -70,7 +70,7 @@ async def sign_tx_dispatch(tsx, msg):
 
 
 async def tsx_init(tsx, tsx_data):
-    return await tsx.init_transaction(tsx_data, 1)  # TODO: remove counter
+    return await tsx.init_transaction(tsx_data)
 
 
 async def tsx_set_input(tsx, msg):
