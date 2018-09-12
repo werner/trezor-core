@@ -29,8 +29,8 @@ class TTransactionBuilder(object):
     STEP_MLSAG = const(600)
     STEP_SIGN = const(700)
 
-    def __init__(self, trezor=None, creds=None, state=None, **kwargs):
-        self.trezor = trezor
+    def __init__(self, iface=None, creds=None, state=None, **kwargs):
+        self.iface = iface
         self.creds = creds
         self.key_master = None
         self.key_hmac = None
@@ -485,7 +485,7 @@ class TTransactionBuilder(object):
         self._log_trace(1)
 
         # Ask for confirmation
-        confirmation = await self.trezor.iface.confirm_transaction(tsx_data, self.creds)
+        confirmation = await self.iface.confirm_transaction(tsx_data, self.creds)
         if not confirmation:
             from trezor.messages import FailureType
             from trezor.messages.Failure import Failure
@@ -671,7 +671,7 @@ class TTransactionBuilder(object):
         self.state.input()
         self.inp_idx += 1
 
-        await self.trezor.iface.transaction_step(
+        await self.iface.transaction_step(
             self.STEP_INP, self.inp_idx, self.num_inputs()
         )
 
@@ -797,7 +797,7 @@ class TTransactionBuilder(object):
             MoneroTransactionInputsPermutationAck
         )
 
-        await self.trezor.iface.transaction_step(self.STEP_PERM)
+        await self.iface.transaction_step(self.STEP_PERM)
 
         if self.in_memory():
             return
@@ -858,7 +858,7 @@ class TTransactionBuilder(object):
             MoneroTransactionInputViniAck
         )
 
-        await self.trezor.iface.transaction_step(
+        await self.iface.transaction_step(
             self.STEP_VINI, self.inp_idx + 1, self.num_inputs()
         )
 
@@ -921,7 +921,7 @@ class TTransactionBuilder(object):
         """
         self._log_trace(0)
         self.state.input_all_done()
-        await self.trezor.iface.transaction_step(self.STEP_ALL_IN)
+        await self.iface.transaction_step(self.STEP_ALL_IN)
 
         from trezor.messages.MoneroTransactionAllInputsSetAck import (
             MoneroTransactionAllInputsSetAck
@@ -1249,7 +1249,7 @@ class TTransactionBuilder(object):
         self._log_trace(0, True)
         mods = utils.unimport_begin()
 
-        await self.trezor.iface.transaction_step(
+        await self.iface.transaction_step(
             self.STEP_OUT, self.out_idx + 1, self.num_dests()
         )
         self._log_trace(1)
@@ -1366,7 +1366,7 @@ class TTransactionBuilder(object):
         """
         self._log_trace(0)
         self.state.set_output_done()
-        await self.trezor.iface.transaction_step(self.STEP_ALL_OUT)
+        await self.iface.transaction_step(self.STEP_ALL_OUT)
         self._log_trace(1)
 
         if self.out_idx + 1 != self.num_dests():
@@ -1461,7 +1461,7 @@ class TTransactionBuilder(object):
         )
 
         self.state.set_final_message_done()
-        await self.trezor.iface.transaction_step(self.STEP_MLSAG)
+        await self.iface.transaction_step(self.STEP_MLSAG)
 
         await self.tsx_mlsag_ecdh_info()
         await self.tsx_mlsag_out_pk()
@@ -1499,7 +1499,7 @@ class TTransactionBuilder(object):
         :return: Generated signature MGs[i]
         """
         self.state.set_signature()
-        await self.trezor.iface.transaction_step(
+        await self.iface.transaction_step(
             self.STEP_SIGN, self.inp_idx + 1, self.num_inputs()
         )
 
@@ -1644,7 +1644,7 @@ class TTransactionBuilder(object):
         # Final state transition
         if self.inp_idx + 1 == self.num_inputs():
             self.state.set_signature_done()
-            await self.trezor.iface.transaction_signed()
+            await self.iface.transaction_signed()
 
         gc.collect()
         self._log_trace()
@@ -1684,7 +1684,7 @@ class TTransactionBuilder(object):
         )
         tx_enc_keys = chacha_poly.encrypt_pack(tx_key, key_buff)
 
-        await self.trezor.iface.transaction_finished()
+        await self.iface.transaction_finished()
         gc.collect()
 
         return MoneroTransactionFinalAck(
