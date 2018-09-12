@@ -63,7 +63,7 @@ class LiteProtocol:
         self.r_msg = bytearray(2048)
         self.r_len = 0
 
-    def _log_trace(self, x=None, collect=False):
+    def _mem_trace(self, x=None, collect=False):
         if __debug__:
             log.debug(
                 __name__,
