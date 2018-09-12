@@ -18,10 +18,11 @@ async def lite_protocol(ctx, msg, state, is_init=False):
 
     from trezor.messages.MoneroLiteAck import MoneroLiteAck
 
-    log.debug(
-        __name__,
-        "### Lite. Free: {} Allocated: {}".format(gc.mem_free(), gc.mem_alloc()),
-    )
+    if __debug__:
+        log.debug(
+            __name__,
+            "### Lite. Free: {} Allocated: {}".format(gc.mem_free(), gc.mem_alloc()),
+        )
 
     gc.collect()
     try:
@@ -32,5 +33,6 @@ async def lite_protocol(ctx, msg, state, is_init=False):
 
     except Exception as e:
         state.ctx_ki = None
-        log.debug(__name__, "Lite error, %s: %s", type(e), e)
+        if __debug__:
+            log.debug(__name__, "Lite error, %s: %s", type(e), e)
         raise
