@@ -3,7 +3,7 @@ from trezor.messages import MessageType
 
 
 # persistent state objects
-class Holder(object):
+class Holder:
     def __init__(self):
         self.ctx_sign = None
         self.ctx_ki = None

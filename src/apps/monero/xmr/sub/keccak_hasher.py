@@ -1,7 +1,7 @@
 from apps.monero.xmr import crypto
 
 
-class KeccakXmrArchive(object):
+class KeccakXmrArchive:
     def __init__(self, ctx=None):
         self.kwriter = get_keccak_writer(ctx=ctx)
         self.ar = None
@@ -51,7 +51,7 @@ class KeccakXmrArchive(object):
         return await ar.container_size(container_len, container_type, params)
 
 
-class HashWrapper(object):
+class HashWrapper:
     def __init__(self, ctx):
         self.ctx = ctx
 

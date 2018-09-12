@@ -1,7 +1,7 @@
 from micropython import const
 
 
-class TState(object):
+class TState:
     """
     Transaction state
     """

@@ -63,7 +63,7 @@ def import_def(module, name):
     return r
 
 
-class Archive(object):
+class Archive:
     """
     Archive object for object binary serialization / deserialization.
     Resembles Archive API from the Monero codebase or Boost serialization archive.

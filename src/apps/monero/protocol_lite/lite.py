@@ -20,7 +20,7 @@ def memcpy(dst, dst_off, src, src_off, ln):
     return dst
 
 
-class LiteProtocol(object):
+class LiteProtocol:
     """
     Lite protocol
     """

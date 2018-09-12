@@ -1,4 +1,4 @@
-class TrezorInterface(object):
+class TrezorInterface:
     def __init__(self, ctx=None):
         self.ctx = ctx
 

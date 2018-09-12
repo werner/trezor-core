@@ -1,4 +1,4 @@
-class RctType(object):
+class RctType:
     Null = 0
     Full = 1
     Simple = 2

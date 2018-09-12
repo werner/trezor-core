@@ -1,4 +1,4 @@
-class TsxSignStateHolder(object):
+class TsxSignStateHolder:
     """
     Simple transaction signer state holder.
     Externalized state uses smaller amount of memory compared to storing the builder instance in the state.

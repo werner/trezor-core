@@ -3,7 +3,7 @@ from trezor import log
 from apps.monero.controller import wrapper as twrap
 
 
-class KeyImageSync(object):
+class KeyImageSync:
     def __init__(self, ctx=None, iface=None, creds=None):
         from apps.monero.xmr import crypto
         from apps.monero.xmr.sub.keccak_hasher import HashWrapper

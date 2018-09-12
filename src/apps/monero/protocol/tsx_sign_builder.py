@@ -7,7 +7,7 @@ from apps.monero.controller import misc
 from apps.monero.xmr import common, crypto, monero
 
 
-class TprefixStub(object):
+class TprefixStub:
     __slots__ = ("version", "unlock_time", "vin", "vout", "extra")
 
     def __init__(self, **kwargs):
@@ -15,7 +15,7 @@ class TprefixStub(object):
             setattr(self, kw, kwargs[kw])
 
 
-class TTransactionBuilder(object):
+class TTransactionBuilder:
     """
     Transaction builder
     """

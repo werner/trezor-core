@@ -1,7 +1,7 @@
 from apps.monero.xmr import crypto
 
 
-class PreMlsagHasher(object):
+class PreMlsagHasher:
     """
     Iterative construction of the pre_mlsag_hash
     """

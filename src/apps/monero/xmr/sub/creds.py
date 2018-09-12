@@ -3,7 +3,7 @@ from apps.monero.xmr.sub.addr import encode_addr
 from apps.monero.xmr.sub.xmr_net import NetworkTypes, net_version
 
 
-class AccountCreds(object):
+class AccountCreds:
     """
     Stores account private keys
     """

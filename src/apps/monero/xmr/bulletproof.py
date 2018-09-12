@@ -256,7 +256,7 @@ def get_exponent(dst, base, idx):
 #
 
 
-class KeyVBase(object):
+class KeyVBase:
     """
     Base KeyVector object
     """
@@ -786,7 +786,7 @@ def is_reduced(sc):
     return crypto.encodeint(crypto.decodeint(sc)) == sc
 
 
-class MultiExpSequential(object):
+class MultiExpSequential:
     """
     MultiExp object similar to MultiExp array of [(scalar, point), ]
     MultiExp computes simply: res = \sum_i scalar_i * point_i
@@ -840,7 +840,7 @@ def multiexp(dst=None, data=None, GiHi=False):
     return data.eval(dst, GiHi)
 
 
-class BulletProofBuilder(object):
+class BulletProofBuilder:
     def __init__(self):
         self.use_det_masks = True
         self.proof_sec = None

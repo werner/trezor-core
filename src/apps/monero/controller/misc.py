@@ -17,7 +17,7 @@ class TrezorChangeAddressError(TrezorError):
     pass
 
 
-class StdObj(object):
+class StdObj:
     def __init__(self, **kwargs):
         for kw in kwargs:
             setattr(self, kw, kwargs[kw])
