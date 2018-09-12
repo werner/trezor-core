@@ -1,6 +1,6 @@
 import gc
 
-from trezor import wire
+from trezor import wire, utils
 from trezor.messages import MessageType
 
 
@@ -29,6 +29,8 @@ async def sign_tx_step(ctx, msg, state):
         state = None
     else:
         creds = None
+
+    mods = utils.unimport_begin()
     tsx = TTransactionBuilder(iface.get_iface(ctx), creds, state)
     del creds
     del state
@@ -41,6 +43,9 @@ async def sign_tx_step(ctx, msg, state):
         state = None
     else:
         state = tsx.state_save()
+
+    gc.collect()
+    utils.unimport_end(mods)
     return res, state
 
 
