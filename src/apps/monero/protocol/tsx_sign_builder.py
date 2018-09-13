@@ -243,20 +243,15 @@ class TTransactionBuilder:
     def init_rct_sig(self):
         """
         Initializes RCTsig structure (fee, tx prefix hash, type)
-        :return:
         """
         rv = misc.StdObj(
             txnFee=self.get_fee(), message=self.tx_prefix_hash, type=self.get_rct_type()
         )
         return rv
 
-    def _build_key(self, secret, discriminator=None, index=None):
+    def _build_key(self, secret, discriminator=None, index: int = None) -> bytes:
         """
         Creates an unique-purpose key
-        :param secret:
-        :param discriminator:
-        :param index:
-        :return:
         """
         key_buff = bytearray(32 + 12 + 4)  # key + disc + index
         offset = 32
@@ -273,77 +268,57 @@ class TTransactionBuilder:
 
         return crypto.keccak_2hash(key_buff)
 
-    def hmac_key_txin(self, idx):
+    def hmac_key_txin(self, idx: int) -> bytes:
         """
         (TxSourceEntry[i] || tx.vin[i]) hmac key
-        :param idx:
-        :return:
         """
         return self._build_key(self.key_hmac, b"txin", idx)
 
-    def hmac_key_txin_comm(self, idx):
+    def hmac_key_txin_comm(self, idx: int) -> bytes:
         """
         pseudo_outputs[i] hmac key. Pedersen commitment for inputs.
-        :param idx:
-        :return:
         """
         return self._build_key(self.key_hmac, b"txin-comm", idx)
 
-    def hmac_key_txdst(self, idx):
+    def hmac_key_txdst(self, idx: int) -> bytes:
         """
         TxDestinationEntry[i] hmac key
-        :param idx:
-        :return:
         """
         return self._build_key(self.key_hmac, b"txdest", idx)
 
-    def hmac_key_txout(self, idx):
+    def hmac_key_txout(self, idx: int) -> bytes:
         """
         (TxDestinationEntry[i] || tx.vout[i]) hmac key
-        :param idx:
-        :return:
         """
         return self._build_key(self.key_hmac, b"txout", idx)
 
-    def hmac_key_txout_asig(self, idx):
+    def hmac_key_txout_asig(self, idx: int) -> bytes:
         """
         rsig[i] hmac key. Range signature HMAC
-        :param idx:
-        :return:
         """
         return self._build_key(self.key_hmac, b"txout-asig", idx)
 
-    def enc_key_txin_alpha(self, idx):
+    def enc_key_txin_alpha(self, idx: int) -> bytes:
         """
         Chacha20Poly1305 encryption key for alpha[i] used in Pedersen commitment in pseudo_outs[i]
-        :param idx:
-        :return:
         """
         return self._build_key(self.key_enc, b"txin-alpha", idx)
 
-    def enc_key_spend(self, idx):
+    def enc_key_spend(self, idx: int) -> bytes:
         """
         Chacha20Poly1305 encryption key for alpha[i] used in Pedersen commitment in pseudo_outs[i]
-        :param idx:
-        :return:
         """
         return self._build_key(self.key_enc, b"txin-spend", idx)
 
-    def enc_key_cout(self, idx=None):
+    def enc_key_cout(self, idx: int = None) -> bytes:
         """
         Chacha20Poly1305 encryption key for multisig C values from MLASG.
-        :param idx:
-        :return:
         """
         return self._build_key(self.key_enc, b"cout", idx)
 
-    async def gen_hmac_vini(self, src_entr, vini_bin, idx):
+    async def gen_hmac_vini(self, src_entr, vini_bin, idx: int) -> bytes:
         """
         Computes hmac (TxSourceEntry[i] || tx.vin[i])
-        :param src_entr:
-        :param vini_bin:
-        :param idx:
-        :return:
         """
         import protobuf
         from apps.monero.xmr.sub.keccak_hasher import get_keccak_writer
@@ -356,13 +331,9 @@ class TTransactionBuilder:
         hmac_vini = crypto.compute_hmac(hmac_key_vini, kwriter.get_digest())
         return hmac_vini
 
-    async def gen_hmac_vouti(self, dst_entr, tx_out_bin, idx):
+    async def gen_hmac_vouti(self, dst_entr, tx_out_bin, idx: int) -> bytes:
         """
         Generates HMAC for (TxDestinationEntry[i] || tx.vout[i])
-        :param dst_entr:
-        :param tx_out:
-        :param idx:
-        :return:
         """
         import protobuf
         from apps.monero.xmr.sub.keccak_hasher import get_keccak_writer
@@ -375,12 +346,9 @@ class TTransactionBuilder:
         hmac_vouti = crypto.compute_hmac(hmac_key_vouti, kwriter.get_digest())
         return hmac_vouti
 
-    async def gen_hmac_tsxdest(self, dst_entr, idx):
+    async def gen_hmac_tsxdest(self, dst_entr, idx: int) -> bytes:
         """
         Generates HMAC for TxDestinationEntry[i]
-        :param dst_entr:
-        :param idx:
-        :return:
         """
         import protobuf
         from apps.monero.xmr.sub.keccak_hasher import get_keccak_writer
@@ -403,9 +371,6 @@ class TTransactionBuilder:
     async def init_transaction(self, tsx_data):
         """
         Initializes a new transaction.
-        :param tsx_data:
-        :type tsx_data: TsxData
-        :return:
         """
         from apps.monero.xmr.sub.addr import classify_subaddresses
 
@@ -512,7 +477,6 @@ class TTransactionBuilder:
     def process_payment_id(self, tsx_data):
         """
         Payment id -> extra
-        :return:
         """
         if common.is_empty(tsx_data.payment_id):
             return
@@ -696,7 +660,6 @@ class TTransactionBuilder:
     def tsx_inputs_done(self):
         """
         All inputs set
-        :return:
         """
         self.state.input_done()
         self.subaddresses = None
@@ -711,8 +674,6 @@ class TTransactionBuilder:
         """
         In-memory post processing - tx.vin[i] sorting by key image.
         Used only if number of inputs is small - computable in Trezor without offloading.
-
-        :return:
         """
         # Sort tx.in by key image
         self.source_permutation = list(range(self.num_inputs()))
@@ -722,9 +683,6 @@ class TTransactionBuilder:
     async def tsx_inputs_permutation(self, permutation):
         """
         Set permutation on the inputs - sorted by key image on host.
-
-        :param permutation:
-        :return:
         """
         from trezor.messages.MoneroTransactionInputsPermutationAck import (
             MoneroTransactionInputsPermutationAck
@@ -740,9 +698,6 @@ class TTransactionBuilder:
     def _tsx_inputs_permutation(self, permutation):
         """
         Set permutation on the inputs - sorted by key image on host.
-
-        :param permutation:
-        :return:
         """
         self.state.input_permutation()
         self.source_permutation = permutation
@@ -821,11 +776,6 @@ class TTransactionBuilder:
     ):
         """
         Incremental hasing of tx.vin[i] and pseudo output
-        :param vini_bin:
-        :param inp_idx:
-        :param pseudo_out:
-        :param pseudo_out_hmac:
-        :return:
         """
         self.tx_prefix_hasher.buffer(vini_bin)
 
@@ -848,8 +798,6 @@ class TTransactionBuilder:
     async def all_in_set(self, rsig_data):
         """
         If in the applicable offloading mode, generate commitment masks.
-        :param rsig_data:
-        :return:
         """
         self._mem_trace(0)
         self.state.input_all_done()
@@ -900,8 +848,6 @@ class TTransactionBuilder:
     def _get_rsig_batch(self, idx):
         """
         Returns index of the current rsig batch
-        :param idx:
-        :return:
         """
         r = 0
         c = 0
@@ -913,9 +859,6 @@ class TTransactionBuilder:
     def _is_last_in_batch(self, idx, bidx=None):
         """
         Returns true if the current output is last in the rsig batch
-        :param idx:
-        :param bidx:
-        :return:
         """
         bidx = self._get_rsig_batch(idx) if bidx is None else bidx
         batch_size = self.rsig_grp[bidx]
@@ -931,7 +874,6 @@ class TTransactionBuilder:
         But we would prefer to compute commitment before range proofs so alphas are generated completely randomly
         and the last A mask is computed in this special way.
         Returns pseudo_out
-        :return:
         """
         alpha = crypto.random_scalar()
         self.sumpouts_alphas = crypto.sc_add(self.sumpouts_alphas, alpha)
@@ -975,11 +917,6 @@ class TTransactionBuilder:
         a[63] = (\\sum_{i=0}^{num_inp}alpha_i - \\sum_{i=0}^{num_outs-1} amasks_i) - \\sum_{i=0}^{62}a_i
 
         The range proof is incrementally hashed to the final_message.
-
-        :param idx:
-        :param amount:
-        :param rsig_data:
-        :return:
         """
         from apps.monero.xmr import ring_ct
 
@@ -1101,9 +1038,6 @@ class TTransactionBuilder:
 
         return out_pk, ecdh_info_bin
 
-    def _set_out1_prefix(self):
-        self.tx_prefix_hasher.container_size(self.num_dests())  # ContainerType
-
     def _set_out1_additional_keys(self, dst_entr):
         additional_txkey = None
         additional_txkey_priv = None
@@ -1171,11 +1105,6 @@ class TTransactionBuilder:
         """
         Set destination entry one by one.
         Computes destination stealth address, amount key, range proof + HMAC, out_pk, ecdh_info.
-
-        :param dst_entr
-        :param dst_entr_hmac
-        :param rsig_data
-        :return:
         """
         self._mem_trace(0, True)
         mods = utils.unimport_begin()
@@ -1204,7 +1133,7 @@ class TTransactionBuilder:
 
         # First output - tx prefix hasher - size of the container
         if self.out_idx == 0:
-            self._set_out1_prefix()
+            self.tx_prefix_hasher.container_size(self.num_dests())
         self._mem_trace(4, True)
 
         self.summary_outs_money += dst_entr.amount
@@ -1238,7 +1167,7 @@ class TTransactionBuilder:
             mask=mask,
             amount_key=amount_key,
         )
-        del(dst_entr, mask, amount_key, tx_out_key)
+        del (dst_entr, mask, amount_key, tx_out_key)
         self._mem_trace(12, True)
 
         # Incremental hashing of the ECDH info.
@@ -1368,16 +1297,12 @@ class TTransactionBuilder:
     def tsx_mlsag_ecdh_info(self):
         """
         Sets ecdh info for the incremental hashing mlsag.
-
-        :return:
         """
         pass
 
     def tsx_mlsag_out_pk(self):
         """
         Sets out_pk for the incremental hashing mlsag.
-
-        :return:
         """
         if self.num_dests() != len(self.output_pk):
             raise ValueError("Invalid number of ecdh")
@@ -1388,8 +1313,6 @@ class TTransactionBuilder:
     async def mlsag_done(self):
         """
         MLSAG message computed.
-
-        :return:
         """
         from trezor.messages.MoneroTransactionMlsagDoneAck import (
             MoneroTransactionMlsagDoneAck
@@ -1592,13 +1515,9 @@ class TTransactionBuilder:
             signature=misc.dump_msg_gc(mgs[0], preallocate=488, del_msg=True), cout=cout
         )
 
-    async def final_msg(self, *args, **kwargs):
+    async def final_msg(self):
         """
         Final step after transaction signing.
-
-        :param args:
-        :param kwargs:
-        :return:
         """
         from trezor.messages.MoneroTransactionFinalAck import MoneroTransactionFinalAck
         from apps.monero.xmr.enc import chacha_poly
