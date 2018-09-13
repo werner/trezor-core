@@ -832,7 +832,9 @@ class TTransactionBuilder:
         # Incremental hashing
         if self.in_memory():
             for idx in range(self.num_inputs()):
-                vini_bin = misc.dump_msg(self.tx.vin[idx], preallocate=65, prefix=b"\x02")
+                vini_bin = misc.dump_msg(
+                    self.tx.vin[idx], preallocate=65, prefix=b"\x02"
+                )
                 self.hash_vini_pseudo_out(vini_bin, idx)
                 self._mem_trace("i: %s" % idx if __debug__ else None, True)
 
