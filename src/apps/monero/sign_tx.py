@@ -102,13 +102,8 @@ async def tsx_input_vini(tsx, msg):
     Set tx.vin[i] for incremental tx prefix hash computation.
     After sorting by key images on host.
     """
-    from apps.monero.controller.misc import parse_vini
-
-    vini = parse_vini(msg.vini)
-    del msg.vini
-
     return await tsx.input_vini(
-        msg.src_entr, vini, msg.vini_hmac, msg.pseudo_out, msg.pseudo_out_hmac
+        msg.src_entr, msg.vini, msg.vini_hmac, msg.pseudo_out, msg.pseudo_out_hmac
     )
 
 
@@ -157,14 +152,9 @@ async def tsx_sign_input(tsx, msg):
     """
     Generates a signature for one input.
     """
-    from apps.monero.controller.misc import parse_vini
-
-    vini = parse_vini(msg.vini)
-    del msg.vini
-
     return await tsx.sign_input(
         msg.src_entr,
-        vini,
+        msg.vini,
         msg.vini_hmac,
         msg.pseudo_out,
         msg.pseudo_out_hmac,

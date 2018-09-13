@@ -398,23 +398,20 @@ class TTransactionBuilder:
         """
         return self._build_key(self.key_enc, b"cout", idx)
 
-    async def gen_hmac_vini(self, src_entr, vini, idx):
+    async def gen_hmac_vini(self, src_entr, vini_bin, idx):
         """
         Computes hmac (TxSourceEntry[i] || tx.vin[i])
         :param src_entr:
-        :param vini:
+        :param vini_bin:
         :param idx:
         :return:
         """
         import protobuf
         from apps.monero.xmr.sub.keccak_hasher import get_keccak_writer
-        from apps.monero.xmr.serialize import xmrserialize
-        from apps.monero.xmr.serialize_messages.tx_prefix import TxinToKey
 
         kwriter = get_keccak_writer()
-        ar = xmrserialize.Archive(kwriter, True)
         await protobuf.dump_message(kwriter, src_entr)
-        ar.message(vini, TxinToKey)
+        kwriter.write(vini_bin)
 
         hmac_key_vini = self.hmac_key_txin(idx)
         hmac_vini = crypto.compute_hmac(hmac_key_vini, kwriter.get_digest())
@@ -691,6 +688,7 @@ class TTransactionBuilder:
             src_entr.real_output_in_tx_index,
         )
         xi, ki, di = secs
+        self._mem_trace(1, True)
 
         # Construct tx.vin
         ki_real = src_entr.multisig_kLRki.ki if self.multi_sig else ki
@@ -703,11 +701,16 @@ class TTransactionBuilder:
         if src_entr.rct:
             vini.amount = 0
 
+        # Serialize with variant code for TxinToKey
+        vini_bin = misc.dump_msg(vini, preallocate=68, prefix=b"\x02")
+        self._mem_trace(2, True)
+
         if self.in_memory():
             self.tx.vin.append(vini)
 
         # HMAC(T_in,i || vin_i)
-        hmac_vini = await self.gen_hmac_vini(src_entr, vini, self.inp_idx)
+        hmac_vini = await self.gen_hmac_vini(src_entr, vini_bin, self.inp_idx)
+        self._mem_trace(3, True)
 
         # PseudoOuts commitment, alphas stored to state
         pseudo_out = None
@@ -743,7 +746,7 @@ class TTransactionBuilder:
             self.tsx_inputs_done()
 
         return MoneroTransactionSetInputAck(
-            vini=misc.dump_msg(vini, preallocate=64),
+            vini=vini_bin,
             vini_hmac=hmac_vini,
             pseudo_out=pseudo_out,
             pseudo_out_hmac=pseudo_out_hmac,
@@ -829,17 +832,18 @@ class TTransactionBuilder:
         # Incremental hashing
         if self.in_memory():
             for idx in range(self.num_inputs()):
-                self.hash_vini_pseudo_out(self.tx.vin[idx], idx)
+                vini_bin = misc.dump_msg(self.tx.vin[idx], preallocate=65, prefix=b"\x02")
+                self.hash_vini_pseudo_out(vini_bin, idx)
                 self._mem_trace("i: %s" % idx if __debug__ else None, True)
 
-    async def input_vini(self, src_entr, vini, hmac, pseudo_out, pseudo_out_hmac):
+    async def input_vini(self, src_entr, vini_bin, hmac, pseudo_out, pseudo_out_hmac):
         """
         Set tx.vin[i] for incremental tx prefix hash computation.
         After sorting by key images on host.
         Hashes pseudo_out to the final_message.
 
         :param src_entr:
-        :param vini: tx.vin[i]
+        :param vini_bin: tx.vin[i]
         :param hmac: HMAC of tx.vin[i]
         :param pseudo_out: pseudo_out for the current entry
         :param pseudo_out_hmac: hmac of pseudo_out
@@ -863,30 +867,26 @@ class TTransactionBuilder:
 
         # HMAC(T_in,i || vin_i)
         hmac_vini = await self.gen_hmac_vini(
-            src_entr, vini, self.source_permutation[self.inp_idx]
+            src_entr, vini_bin, self.source_permutation[self.inp_idx]
         )
         if not common.ct_equal(hmac_vini, hmac):
             raise ValueError("HMAC is not correct")
 
-        self.hash_vini_pseudo_out(vini, self.inp_idx, pseudo_out, pseudo_out_hmac)
+        self.hash_vini_pseudo_out(vini_bin, self.inp_idx, pseudo_out, pseudo_out_hmac)
         return MoneroTransactionInputViniAck()
 
     def hash_vini_pseudo_out(
-        self, vini, inp_idx, pseudo_out=None, pseudo_out_hmac=None
+        self, vini_bin, inp_idx, pseudo_out=None, pseudo_out_hmac=None
     ):
         """
         Incremental hasing of tx.vin[i] and pseudo output
-        :param vini:
+        :param vini_bin:
         :param inp_idx:
         :param pseudo_out:
         :param pseudo_out_hmac:
         :return:
         """
-        # Serialize particular input type
-        from apps.monero.xmr.serialize import xmrserialize
-        from apps.monero.xmr.serialize_messages.tx_prefix import TxInV
-
-        self.tx_prefix_hasher.field(vini, TxInV, xser=xmrserialize)
+        self.tx_prefix_hasher.buffer(vini_bin)
 
         # Pseudo_out incremental hashing - applicable only in simple rct
         if not self.use_simple_rct or self.use_bulletproof:
@@ -1471,7 +1471,7 @@ class TTransactionBuilder:
     async def sign_input(
         self,
         src_entr,
-        vini,
+        vini_bin,
         hmac_vini,
         pseudo_out,
         pseudo_out_hmac,
@@ -1482,7 +1482,7 @@ class TTransactionBuilder:
         Generates a signature for one input.
 
         :param src_entr: Source entry
-        :param vini: tx.vin[i] for the transaction. Contains key image, offsets, amount (usually zero)
+        :param vini_bin: tx.vin[i] for the transaction. Contains key image, offsets, amount (usually zero)
         :param hmac_vini: HMAC for the tx.vin[i] as returned from Trezor
         :param pseudo_out: pedersen commitment for the current input, uses alpha as the mask.
         Only in memory offloaded scenario. Tuple containing HMAC, as returned from the Trezor.
@@ -1510,7 +1510,7 @@ class TTransactionBuilder:
         inv_idx = self.source_permutation[self.inp_idx]
 
         # Check HMAC of all inputs
-        hmac_vini_comp = await self.gen_hmac_vini(src_entr, vini, inv_idx)
+        hmac_vini_comp = await self.gen_hmac_vini(src_entr, vini_bin, inv_idx)
         if not common.ct_equal(hmac_vini_comp, hmac_vini):
             raise ValueError("HMAC is not correct")
 
