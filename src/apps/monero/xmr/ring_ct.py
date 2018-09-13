@@ -111,50 +111,17 @@ def prove_range(
 #   verifies the above sig is created corretly
 
 
-def ecdh_encode_into(dst, unmasked, receiver_pk=None, derivation=None):
+def ecdh_encode_into(dst, unmasked, derivation=None):
     """
     Elliptic Curve Diffie-Helman: encodes and decodes the amount b and mask a
     where C= aG + bH
-    :param unmasked:
-    :param receiver_pk:
-    :param derivation:
-    :return:
     """
-    if derivation is None:
-        esk = crypto.random_scalar()
-        dst.senderPk = crypto.scalarmult_base(esk)
-        derivation = crypto.encodepoint(crypto.scalarmult(receiver_pk, esk))
+    sec1 = crypto.hash_to_scalar(derivation)
+    sec2 = crypto.hash_to_scalar(crypto.encodeint(sec1))
 
-    sharedSec1 = crypto.hash_to_scalar(derivation)
-    sharedSec2 = crypto.hash_to_scalar(crypto.encodeint(sharedSec1))
-
-    dst.mask = crypto.sc_add(unmasked.mask, sharedSec1)
-    dst.amount = crypto.sc_add(unmasked.amount, sharedSec2)
+    dst.mask = crypto.sc_add(unmasked.mask, sec1)
+    dst.amount = crypto.sc_add(unmasked.amount, sec2)
     return dst
-
-
-def ecdh_decode(masked, receiver_sk=None, derivation=None):
-    """
-    Elliptic Curve Diffie-Helman: encodes and decodes the amount b and mask a
-    where C= aG + bH
-    :param masked:
-    :param receiver_sk:
-    :param derivation:
-    :return:
-    """
-    from apps.monero.xmr.serialize_messages.tx_ecdh import EcdhTuple
-
-    rv = EcdhTuple()
-
-    if derivation is None:
-        derivation = crypto.scalarmult(masked.senderPk, receiver_sk)
-
-    sharedSec1 = crypto.hash_to_scalar(derivation)
-    sharedSec2 = crypto.hash_to_scalar(crypto.encodeint(sharedSec1))
-
-    rv.mask = crypto.sc_sub(masked.mask, sharedSec1)
-    rv.amount = crypto.sc_sub(masked.amount, sharedSec2)
-    return rv
 
 
 #
