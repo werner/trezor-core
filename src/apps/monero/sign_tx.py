@@ -1,18 +1,29 @@
 import gc
 
-from trezor import utils, wire
+from trezor import log, utils
 from trezor.messages import MessageType
 
 
 async def sign_tx(ctx, msg):
     state = None
+    gc.collect()
+    mods = utils.unimport_begin()
 
     while True:
+        if __debug__:
+            log.debug(__name__, "#### F: %s, A: %s", gc.mem_free(), gc.mem_alloc())
         res, state = await sign_tx_step(ctx, msg, state)
         if msg.final_msg:
             break
-        msg = await ctx.call(res, MessageType.MoneroTransactionSignRequest)
 
+        await ctx.write(res)
+        del (res, msg)
+        utils.unimport_end(mods)
+
+        msg = await ctx.read((MessageType.MoneroTransactionSignRequest,))
+        gc.collect()
+
+    utils.unimport_end(mods)
     return res
 
 
@@ -30,7 +41,6 @@ async def sign_tx_step(ctx, msg, state):
     else:
         creds = None
 
-    mods = utils.unimport_begin()
     tsx = TTransactionBuilder(iface.get_iface(ctx), creds, state)
     del creds
     del state
@@ -45,7 +55,6 @@ async def sign_tx_step(ctx, msg, state):
         state = tsx.state_save()
 
     gc.collect()
-    utils.unimport_end(mods)
     return res, state
 
 
@@ -71,6 +80,8 @@ async def sign_tx_dispatch(tsx, msg):
     elif msg.final_msg:
         return await tsx_sign_final(tsx)
     else:
+        from trezor import wire
+
         raise wire.DataError("Unknown message")
 
 
@@ -138,6 +149,8 @@ async def tsx_all_out1_set(tsx, msg):
     try:
         return await tsx.all_out1_set()
     except TrezorTxPrefixHashNotMatchingError as e:
+        from trezor import wire
+
         raise wire.NotEnoughFunds(e.message)
 
 
