@@ -93,8 +93,8 @@ class AHashWriter:
         return self.hasher.digest(*args)
 
     def ctx(self):
-        return self.hasher.ctx
+        return self.hasher
 
 
 def get_keccak_writer(ctx=None):
-    return AHashWriter(HashWrapper(crypto.get_keccak() if ctx is None else ctx))
+    return AHashWriter(crypto.get_keccak() if ctx is None else ctx)
