@@ -139,7 +139,7 @@ class TTransactionBuilder:
 
             if attr == "state":
                 t.state = self.state.state_save()
-            elif attr in ["trezor"]:
+            elif attr in ["iface"]:
                 continue
             elif attr.startswith("STEP"):
                 continue
