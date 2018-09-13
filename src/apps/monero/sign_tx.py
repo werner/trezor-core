@@ -37,24 +37,15 @@ async def sign_tx_step(ctx, msg, state):
     if msg.init:
         init = msg.init
         creds = await wrapper.monero_get_creds(ctx, init.address_n, init.network_type)
+        state = TTransactionBuilder(iface.get_iface(ctx), creds)
+        del creds
+
+    gc.collect()
+    res = await sign_tx_dispatch(state, msg)
+    gc.collect()
+
+    if state.is_terminal():
         state = None
-    else:
-        creds = None
-
-    tsx = TTransactionBuilder(iface.get_iface(ctx), creds, state)
-    del creds
-    del state
-
-    gc.collect()
-    res = await sign_tx_dispatch(tsx, msg)
-    gc.collect()
-
-    if tsx.is_terminal():
-        state = None
-    else:
-        state = tsx.state_save()
-
-    gc.collect()
     return res, state
 
 

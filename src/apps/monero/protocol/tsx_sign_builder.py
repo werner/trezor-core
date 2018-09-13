@@ -29,7 +29,7 @@ class TTransactionBuilder:
     STEP_MLSAG = const(600)
     STEP_SIGN = const(700)
 
-    def __init__(self, iface=None, creds=None, state=None, **kwargs):
+    def __init__(self, iface=None, creds=None):
         self.iface = iface
         self.creds = creds
         self.key_master = None
@@ -78,11 +78,7 @@ class TTransactionBuilder:
         self.full_message_hasher = None
         self.full_message = None
         self.exp_tx_prefix_hash = None
-
-        if state is None:
-            self._init()
-        else:
-            self.state_load(state)
+        self._init()
 
     def _init(self):
         from apps.monero.xmr.sub.keccak_hasher import KeccakXmrArchive
@@ -93,63 +89,6 @@ class TTransactionBuilder:
         self.tx = TprefixStub(vin=[], vout=[], extra=b"")
         self.tx_prefix_hasher = KeccakXmrArchive()
         self.full_message_hasher = PreMlsagHasher()
-
-    def state_load(self, t):
-        from apps.monero.protocol.tsx_sign_state import TState
-
-        self._mem_trace("Restore: %s" % str(t.state) if __debug__ else None, True)
-
-        for attr in t.__dict__:
-            if attr.startswith("_"):
-                continue
-
-            cval = getattr(t, attr)
-            if cval is None:
-                setattr(self, attr, cval)
-                continue
-
-            if attr == "state":
-                self.state = TState()
-                self.state.state_load(t.state)
-            elif attr == "tx_prefix_hasher":
-                from apps.monero.xmr.sub.keccak_hasher import KeccakXmrArchive
-
-                self.tx_prefix_hasher = KeccakXmrArchive(ctx=t.tx_prefix_hasher)
-            elif attr == "full_message_hasher":
-                from apps.monero.xmr.sub.mlsag_hasher import PreMlsagHasher
-
-                self.full_message_hasher = PreMlsagHasher(state=t.full_message_hasher)
-            else:
-                setattr(self, attr, cval)
-            gc.collect()
-
-    def state_save(self):
-        from apps.monero.protocol.tsx_sign_state_holder import TsxSignStateHolder
-
-        t = TsxSignStateHolder()
-
-        for attr in self.__dict__:
-            if attr.startswith("_"):
-                continue
-
-            cval = getattr(self, attr)
-            if cval is None:
-                setattr(t, attr, cval)
-                continue
-
-            if attr == "state":
-                t.state = self.state.state_save()
-            elif attr in ["iface"]:
-                continue
-            elif attr.startswith("STEP"):
-                continue
-            elif attr == "tx_prefix_hasher":
-                t.tx_prefix_hasher = self.tx_prefix_hasher.ctx()
-            elif attr == "full_message_hasher":
-                t.full_message_hasher = self.full_message_hasher.state_save()
-            else:
-                setattr(t, attr, cval)
-        return t
 
     def _mem_trace(self, x=None, collect=False):
         if __debug__:
