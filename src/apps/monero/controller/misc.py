@@ -64,11 +64,13 @@ def parse_vini(bts):
     return parse_msg(bts, TxinToKey())
 
 
-def dump_msg(msg, preallocate=None, msg_type=None):
+def dump_msg(msg, preallocate=None, msg_type=None, prefix=None):
     from apps.monero.xmr.serialize import xmrserialize
     from apps.monero.xmr.serialize.readwriter import MemoryReaderWriter
 
     writer = MemoryReaderWriter(preallocate=preallocate)
+    if prefix:
+        writer.write(prefix)
     ar = xmrserialize.Archive(writer, True)
     ar.message(msg, msg_type=msg_type)
     return writer.get_buffer()
