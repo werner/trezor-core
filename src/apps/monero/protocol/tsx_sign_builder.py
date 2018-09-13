@@ -1163,11 +1163,7 @@ class TTransactionBuilder:
         return out_pk, ecdh_info_bin
 
     def _set_out1_prefix(self):
-        from apps.monero.xmr.serialize_messages.tx_prefix import TransactionPrefix
-
-        self.tx_prefix_hasher.container_size(
-            self.num_dests(), TransactionPrefix.f_specs()[3][1]
-        )
+        self.tx_prefix_hasher.container_size(self.num_dests())  # ContainerType
 
     def _set_out1_additional_keys(self, dst_entr):
         additional_txkey = None
