@@ -1,6 +1,6 @@
 import gc
 
-from trezor import wire, utils
+from trezor import utils, wire
 from trezor.messages import MessageType
 
 

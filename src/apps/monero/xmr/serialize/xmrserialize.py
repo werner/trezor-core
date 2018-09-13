@@ -39,8 +39,8 @@ from apps.monero.xmr.serialize.base_types import IntType, UVarintType, XmrType
 from apps.monero.xmr.serialize.erefs import eref, get_elem, set_elem
 from apps.monero.xmr.serialize.int_serialize import (
     dump_uint,
-    load_uint,
     dump_uvarint,
+    load_uint,
     load_uvarint,
 )
 from apps.monero.xmr.serialize.message_types import (
