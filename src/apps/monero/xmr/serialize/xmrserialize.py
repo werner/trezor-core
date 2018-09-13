@@ -324,7 +324,7 @@ class Archive:
             fvalue = self.uvarint(get_elem(elem))
 
         elif self._is_type(etype, IntType):
-            fvalue = self.uint(elem=get_elem(elem), elem_type=elem_type, params=params)
+            fvalue = self.uint(elem=get_elem(elem), elem_type=elem_type)
 
         elif self._is_type(etype, BlobType):
             fvalue = self.blob(elem=get_elem(elem), elem_type=elem_type, params=params)

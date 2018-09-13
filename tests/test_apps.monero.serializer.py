@@ -86,7 +86,7 @@ class TestMoneroSerializer(unittest.TestCase):
     def setUp(self):
         self.tdata.reset()
 
-    async def test_async_varint(self):
+    def test_varint(self):
         """
         Var int
         :return:
@@ -99,12 +99,12 @@ class TestMoneroSerializer(unittest.TestCase):
         for test_num in test_nums:
             writer = MemoryReaderWriter()
 
-            await xms.dump_uvarint(writer, test_num)
-            test_deser = await xms.load_uvarint(MemoryReaderWriter(writer.get_buffer()))
+            xms.dump_uvarint(writer, test_num)
+            test_deser = xms.load_uvarint(MemoryReaderWriter(writer.get_buffer()))
 
             self.assertEqual(test_num, test_deser)
 
-    async def test_async_ecpoint(self):
+    def test_ecpoint(self):
         """
         Ec point
         :return:
@@ -112,15 +112,15 @@ class TestMoneroSerializer(unittest.TestCase):
         ec_data = bytearray(range(32))
         writer = MemoryReaderWriter()
 
-        await xms.dump_blob(writer, ec_data, ECPoint)
+        xms.dump_blob(writer, ec_data, ECPoint)
         self.assertTrue(len(writer.get_buffer()), ECPoint.SIZE)
 
-        test_deser = await xms.load_blob(
+        test_deser = xms.load_blob(
             MemoryReaderWriter(writer.get_buffer()), ECPoint
         )
         self.assertEqual(ec_data, test_deser)
 
-    async def test_async_ecpoint_obj(self):
+    def test_ecpoint_obj(self):
         """
         EC point into
         :return:
@@ -130,18 +130,18 @@ class TestMoneroSerializer(unittest.TestCase):
         ec_point.data = ec_data
         writer = MemoryReaderWriter()
 
-        await xms.dump_blob(writer, ec_point, ECPoint)
+        xms.dump_blob(writer, ec_point, ECPoint)
         self.assertTrue(len(writer.get_buffer()), ECPoint.SIZE)
 
         ec_point2 = ECPoint()
-        test_deser = await xms.load_blob(
+        test_deser = xms.load_blob(
             MemoryReaderWriter(writer.get_buffer()), ECPoint, elem=ec_point2
         )
 
         self.assertEqual(ec_data, ec_point2.data)
         self.assertEqual(ec_point, ec_point2)
 
-    async def test_async_simple_msg(self):
+    def test_simple_msg(self):
         """
         TxinGen
         :return:
@@ -150,13 +150,13 @@ class TestMoneroSerializer(unittest.TestCase):
 
         writer = MemoryReaderWriter()
         ar1 = xms.Archive(writer, True)
-        await ar1.message(msg)
+        ar1.message(msg)
 
         ar2 = xms.Archive(MemoryReaderWriter(writer.get_buffer()), False)
-        test_deser = await ar2.message(None, msg_type=TxinGen)
+        test_deser = ar2.message(None, msg_type=TxinGen)
         self.assertEqual(msg.height, test_deser.height)
 
-    async def test_async_simple_msg_into(self):
+    def test_simple_msg_into(self):
         """
         TxinGen
         :return:
@@ -165,16 +165,16 @@ class TestMoneroSerializer(unittest.TestCase):
 
         writer = MemoryReaderWriter()
         ar1 = xms.Archive(writer, True)
-        await ar1.message(msg)
+        ar1.message(msg)
 
         msg2 = TxinGen()
         ar2 = xms.Archive(MemoryReaderWriter(writer.get_buffer()), False)
-        test_deser = await ar2.message(msg2, TxinGen)
+        test_deser = ar2.message(msg2, TxinGen)
         self.assertEqual(msg.height, test_deser.height)
         self.assertEqual(msg.height, msg2.height)
         self.assertEqual(msg2, test_deser)
 
-    async def test_async_tuple(self):
+    def test_tuple(self):
         """
         Simple tuple type
         :return:
@@ -186,13 +186,13 @@ class TestMoneroSerializer(unittest.TestCase):
         writer = MemoryReaderWriter()
         ar1 = xms.Archive(writer, True)
 
-        await ar1.tuple(out_entry, OutputEntry)
+        ar1.tuple(out_entry, OutputEntry)
         ar2 = xms.Archive(MemoryReaderWriter(writer.get_buffer()), False)
-        test_deser = await ar2.tuple(None, OutputEntry)
+        test_deser = ar2.tuple(None, OutputEntry)
 
         self.assertEqual(out_entry, test_deser)
 
-    async def test_async_txin_to_key(self):
+    def test_txin_to_key(self):
         """
         TxinToKey
         :return:
@@ -203,14 +203,14 @@ class TestMoneroSerializer(unittest.TestCase):
 
         writer = MemoryReaderWriter()
         ar1 = xms.Archive(writer, True)
-        await ar1.message(msg)
+        ar1.message(msg)
 
         ar2 = xms.Archive(MemoryReaderWriter(writer.get_buffer()), False)
-        test_deser = await ar2.message(None, TxinToKey)
+        test_deser = ar2.message(None, TxinToKey)
         self.assertEqual(msg.amount, test_deser.amount)
         self.assertEqual(msg, test_deser)
 
-    async def test_async_txin_variant(self):
+    def test_txin_variant(self):
         """
         TxInV
         :return:
@@ -223,16 +223,16 @@ class TestMoneroSerializer(unittest.TestCase):
 
         writer = MemoryReaderWriter()
         ar1 = xms.Archive(writer, True)
-        await ar1.variant(msg)
+        ar1.variant(msg)
 
         ar2 = xms.Archive(MemoryReaderWriter(writer.get_buffer()), False)
-        test_deser = await ar2.variant(None, TxInV, wrapped=True)
+        test_deser = ar2.variant(None, TxInV, wrapped=True)
         self.assertEqual(test_deser.__class__, TxInV)
         self.assertEqual(msg, test_deser)
         self.assertEqual(msg.variant_elem, test_deser.variant_elem)
         self.assertEqual(msg.variant_elem_type, test_deser.variant_elem_type)
 
-    async def test_async_tx_prefix(self):
+    def test_tx_prefix(self):
         """
         TransactionPrefix
         :return:
@@ -241,10 +241,10 @@ class TestMoneroSerializer(unittest.TestCase):
 
         writer = MemoryReaderWriter()
         ar1 = xms.Archive(writer, True)
-        await ar1.message(msg)
+        ar1.message(msg)
 
         ar2 = xms.Archive(MemoryReaderWriter(writer.get_buffer()), False)
-        test_deser = await ar2.message(None, TransactionPrefix)
+        test_deser = ar2.message(None, TransactionPrefix)
         self.assertEqual(test_deser.__class__, TransactionPrefix)
         self.assertEqual(test_deser.version, msg.version)
         self.assertEqual(test_deser.unlock_time, msg.unlock_time)
@@ -256,7 +256,7 @@ class TestMoneroSerializer(unittest.TestCase):
         self.assertListEqual(test_deser.vout, msg.vout)
         self.assertEqual(test_deser, msg)
 
-    async def test_async_boro_sig(self):
+    def test_boro_sig(self):
         """
         BoroSig
         :return:
@@ -265,13 +265,13 @@ class TestMoneroSerializer(unittest.TestCase):
 
         writer = MemoryReaderWriter()
         ar1 = xms.Archive(writer, True)
-        await ar1.message(msg)
+        ar1.message(msg)
 
         ar2 = xms.Archive(MemoryReaderWriter(writer.get_buffer()), False)
-        test_deser = await ar2.message(None, BoroSig)
+        test_deser = ar2.message(None, BoroSig)
         self.assertEqual(msg, test_deser)
 
-    async def test_async_transaction_prefix(self):
+    def test_transaction_prefix(self):
         """
 
         :return:
@@ -282,7 +282,7 @@ class TestMoneroSerializer(unittest.TestCase):
         reader = MemoryReaderWriter(bytearray(tsx_bin))
         ar1 = xms.Archive(reader, False)
 
-        test_deser = await ar1.message(None, TransactionPrefix)
+        test_deser = ar1.message(None, TransactionPrefix)
         self.assertIsNotNone(test_deser)
         self.assertEqual(len(reader.get_buffer()), 0)  # no data left to read
         self.assertEqual(len(test_deser.extra), 33)
