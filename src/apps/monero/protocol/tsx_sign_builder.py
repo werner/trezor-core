@@ -1139,8 +1139,10 @@ class TTransactionBuilder:
         from apps.monero.xmr import ring_ct
 
         # Mask sum
-        out_pk = misc.StdObj(dest=crypto.encodepoint(dest_pub_key), mask=None)
-        out_pk.mask = crypto.encodepoint(crypto.gen_c(mask, amount))
+        out_pk = misc.StdObj(
+            dest=crypto.encodepoint(dest_pub_key),
+            mask=crypto.encodepoint(crypto.gen_c(mask, amount)),
+        )
         self.sumout = crypto.sc_add(self.sumout, mask)
         self.output_sk.append(misc.StdObj(mask=mask))
 
@@ -1152,9 +1154,13 @@ class TTransactionBuilder:
             ecdh_info, ecdh_info, derivation=crypto.encodeint(amount_key)
         )
         recode_ecdh(ecdh_info, encode=True)
+
+        ecdh_info_bin = bytearray(64)
+        utils.memcpy(ecdh_info_bin, 0, ecdh_info.mask, 0, 32)
+        utils.memcpy(ecdh_info_bin, 32, ecdh_info.amount, 0, 32)
         gc.collect()
 
-        return out_pk, ecdh_info
+        return out_pk, ecdh_info_bin
 
     def _set_out1_prefix(self):
         from apps.monero.xmr.serialize_messages.tx_prefix import TransactionPrefix
@@ -1290,17 +1296,15 @@ class TTransactionBuilder:
         self._mem_trace(11, True)
 
         # Out_pk, ecdh_info
-        out_pk, ecdh_info = self._set_out1_ecdh(
+        out_pk, ecdh_info_bin = self._set_out1_ecdh(
             self.out_idx,
             dest_pub_key=tx_out_key,
             amount=dst_entr.amount,
             mask=mask,
             amount_key=amount_key,
         )
+        del(dst_entr, mask, amount_key, tx_out_key)
         self._mem_trace(12, True)
-        ecdh_info_bin = bytearray(64)
-        utils.memcpy(ecdh_info_bin, 0, ecdh_info.mask, 0, 32)
-        utils.memcpy(ecdh_info_bin, 32, ecdh_info.amount, 0, 32)
 
         # Incremental hashing of the ECDH info.
         # RctSigBase allows to hash only one of the (ecdh, out_pk) as they are serialized
