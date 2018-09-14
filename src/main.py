@@ -19,6 +19,7 @@ import apps.nem
 import apps.stellar
 import apps.ripple
 import apps.cardano
+import apps.tezos
 
 if __debug__:
     import apps.debug
@@ -36,6 +37,7 @@ apps.nem.boot()
 apps.stellar.boot()
 apps.ripple.boot()
 apps.cardano.boot()
+apps.tezos.boot()
 if __debug__:
     apps.debug.boot()
 else:

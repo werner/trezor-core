@@ -22,13 +22,25 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 
-#define DISPLAY_EMULATOR_BORDER 16
+#define EMULATOR_BORDER 16
 
-#define DISPLAY_TOUCH_OFFSET_X 180
-#define DISPLAY_TOUCH_OFFSET_Y 120
+#if TREZOR_MODEL == T
 
-#define WINDOW_WIDTH 600
-#define WINDOW_HEIGHT 800
+#define WINDOW_WIDTH    400
+#define WINDOW_HEIGHT   600
+#define TOUCH_OFFSET_X  80
+#define TOUCH_OFFSET_Y  110
+
+#elif TREZOR_MODEL == 1
+
+#define WINDOW_WIDTH    200
+#define WINDOW_HEIGHT   340
+#define TOUCH_OFFSET_X  36
+#define TOUCH_OFFSET_Y  92
+
+#else
+#error Unknown TREZOR Model
+#endif
 
 static SDL_Renderer *RENDERER;
 static SDL_Surface *BUFFER;
@@ -50,6 +62,12 @@ static struct {
 } PIXELWINDOW;
 
 void PIXELDATA(uint16_t c) {
+#if TREZOR_MODEL == 1
+    // set to white if highest bits of all R, G, B values are set to 1
+    // bin(10000 100000 10000) = hex(0x8410)
+    // otherwise set to black
+    c = (c & 0x8410) ? 0xFFFF : 0x0000;
+#endif
     if (!RENDERER) {
         display_init();
     }
@@ -79,7 +97,7 @@ void display_init(void)
         printf("%s\n", SDL_GetError());
         ensure(secfalse, "SDL_CreateWindow error");
     }
-    RENDERER = SDL_CreateRenderer(win, -1, 0);
+    RENDERER = SDL_CreateRenderer(win, -1, SDL_RENDERER_SOFTWARE);
     if (!RENDERER) {
         printf("%s\n", SDL_GetError());
         SDL_DestroyWindow(win);
@@ -91,15 +109,15 @@ void display_init(void)
     TEXTURE = SDL_CreateTexture(RENDERER, SDL_PIXELFORMAT_RGB565, SDL_TEXTUREACCESS_STREAMING, DISPLAY_RESX, DISPLAY_RESY);
     SDL_SetTextureBlendMode(TEXTURE, SDL_BLENDMODE_BLEND);
     // TODO: find better way how to embed/distribute background image
-    BACKGROUND = IMG_LoadTexture(RENDERER, "../embed/unix/background.jpg");
+    BACKGROUND = IMG_LoadTexture(RENDERER, "../embed/unix/background_" XSTR(TREZOR_MODEL) ".jpg");
     if (BACKGROUND) {
         SDL_SetTextureBlendMode(BACKGROUND, SDL_BLENDMODE_NONE);
-        sdl_touch_offset_x = DISPLAY_TOUCH_OFFSET_X;
-        sdl_touch_offset_y = DISPLAY_TOUCH_OFFSET_Y;
+        sdl_touch_offset_x = TOUCH_OFFSET_X;
+        sdl_touch_offset_y = TOUCH_OFFSET_Y;
     } else {
-        SDL_SetWindowSize(win, DISPLAY_RESX + 2 * DISPLAY_EMULATOR_BORDER, DISPLAY_RESY + 2 * DISPLAY_EMULATOR_BORDER);
-        sdl_touch_offset_x = DISPLAY_EMULATOR_BORDER;
-        sdl_touch_offset_y = DISPLAY_EMULATOR_BORDER;
+        SDL_SetWindowSize(win, DISPLAY_RESX + 2 * EMULATOR_BORDER, DISPLAY_RESY + 2 * EMULATOR_BORDER);
+        sdl_touch_offset_x = EMULATOR_BORDER;
+        sdl_touch_offset_y = EMULATOR_BORDER;
     }
     DISPLAY_BACKLIGHT = 0;
     DISPLAY_ORIENTATION = 0;
@@ -133,10 +151,10 @@ void display_refresh(void)
 #define BACKLIGHT_NORMAL 150
     SDL_SetTextureAlphaMod(TEXTURE, MIN(255, 255 * DISPLAY_BACKLIGHT / BACKLIGHT_NORMAL));
     if (BACKGROUND) {
-        const SDL_Rect r = {DISPLAY_TOUCH_OFFSET_X, DISPLAY_TOUCH_OFFSET_Y, DISPLAY_RESX, DISPLAY_RESY};
+        const SDL_Rect r = {TOUCH_OFFSET_X, TOUCH_OFFSET_Y, DISPLAY_RESX, DISPLAY_RESY};
         SDL_RenderCopyEx(RENDERER, TEXTURE, NULL, &r, DISPLAY_ORIENTATION, NULL, 0);
     } else {
-        const SDL_Rect r = {DISPLAY_EMULATOR_BORDER, DISPLAY_EMULATOR_BORDER, DISPLAY_RESX, DISPLAY_RESY};
+        const SDL_Rect r = {EMULATOR_BORDER, EMULATOR_BORDER, DISPLAY_RESX, DISPLAY_RESY};
         SDL_RenderCopyEx(RENDERER, TEXTURE, NULL, &r, DISPLAY_ORIENTATION, NULL, 0);
     }
     SDL_RenderPresent(RENDERER);

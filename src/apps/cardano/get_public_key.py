@@ -5,7 +5,7 @@ from trezor.crypto import bip32
 from trezor.messages.CardanoPublicKey import CardanoPublicKey
 from trezor.messages.HDNodeType import HDNodeType
 
-from .address import _derive_hd_passphrase, derive_address_and_node
+from .address import derive_address_and_node
 
 from apps.common import layout, seed, storage
 
@@ -34,7 +34,6 @@ def _get_public_key(root_node, derivation_path: list):
     public_key = hexlify(seed.remove_ed25519_prefix(node.public_key())).decode()
     chain_code = hexlify(node.chain_code()).decode()
     xpub_key = public_key + chain_code
-    root_hd_passphrase = hexlify(_derive_hd_passphrase(root_node)).decode()
 
     node_type = HDNodeType(
         depth=node.depth(),
@@ -44,6 +43,4 @@ def _get_public_key(root_node, derivation_path: list):
         public_key=seed.remove_ed25519_prefix(node.public_key()),
     )
 
-    return CardanoPublicKey(
-        node=node_type, xpub=xpub_key, root_hd_passphrase=root_hd_passphrase
-    )
+    return CardanoPublicKey(node=node_type, xpub=xpub_key)
