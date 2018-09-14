@@ -272,7 +272,7 @@ def export_key_image(
     """
     from apps.monero.xmr import monero
 
-    r = monero.generate_key_image_helper(
+    r = monero.generate_tx_spend_and_key_image_and_derivation(
         creds, subaddresses, pkey, tx_pub_key, additional_tx_pub_keys, out_idx
     )
     xi, ki, recv_derivation = r[:3]

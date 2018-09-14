@@ -2,6 +2,10 @@ from micropython import const
 
 from apps.monero.xmr import common, crypto
 
+if False:
+    from apps.monero.xmr.types import *
+
+
 DISPLAY_DECIMAL_POINT = const(12)
 
 
@@ -14,12 +18,6 @@ def get_subaddress_secret_key(secret_key, index=None, major=None, minor=None):
     """
     Builds subaddress secret key from the subaddress index
     Hs(SubAddr || a || index_major || index_minor)
-
-    :param secret_key:
-    :param index:
-    :param major:
-    :param minor:
-    :return:
     """
     if index:
         major = index.major
@@ -34,11 +32,6 @@ def get_subaddress_secret_key(secret_key, index=None, major=None, minor=None):
 def get_subaddress_spend_public_key(view_private, spend_public, major, minor):
     """
     Generates subaddress spend public key D_{major, minor}
-    :param view_private:
-    :param spend_public:
-    :param major:
-    :param minor:
-    :return:
     """
     if major == 0 and minor == 0:
         return spend_public
@@ -49,24 +42,9 @@ def get_subaddress_spend_public_key(view_private, spend_public, major, minor):
     return D
 
 
-def generate_key_derivation(pub_key, priv_key):
-    """
-    Generates derivation priv_key * pub_key.
-    Simple ECDH.
-    :param pub_key:
-    :param priv_key:
-    :return:
-    """
-    return crypto.generate_key_derivation(pub_key, priv_key)
-
-
 def derive_subaddress_public_key(out_key, derivation, output_index):
     """
     out_key - H_s(derivation || varint(output_index))G
-    :param out_key:
-    :param derivation:
-    :param output_index:
-    :return:
     """
     crypto.check_ed25519point(out_key)
     scalar = crypto.derivation_to_scalar(derivation, output_index)
@@ -78,28 +56,24 @@ def derive_subaddress_public_key(out_key, derivation, output_index):
 def generate_key_image(public_key, secret_key):
     """
     Key image: secret_key * H_p(pub_key)
-    :param public_key: encoded point
-    :param secret_key:
-    :return:
     """
     point = crypto.hash_to_ec(public_key)
     point2 = crypto.scalarmult(point, secret_key)
     return point2
 
 
-def is_out_to_acc_precomp(
-    subaddresses, out_key, derivation, additional_derivations, output_index
+def is_out_to_account(
+    subaddresses: dict,
+    out_key: Ge25519,
+    derivation: Ge25519,
+    additional_derivations: list,
+    output_index: int,
 ):
     """
+    Checks whether the given transaction is sent to the account.
     Searches subaddresses for the computed subaddress_spendkey.
-    If found, returns (major, minor), derivation.
-
-    :param subaddresses:
-    :param out_key:
-    :param derivation:
-    :param additional_derivations:
-    :param output_index:
-    :return:
+    Corresponds to is_out_to_acc_precomp() in the Monero codebase.
+    If found, returns (major, minor), derivation, otherwise None.
     """
     subaddress_spendkey = crypto.encodepoint(
         derive_subaddress_public_key(out_key, derivation, output_index)
@@ -124,11 +98,12 @@ def is_out_to_acc_precomp(
     return None
 
 
-def generate_key_image_helper_precomp(
-    ack, out_key, recv_derivation, real_output_index, received_index
-):
+def generate_tx_spend_and_key_image(
+    ack, out_key, recv_derivation, real_output_index, received_index: tuple
+) -> Optional[Tuple[Sc25519, Ge25519]]:
     """
     Generates UTXO spending key and key image.
+    Corresponds to generate_key_image_helper_precomp() in the Monero codebase.
 
     :param ack: sender credentials
     :type ack: apps.monero.xmr.sub.creds.AccountCreds
@@ -182,17 +157,18 @@ def generate_key_image_helper_precomp(
     return scalar_step2, ki
 
 
-def generate_key_image_helper(
+def generate_tx_spend_and_key_image_and_derivation(
     creds,
-    subaddresses,
-    out_key,
-    tx_public_key,
-    additional_tx_public_keys,
-    real_output_index,
-):
+    subaddresses: dict,
+    out_key: Ge25519,
+    tx_public_key: Ge25519,
+    additional_tx_public_keys: list,
+    real_output_index: int,
+) -> Tuple[Sc25519, Ge25519, Ge25519]:
     """
-    Generates UTXO spending key and key image.
+    Generates UTXO spending key and key image and corresponding derivation.
     Supports subaddresses.
+    Corresponds to generate_key_image_helper() in the Monero codebase.
 
     :param creds:
     :param subaddresses:
@@ -202,15 +178,17 @@ def generate_key_image_helper(
     :param real_output_index: index of the real output in the RCT
     :return:
     """
-    recv_derivation = generate_key_derivation(tx_public_key, creds.view_key_private)
+    recv_derivation = crypto.generate_key_derivation(
+        tx_public_key, creds.view_key_private
+    )
 
     additional_recv_derivations = []
     for add_pub_key in additional_tx_public_keys:
         additional_recv_derivations.append(
-            generate_key_derivation(add_pub_key, creds.view_key_private)
+            crypto.generate_key_derivation(add_pub_key, creds.view_key_private)
         )
 
-    subaddr_recv_info = is_out_to_acc_precomp(
+    subaddr_recv_info = is_out_to_account(
         subaddresses,
         out_key,
         recv_derivation,
@@ -220,13 +198,13 @@ def generate_key_image_helper(
     if subaddr_recv_info is None:
         raise XmrNoSuchAddressException("No such addr")
 
-    xi, ki = generate_key_image_helper_precomp(
+    xi, ki = generate_tx_spend_and_key_image(
         creds, out_key, subaddr_recv_info[1], real_output_index, subaddr_recv_info[0]
     )
     return xi, ki, recv_derivation
 
 
-def compute_subaddresses(creds, account, indices, subaddresses=None):
+def compute_subaddresses(creds, account: int, indices, subaddresses=None):
     """
     Computes subaddress public spend key for receiving transactions.
 
@@ -253,11 +231,6 @@ def compute_subaddresses(creds, account, indices, subaddresses=None):
 
 
 def generate_keys(recovery_key):
-    """
-    Wallet gen.
-    :param recovery_key:
-    :return:
-    """
     pub = crypto.scalarmult_base(recovery_key)
     return recovery_key, pub
 
@@ -268,8 +241,6 @@ def generate_monero_keys(seed):
 
     account.cpp:
     crypto::secret_key account_base::generate(const crypto::secret_key& recovery_key, bool recover, bool two_random).
-    :param seed:
-    :return:
     """
     spend_sec, spend_pub = generate_keys(crypto.decodeint(seed))
     hash = crypto.cn_fast_hash(crypto.encodeint(spend_sec))

@@ -582,7 +582,7 @@ class TTransactionBuilder:
             crypto.decodepoint(x) for x in src_entr.real_out_additional_tx_keys
         ]
 
-        secs = monero.generate_key_image_helper(
+        secs = monero.generate_tx_spend_and_key_image_and_derivation(
             self.creds,
             self.subaddresses,
             out_key,
@@ -1068,7 +1068,7 @@ class TTransactionBuilder:
         change_addr = self.change_address()
         if change_addr and addr_eq(dst_entr.addr, change_addr):
             # sending change to yourself; derivation = a*R
-            derivation = monero.generate_key_derivation(
+            derivation = crypto.generate_key_derivation(
                 self.r_pub, self.creds.view_key_private
             )
 
@@ -1079,7 +1079,7 @@ class TTransactionBuilder:
                 if dst_entr.is_subaddress and self.need_additional_txkeys
                 else self.r
             )
-            derivation = monero.generate_key_derivation(
+            derivation = crypto.generate_key_derivation(
                 crypto.decodepoint(dst_entr.addr.view_public_key), deriv_priv
             )
         return derivation

@@ -609,7 +609,7 @@ class LiteProtocol:
         sec = self._fetch_decrypt_key()
         pay_id = self._fetch(8)
 
-        drv = monero.generate_key_derivation(pub, sec)
+        drv = crypto.generate_key_derivation(pub, sec)
         drv += b"\x8d"
         sec = crypto.keccak_hash(drv)
         for i in range(8):
