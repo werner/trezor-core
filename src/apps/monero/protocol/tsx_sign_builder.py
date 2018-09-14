@@ -422,7 +422,7 @@ class TTransactionBuilder:
         class_res = classify_subaddresses(tsx_data.outputs, self.change_address())
         num_stdaddresses, num_subaddresses, single_dest_subaddress = class_res
 
-        # if this is a single-destination transfer to a subaddress, we set the tx pubkey to R=s*D
+        # if this is a single-destination transfer to a subaddress, we set the tx pubkey to R=r*D
         if num_stdaddresses == 0 and num_subaddresses == 1:
             self.r_pub = crypto.scalarmult(
                 crypto.decodepoint(single_dest_subaddress.spend_public_key), self.r
