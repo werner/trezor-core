@@ -94,13 +94,11 @@ def get_change_addr_idx(outputs, change_dts):
         return None
 
     change_idx = None
-    change_coord = change_dts.amount, change_dts.addr
     for idx, dst in enumerate(outputs):
         if (
-            change_coord
-            and change_coord[0]
-            and change_coord[0] == dst.amount
-            and addr_eq(change_coord[1], dst.addr)
+            change_dts.amount
+            and change_dts.amount == dst.amount
+            and addr_eq(change_dts.addr, dst.addr)
         ):
             change_idx = idx
     return change_idx

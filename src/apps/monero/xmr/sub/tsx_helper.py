@@ -9,74 +9,6 @@ from apps.monero.xmr.serialize_messages.tx_extra import (
 )
 
 
-def parse_extra_fields(extra_buff):
-    """
-    Parses extra buffer to the extra fields vector
-    """
-    extras = []
-    rw = MemoryReaderWriter(extra_buff)
-    ar2 = xmrserialize.Archive(rw, False)
-    while len(rw.get_buffer()) > 0:
-        extras.append(ar2.variant(elem_type=TxExtraField))
-    return extras
-
-
-def find_tx_extra_field_by_type(extra_fields, msg, idx=0):
-    """
-    Finds given message type in the extra array, or returns None if not found
-    """
-    cur_idx = 0
-    for x in extra_fields:
-        if isinstance(x, msg):
-            if cur_idx == idx:
-                return x
-            cur_idx += 1
-    return None
-
-
-def has_encrypted_payment_id(extra_nonce):
-    """
-    Returns true if encrypted payment id is present
-    """
-    return len(extra_nonce) == 9 and extra_nonce[0] == 1
-
-
-def has_payment_id(extra_nonce):
-    """
-    Returns true if payment id is present
-    """
-    return len(extra_nonce) == 33 and extra_nonce[0] == 0
-
-
-def get_payment_id_from_tx_extra_nonce(extra_nonce):
-    """
-    Extracts encrypted payment id from extra
-    """
-    if 33 != len(extra_nonce):
-        raise ValueError("Nonce size mismatch")
-    if 0x0 != extra_nonce[0]:
-        raise ValueError("Nonce payment type invalid")
-    return extra_nonce[1:]
-
-
-def get_encrypted_payment_id_from_tx_extra_nonce(extra_nonce):
-    """
-    Extracts encrypted payment id from extra
-    """
-    if 9 != len(extra_nonce):
-        raise ValueError("Nonce size mismatch")
-    if 0x1 != extra_nonce[0]:
-        raise ValueError("Nonce payment type invalid")
-    return extra_nonce[1:]
-
-
-def set_payment_id_to_tx_extra_nonce(payment_id):
-    """
-    Sets payment ID to the extra
-    """
-    return b"\x00" + payment_id
-
-
 def absolute_output_offsets_to_relative(off):
     """
     Relative offsets, prev + cur = next.
@@ -84,10 +16,10 @@ def absolute_output_offsets_to_relative(off):
     """
     if len(off) == 0:
         return off
-    res = sorted(off)
+    off.sort()
     for i in range(len(off) - 1, 0, -1):
-        res[i] -= res[i - 1]
-    return res
+        off[i] -= off[i - 1]
+    return off
 
 
 def get_destination_view_key_pub(destinations, change_addr=None):
@@ -130,40 +62,6 @@ def encrypt_payment_id(payment_id, public_key, secret_key):
     return pm_copy
 
 
-def set_encrypted_payment_id_to_tx_extra_nonce(payment_id):
-    return b"\x01" + payment_id
-
-
-def remove_field_from_tx_extra(extra, mtype):
-    """
-    Removes extra field of fiven type from the buffer
-    Reserializes with skipping the given mtype.
-    """
-    if len(extra) == 0:
-        return []
-
-    reader = MemoryReaderWriter(extra)
-    writer = MemoryReaderWriter()
-    ar_read = xmrserialize.Archive(reader, False)
-    ar_write = xmrserialize.Archive(writer, True)
-    while len(reader.get_buffer()) > 0:
-        c_extras = ar_read.variant(elem_type=TxExtraField)
-        if not isinstance(c_extras, mtype):
-            ar_write.variant(c_extras, elem_type=TxExtraField)
-
-    return writer.get_buffer()
-
-
-def add_extra_nonce_to_tx_extra(extra, extra_nonce):
-    """
-    Appends nonce extra to the extra buffer
-    """
-    if len(extra_nonce) > 255:
-        raise ValueError("Nonce could be 255 bytes max")
-    extra += b"\x02" + len(extra_nonce).to_bytes(1, "big") + extra_nonce
-    return extra
-
-
 def add_tx_pub_key_to_extra(tx_extra, pub_key):
     """
     Adds public key to the extra
@@ -191,5 +89,5 @@ def add_additional_tx_pub_keys_to_extra(
 
     # format: variant_tag (0x4) | array len varint | 32B | 32B | ...
     ar.variant(pubs_msg, TxExtraField)
-    tx_extra += bytes(rw.get_buffer())
+    tx_extra += rw.get_buffer()
     return tx_extra

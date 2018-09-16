@@ -262,9 +262,13 @@ class TTransactionBuilder:
             offset += len(discriminator)
 
         if index is not None:
-            from apps.monero.xmr.serialize.int_serialize import dump_uvarint_b_into
-
-            dump_uvarint_b_into(index, key_buff, offset)
+            # dump_uvarint_b_into, saving import
+            shifted = True
+            while shifted:
+                shifted = index >> 7
+                key_buff[offset] = (index & 0x7F) | (0x80 if shifted else 0x00)
+                offset += 1
+                index = shifted
 
         return crypto.keccak_2hash(key_buff)
 
@@ -497,19 +501,26 @@ class TTransactionBuilder:
                 tsx_data.payment_id, view_key_pub, self.r
             )
 
-            extra_nonce = tsx_helper.set_encrypted_payment_id_to_tx_extra_nonce(
-                payment_id_encr
-            )
+            extra_nonce = payment_id_encr
+            extra_prefix = 1
 
         elif len(tsx_data.payment_id) == 32:
-            extra_nonce = tsx_helper.set_payment_id_to_tx_extra_nonce(
-                tsx_data.payment_id
-            )
+            extra_nonce = tsx_data.payment_id
+            extra_prefix = 0
 
         else:
             raise ValueError("Payment ID size invalid")
 
-        self.tx.extra = tsx_helper.add_extra_nonce_to_tx_extra(b"", extra_nonce)
+        lextra = len(extra_nonce)
+        if lextra >= 255:
+            raise ValueError("Nonce could be 255 bytes max")
+
+        extra_buff = bytearray(3 + lextra)
+        extra_buff[0] = 2
+        extra_buff[1] = lextra + 1
+        extra_buff[2] = extra_prefix
+        utils.memcpy(extra_buff, 3, extra_nonce, 0, lextra)
+        self.tx.extra = extra_buff
 
     async def compute_sec_keys(self, tsx_data):
         """
@@ -596,16 +607,15 @@ class TTransactionBuilder:
         # Construct tx.vin
         ki_real = src_entr.multisig_kLRki.ki if self.multi_sig else ki
         vini = TxinToKey(amount=src_entr.amount, k_image=crypto.encodepoint(ki_real))
-        vini.key_offsets = [x.idx for x in src_entr.outputs]
         vini.key_offsets = tsx_helper.absolute_output_offsets_to_relative(
-            vini.key_offsets
+            [x.idx for x in src_entr.outputs]
         )
 
         if src_entr.rct:
             vini.amount = 0
 
         # Serialize with variant code for TxinToKey
-        vini_bin = misc.dump_msg(vini, preallocate=68, prefix=b"\x02")
+        vini_bin = misc.dump_msg(vini, preallocate=64, prefix=b"\x02")
         self._mem_trace(2, True)
 
         if self.in_memory():
@@ -896,7 +906,7 @@ class TTransactionBuilder:
 
         for i in range(batch_size):
             C = crypto.decodepoint(rsig.V[i])
-            C = crypto.point_mul8(C)
+            crypto.point_mul8_into(C, C)
             self._check_out_commitment(self.output_amounts[i], masks[i], C)
 
     def _return_rsig_data(self, rsig):
