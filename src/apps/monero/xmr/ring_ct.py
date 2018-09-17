@@ -38,7 +38,7 @@ def verify_bp(bp_proof, amounts=None, masks=None):
     if amounts:
         bp_proof.V = []
         for i in range(len(amounts)):
-            C = crypto.gen_c(masks[i], amounts[i])
+            C = crypto.gen_commitment(masks[i], amounts[i])
             crypto.scalarmult_into(C, C, crypto.sc_inv_eight())
             bp_proof.V.append(crypto.encodepoint(C))
 
@@ -61,7 +61,7 @@ def prove_range_chunked(amount, last_mask=None):
     tmp_alpha = crypto.sc_init(0)
 
     C_acc = crypto.identity()
-    C_h = crypto.gen_H()
+    C_h = crypto.xmr_H()
     C_tmp = crypto.identity()
     L = crypto.identity()
     Zero = crypto.identity()
@@ -77,12 +77,12 @@ def prove_range_chunked(amount, last_mask=None):
     ee_bin = bytearray(32)
 
     for ii in range(64):
-        crypto.random_scalar_into(tmp_ai)
+        crypto.random_scalar(tmp_ai)
         if last_mask is not None and ii == 63:
             crypto.sc_sub_into(tmp_ai, last_mask, a)
 
         crypto.sc_add_into(a, a, tmp_ai)
-        crypto.random_scalar_into(tmp_alpha)
+        crypto.random_scalar(tmp_alpha)
 
         crypto.scalarmult_base_into(L, tmp_alpha)
         crypto.scalarmult_base_into(C_tmp, tmp_ai)
@@ -97,7 +97,7 @@ def prove_range_chunked(amount, last_mask=None):
         crypto.encodeint_into(alphai, tmp_alpha, ii << 5)
 
         if ((amount >> ii) & 1) == 0:
-            crypto.random_scalar_into(si)
+            crypto.random_scalar(si)
             crypto.encodepoint_into(buff, L)
             crypto.hash_to_scalar_into(c, buff)
 
@@ -116,7 +116,7 @@ def prove_range_chunked(amount, last_mask=None):
     crypto.decodeint_into(ee, tmp_ee)
     del (tmp_ee, kck)
 
-    C_h = crypto.gen_H()
+    C_h = crypto.xmr_H()
     gc.collect()
 
     # Second pass, s0, s1
@@ -129,7 +129,7 @@ def prove_range_chunked(amount, last_mask=None):
             crypto.encodeint_into(s0s, si, ii << 5)
 
         else:
-            crypto.random_scalar_into(si)
+            crypto.random_scalar(si)
             crypto.encodeint_into(s0s, si, ii << 5)
 
             crypto.decodepoint_into(C_tmp, Cis, ii << 5)
@@ -198,8 +198,6 @@ def generate_ring_signature(prefix_hash, image, pubs, sec, sec_idx, test=False):
         for k in pubs:
             crypto.ge_frombytes_vartime_check(k)
 
-    image_unp = crypto.ge_frombytes_vartime(image)
-
     buff_off = len(prefix_hash)
     buff = bytearray(buff_off + 2 * 32 * len(pubs))
     memcpy(buff, 0, prefix_hash, 0, buff_off)
@@ -218,21 +216,23 @@ def generate_ring_signature(prefix_hash, image, pubs, sec, sec_idx, test=False):
             crypto.encodepoint_into(mvbuff[buff_off : buff_off + 32], tmp3)
             buff_off += 32
 
-            tmp3 = crypto.hash_to_ec(crypto.encodepoint(pubs[i]))
+            tmp3 = crypto.hash_to_point(crypto.encodepoint(pubs[i]))
             tmp2 = crypto.scalarmult(tmp3, k)
             crypto.encodepoint_into(mvbuff[buff_off : buff_off + 32], tmp2)
             buff_off += 32
 
         else:
             sig[i] = [crypto.random_scalar(), crypto.random_scalar()]
-            tmp3 = crypto.ge_frombytes_vartime(pubs[i])
-            tmp2 = crypto.ge_double_scalarmult_base_vartime(sig[i][0], tmp3, sig[i][1])
+            tmp3 = pubs[i]
+            tmp2 = crypto.ge25519_double_scalarmult_base_vartime(
+                sig[i][0], tmp3, sig[i][1]
+            )
             crypto.encodepoint_into(mvbuff[buff_off : buff_off + 32], tmp2)
             buff_off += 32
 
-            tmp3 = crypto.hash_to_ec(crypto.encodepoint(tmp3))
-            tmp2 = crypto.ge_double_scalarmult_precomp_vartime(
-                sig[i][1], tmp3, sig[i][0], image_unp
+            tmp3 = crypto.hash_to_point(crypto.encodepoint(tmp3))
+            tmp2 = crypto.ge25519_double_scalarmult_vartime2(
+                sig[i][1], tmp3, sig[i][0], image
             )
             crypto.encodepoint_into(mvbuff[buff_off : buff_off + 32], tmp2)
             buff_off += 32
@@ -245,49 +245,8 @@ def generate_ring_signature(prefix_hash, image, pubs, sec, sec_idx, test=False):
     return sig
 
 
-def check_ring_singature(prefix_hash, image, pubs, sig):
-    from trezor.utils import memcpy
-
-    image_unp = crypto.ge_frombytes_vartime(image)
-
-    buff_off = len(prefix_hash)
-    buff = bytearray(buff_off + 2 * 32 * len(pubs))
-    memcpy(buff, 0, prefix_hash, 0, buff_off)
-    mvbuff = memoryview(buff)
-
-    sum = crypto.sc_0()
-    for i in range(len(pubs)):
-        if crypto.sc_check(sig[i][0]) != 0 or crypto.sc_check(sig[i][1]) != 0:
-            return False
-
-        tmp3 = crypto.ge_frombytes_vartime(pubs[i])
-        tmp2 = crypto.ge_double_scalarmult_base_vartime(sig[i][0], tmp3, sig[i][1])
-        crypto.encodepoint_into(mvbuff[buff_off : buff_off + 32], tmp2)
-        buff_off += 32
-
-        tmp3 = crypto.hash_to_ec(crypto.encodepoint(pubs[i]))
-        tmp2 = crypto.ge_double_scalarmult_precomp_vartime(
-            sig[i][1], tmp3, sig[i][0], image_unp
-        )
-        crypto.encodepoint_into(mvbuff[buff_off : buff_off + 32], tmp2)
-        buff_off += 32
-
-        sum = crypto.sc_add(sum, sig[i][0])
-
-    h = crypto.hash_to_scalar(buff)
-    h = crypto.sc_sub(h, sum)
-    return crypto.sc_isnonzero(h) == 0
-
-
 def export_key_image(
-    creds,
-    subaddresses,
-    pkey,
-    tx_pub_key,
-    additional_tx_pub_keys,
-    out_idx,
-    test=True,
-    verify=True,
+    creds, subaddresses, pkey, tx_pub_key, additional_tx_pub_keys, out_idx, test=True
 ):
     """
     Generates key image for the TXO + signature for the key image
@@ -301,9 +260,5 @@ def export_key_image(
 
     phash = crypto.encodepoint(ki)
     sig = generate_ring_signature(phash, ki, [pkey], xi, 0, test)
-
-    if verify:
-        if check_ring_singature(phash, ki, [pkey], sig) != 1:
-            raise ValueError("Signature error")
 
     return ki, sig

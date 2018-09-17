@@ -97,7 +97,7 @@ def gen_mlsag_rows(message, rv, pk, xx, kLRki, index, dsRows, rows, cols):
             hash_point(hasher, kLRki.R)
 
         else:
-            Hi = crypto.hash_to_ec(
+            Hi = crypto.hash_to_point(
                 crypto.encodepoint(pk[index][i])
             )  # originally hashToPoint()
             alpha[i] = crypto.random_scalar()
@@ -145,7 +145,7 @@ def gen_mlsag_ext(message, pk, xx, kLRki, mscout, index, dsRows):
 
         for j in range(dsRows):
             L = crypto.add_keys2(rv.ss[i][j], c_old, pk[i][j])
-            Hi = crypto.hash_to_ec(
+            Hi = crypto.hash_to_point(
                 crypto.encodepoint(pk[i][j])
             )  # originally hashToPoint()
             R = crypto.add_keys3(rv.ss[i][j], Hi, c_old, Ip[j])

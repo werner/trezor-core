@@ -713,7 +713,7 @@ class TTransactionBuilder:
             if is_last and self.use_simple_rct:
                 crypto.sc_sub_into(cur_mask, self.sumpouts_alphas, self.sumout)
             else:
-                crypto.random_scalar_into(cur_mask)
+                crypto.random_scalar(cur_mask)
 
             crypto.sc_add_into(self.sumout, self.sumout, cur_mask)
             self.output_masks.append(cur_mask)
@@ -766,7 +766,7 @@ class TTransactionBuilder:
         """
         alpha = crypto.random_scalar()
         self.sumpouts_alphas = crypto.sc_add(self.sumpouts_alphas, alpha)
-        return alpha, crypto.gen_c(alpha, in_amount)
+        return alpha, crypto.gen_commitment(alpha, in_amount)
 
     def _check_out_commitment(self, amount, mask, C):
         self.assrt(
@@ -901,7 +901,7 @@ class TTransactionBuilder:
         # Mask sum
         out_pk = misc.StdObj(
             dest=crypto.encodepoint(dest_pub_key),
-            mask=crypto.encodepoint(crypto.gen_c(mask, amount)),
+            mask=crypto.encodepoint(crypto.gen_commitment(mask, amount)),
         )
         self.sumout = crypto.sc_add(self.sumout, mask)
         self.output_sk.append(misc.StdObj(mask=mask))
@@ -1317,7 +1317,7 @@ class TTransactionBuilder:
         self.assrt(
             crypto.point_eq(
                 crypto.decodepoint(src_entr.outputs[src_entr.real_output].key.mask),
-                crypto.gen_c(in_sk.mask, src_entr.amount),
+                crypto.gen_commitment(in_sk.mask, src_entr.amount),
             ),
             "a2",
         )

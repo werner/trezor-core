@@ -297,12 +297,8 @@ def sc_inv_into(r, x):
     return tcry.inv256_modm(r, x)
 
 
-def random_scalar():
-    return tcry.xmr_random_scalar()
-
-
-def random_scalar_into(r):
-    return tcry.xmr_random_scalar(r)
+def random_scalar(r=None):
+    return tcry.xmr_random_scalar(r if r is not None else new_scalar())
 
 
 #
@@ -310,7 +306,7 @@ def random_scalar_into(r):
 #
 
 
-def ge_double_scalarmult_base_vartime(a, A, b):
+def ge25519_double_scalarmult_base_vartime(a, A, b):
     """
     void ge25519_double_scalarmult_vartime(ge25519 *r, const ge25519 *p1, const bignum256modm s1, const bignum256modm s2);
     r = a * A + b * B
@@ -319,14 +315,7 @@ def ge_double_scalarmult_base_vartime(a, A, b):
     return R
 
 
-def ge_double_scalarmult_precomp_vartime(a, A, b, Bi):
-    """
-    void ge_double_scalarmult_precomp_vartime(ge_p2 *r, const unsigned char *a, const ge_p3 *A, const unsigned char *b, const ge_dsmp Bi)
-    """
-    return ge_double_scalarmult_precomp_vartime2(a, A, b, Bi)
-
-
-def ge_double_scalarmult_precomp_vartime2(a, Ai, b, Bi):
+def ge25519_double_scalarmult_vartime2(a, Ai, b, Bi):
     """
     void ge_double_scalarmult_precomp_vartime2(ge_p2 *r, const unsigned char *a, const ge_dsmp Ai, const unsigned char *b, const ge_dsmp Bi)
     """
@@ -350,14 +339,6 @@ def ge_frombytes_vartime_check(point):
     """
     tcry.ge25519_check(point)
     return 0
-
-
-def ge_frombytes_vartime(point):
-    """
-    https://www.imperialviolet.org/2013/12/25/elligator.html
-    """
-    ge_frombytes_vartime_check(point)
-    return point
 
 
 #
@@ -385,7 +366,7 @@ def hash_to_scalar_into(r, data, length=None):
     return tcry.xmr_hash_to_scalar(r, dt)
 
 
-def hash_to_ec(buf):
+def hash_to_point(buf):
     """
     H_p(buf)
 
@@ -396,7 +377,7 @@ def hash_to_ec(buf):
     return tcry.xmr_hash_to_ec(buf)
 
 
-def hash_to_ec_into(r, buf):
+def hash_to_point_into(r, buf):
     return tcry.xmr_hash_to_ec(r, buf)
 
 
@@ -405,7 +386,7 @@ def hash_to_ec_into(r, buf):
 #
 
 
-def gen_H():
+def xmr_H():
     """
     Returns point H
     8b655970153799af2aeadc9ff1add0ea6c7251d54154cfa92c173a0dd39c1f94
@@ -414,7 +395,7 @@ def gen_H():
 
 
 def scalarmult_h(i):
-    return scalarmult(gen_H(), sc_init(i) if isinstance(i, int) else i)
+    return scalarmult(xmr_H(), sc_init(i) if isinstance(i, int) else i)
 
 
 def add_keys2(a, b, B):
@@ -445,7 +426,7 @@ def add_keys3_into(r, a, A, b, B):
     return tcry.xmr_add_keys3_vartime(r, a, A, b, B)
 
 
-def gen_c(a, amount):
+def gen_commitment(a, amount):
     """
     Generates Pedersen commitment
     C = aG + bH

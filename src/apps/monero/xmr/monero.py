@@ -57,7 +57,7 @@ def generate_key_image(public_key, secret_key):
     """
     Key image: secret_key * H_p(pub_key)
     """
-    point = crypto.hash_to_ec(public_key)
+    point = crypto.hash_to_point(public_key)
     point2 = crypto.scalarmult(point, secret_key)
     return point2
 
