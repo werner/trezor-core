@@ -311,39 +311,60 @@ class KeyV(KeyVBase):
     """
     KeyVector abstraction
     Constant precomputed buffers = bytes, frozen. Same operation as normal.
+
+    Non-constant KeyVector is separated to 64 elements chunks to avoid problems with
+    the heap fragmentation. In this way the chunks are more probable to be correctly
+    allocated as smaller chunk of continuous memory is required. Chunk is assumed to
+    have 64 elements at all times to minimize corner cases handling. BP require either
+    multiple of 64 elements vectors or less than 64.
+
+    Some chunk-dependent cases are not implemented as they are currently not needed in the BP.
     """
 
-    def __init__(self, elems=64, src=None, buffer=None, const=False, no_init=False):
+    def __init__(self, elems=64, buffer=None, const=False, no_init=False):
         super().__init__(elems)
         self.d = None
         self.mv = None
         self.const = const
         self.cur = _ensure_dst_key()
+        self.chunked = False
         if no_init:
             pass
-        elif src:
-            self.d = bytearray(src.d)
-            self.size = src.size
         elif buffer:
             self.d = buffer  # can be immutable (bytes)
             self.size = len(buffer) // 32
         else:
-            self.d = bytearray(32 * elems)
+            self._set_d(elems)
+
         if not no_init:
             self._set_mv()
 
+    def _set_d(self, elems):
+        if elems > 64 and elems % 64 == 0:
+            self.chunked = True
+            self.d = [bytearray(32 * 64) for _ in range(elems // 64)]
+
+        else:
+            self.chunked = False
+            self.d = bytearray(32 * elems)
+
     def _set_mv(self):
-        self.mv = memoryview(self.d)
+        if not self.chunked:
+            self.mv = memoryview(self.d)
 
     def __getitem__(self, item):
         """
         Returns corresponding 32 byte array.
         Creates new memoryview on access.
         """
+        if self.chunked:
+            raise ValueError("Not supported")  # not needed
         item = self.idxize(item)
         return self.mv[item * 32 : (item + 1) * 32]
 
     def __setitem__(self, key, value):
+        if self.chunked:
+            raise ValueError("Not supported")  # not needed
         if self.const:
             raise ValueError("Constant KeyV")
         ck = self[key]
@@ -352,22 +373,49 @@ class KeyV(KeyVBase):
 
     def to(self, idx, buff=None, offset=0):
         idx = self.idxize(idx)
-        memcpy(buff if buff else self.cur, offset, self.d, idx * 32, 32)
+        if self.chunked:
+            memcpy(
+                buff if buff else self.cur,
+                offset,
+                self.d[idx >> 6],
+                (idx & 63) << 5,
+                32,
+            )
+        else:
+            memcpy(buff if buff else self.cur, offset, self.d, idx << 5, 32)
         return buff if buff else self.cur
 
     def read(self, idx, buff, offset=0):
         idx = self.idxize(idx)
-        memcpy(self.d, idx * 32, buff, offset, 32)
+        if self.chunked:
+            memcpy(self.d[idx >> 6], (idx & 63) << 5, buff, offset, 32)
+        else:
+            memcpy(self.d, idx << 5, buff, offset, 32)
 
     def resize(self, nsize, chop=False, realloc=False):
         if self.size == nsize:
             return self
-        elif self.size > nsize and realloc:
-            self.d = bytearray(self.d[: nsize * 32])
-        elif self.size > nsize and not chop:
-            self.d = self.d[: nsize * 32]
+
+        if self.chunked and nsize <= 64:
+            self.chunked = False  # de-chunk
+            if self.size > nsize and realloc:
+                self.d = bytearray(self.d[0][: nsize << 5])
+            elif self.size > nsize and not chop:
+                self.d = self.d[0][: nsize << 5]
+            else:
+                self.d = bytearray(nsize << 5)
+
+        elif self.chunked:
+            raise ValueError("Unsupported")  # not needed
+
         else:
-            self.d = bytearray(nsize * 32)
+            if self.size > nsize and realloc:
+                self.d = bytearray(self.d[: nsize << 5])
+            elif self.size > nsize and not chop:
+                self.d = self.d[: nsize << 5]
+            else:
+                self.d = bytearray(nsize << 5)
+
         self.size = nsize
         self._set_mv()
 
@@ -376,7 +424,8 @@ class KeyV(KeyVBase):
         self.mv = None
         if collect:
             gc.collect()  # gc collect prev. allocation
-        self.d = bytearray(nsize * 32)
+
+        self._set_d(nsize)
         self.size = nsize
         self._set_mv()
 
@@ -384,7 +433,25 @@ class KeyV(KeyVBase):
         if not isinstance(src, KeyV):
             raise ValueError("KeyV supported only")
         self.realloc(nsize, collect)
-        memcpy(self.d, 0, src.d, 32 * offset, 32 * nsize)
+
+        if not self.chunked and not src.chunked:
+            memcpy(self.d, 0, src.d, offset << 5, nsize << 5)
+
+        elif self.chunked and not src.chunked:
+            raise ValueError("Unsupported")  # not needed
+
+        elif self.chunked and src.chunked:
+            raise ValueError("Unsupported")  # not needed
+
+        elif not self.chunked and src.chunked:
+            for i in range(nsize >> 6):
+                memcpy(
+                    self.d,
+                    i << 11,
+                    src.d[i + (offset >> 6)],
+                    (offset & 63) << 5 if i == 0 else 0,
+                    nsize << 5 if i <= nsize >> 6 else (nsize & 64) << 5,
+                )
 
 
 class KeyVEval(KeyVBase):
