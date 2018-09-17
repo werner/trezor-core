@@ -924,9 +924,7 @@ class TTransactionBuilder:
             self.full_message_hasher.rsig_val(rsig, True, raw=False)
             self._mem_trace("post-bp-hash" if __debug__ else None, collect=True)
 
-            rsig = misc.dump_msg_gc(
-                rsig, preallocate=ring_ct.bp_size(batch_size) + 8, del_msg=True
-            )
+            rsig = misc.dump_rsig_bp(rsig)
             self._mem_trace(
                 "post-bp-ser, size: %s" % len(rsig) if __debug__ else None, collect=True
             )
