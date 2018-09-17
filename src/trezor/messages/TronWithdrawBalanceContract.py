@@ -3,5 +3,5 @@
 import protobuf as p
 
 
-class MoneroLiteInitAck(p.MessageType):
-    MESSAGE_WIRE_TYPE = 541
+class TronWithdrawBalanceContract(p.MessageType):
+    pass
