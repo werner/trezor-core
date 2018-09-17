@@ -68,7 +68,10 @@ def addr_eq(a, b):
     :param b:
     :return:
     """
-    return a.spend_public_key == b.spend_public_key and a.view_public_key == b.view_public_key
+    return (
+        a.spend_public_key == b.spend_public_key
+        and a.view_public_key == b.view_public_key
+    )
 
 
 def get_change_addr_idx(outputs, change_dts):
