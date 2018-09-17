@@ -23,7 +23,7 @@ def scalar_gen_vector(n):
     """
     Generates vector of scalars
     """
-    return [crypto.random_scalar() for i in range(0, n)]
+    return [crypto.random_scalar() for _ in range(0, n)]
 
 
 #

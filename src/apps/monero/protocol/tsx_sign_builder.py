@@ -562,7 +562,6 @@ class TTransactionBuilder:
         pseudo_out = None
         pseudo_out_hmac = None
         alpha_enc = None
-        spend_enc = None
 
         if self.use_simple_rct:
             alpha, pseudo_out = self._gen_commitment(src_entr.amount)
@@ -896,7 +895,7 @@ class TTransactionBuilder:
             self.output_masks = []
         return rsig, mask
 
-    def _set_out1_ecdh(self, idx, dest_pub_key, amount, mask, amount_key):
+    def _set_out1_ecdh(self, dest_pub_key, amount, mask, amount_key):
         from apps.monero.xmr import ring_ct
 
         # Mask sum
@@ -1046,7 +1045,6 @@ class TTransactionBuilder:
 
         # Out_pk, ecdh_info
         out_pk, ecdh_info_bin = self._set_out1_ecdh(
-            self.out_idx,
             dest_pub_key=tx_out_key,
             amount=dst_entr.amount,
             mask=mask,
@@ -1331,7 +1329,6 @@ class TTransactionBuilder:
         gc.collect()
         from apps.monero.xmr import mlsag2
 
-        mg = None
         if self.use_simple_rct:
             # Simple RingCT
             mix_ring = [x.key for x in src_entr.outputs]

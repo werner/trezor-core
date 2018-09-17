@@ -123,7 +123,6 @@ def generate_tx_spend_and_key_image(
 
     # step 2: add Hs(SubAddr || a || index_major || index_minor)
     subaddr_sk = None
-    scalar_step2 = None
     if received_index == (0, 0):
         scalar_step2 = scalar_step1
     else:

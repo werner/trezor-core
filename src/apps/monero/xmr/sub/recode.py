@@ -22,7 +22,7 @@ def recode_ecdh(ecdh, encode=True):
 def recode_msg(mgs, encode=True):
     """
     Recodes MGs signatures from raw forms to bytearrays so it works with serialization
-    :param rv:
+    :param mgs:
     :param encode: if true encodes to byte representation, otherwise decodes from byte representation
     :return:
     """

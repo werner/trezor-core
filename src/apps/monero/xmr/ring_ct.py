@@ -6,15 +6,6 @@ import gc
 from apps.monero.xmr import crypto
 
 
-def bp_size(outputs):
-    M, logM = 1, 0
-    while M <= 16 and M < outputs:
-        logM += 1
-        M = 1 << logM
-
-    return 32 * (21 + outputs + 2 * logM)
-
-
 def prove_range_bp(amount, last_mask=None):
     mask = last_mask if last_mask is not None else crypto.random_scalar()
     bp_proof = prove_range_bp_batch([amount], [mask])
