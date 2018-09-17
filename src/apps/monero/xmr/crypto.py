@@ -543,16 +543,6 @@ def get_subaddress_secret_key(secret_key, major=0, minor=0):
     return tcry.xmr_get_subaddress_secret_key(major, minor, secret_key)
 
 
-def prove_range(rsig, amount, last_mask=None, *args, **kwargs):
-    """
-    Range proof provided by the backend. Implemented in C for speed.
-    """
-    C, a, R = tcry.gen_range_proof(rsig, amount, last_mask, *args, **kwargs)
-
-    # Trezor micropython extmod returns byte-serialized/flattened rsig
-    return C, a, R
-
-
 def b16_to_scalar(bts):
     """
     Converts hexcoded bytearray to the scalar

@@ -66,7 +66,6 @@ SOURCE_MOD += [
     'vendor/trezor-crypto/ed25519-donna/modm-donna-32bit.c',
     'vendor/trezor-crypto/monero/base58.c',
     'vendor/trezor-crypto/monero/serialize.c',
-    'vendor/trezor-crypto/monero/range_proof.c',
     'vendor/trezor-crypto/monero/xmr.c',
     'vendor/trezor-crypto/groestl.c',
     'vendor/trezor-crypto/hasher.c',
