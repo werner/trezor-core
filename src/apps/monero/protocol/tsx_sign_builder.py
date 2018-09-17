@@ -602,16 +602,6 @@ class TTransactionBuilder:
         if self.inp_idx + 1 != self.num_inputs():
             raise ValueError("Input count mismatch")
 
-    def tsx_inputs_done_inm(self):
-        """
-        In-memory post processing - tx.vin[i] sorting by key image.
-        Used only if number of inputs is small - computable in Trezor without offloading.
-        """
-        # Sort tx.in by key image
-        self.source_permutation = list(range(self.num_inputs()))
-        self.source_permutation.sort(key=lambda x: self.tx.vin[x].k_image, reverse=True)
-        self._tsx_inputs_permutation(self.source_permutation)
-
     async def tsx_inputs_permutation(self, permutation):
         """
         Set permutation on the inputs - sorted by key image on host.
@@ -631,6 +621,7 @@ class TTransactionBuilder:
         """
         self.state.input_permutation()
         self.source_permutation = permutation
+        common.check_permutation(permutation)
         self.inp_idx = -1
 
     async def input_vini(self, src_entr, vini_bin, hmac, pseudo_out, pseudo_out_hmac):
