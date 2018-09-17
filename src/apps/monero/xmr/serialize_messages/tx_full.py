@@ -40,12 +40,6 @@ class RctSigBase(MessageType):
         )
 
     def serialize_rctsig_base(self, ar, inputs, outputs):
-        """
-        Custom serialization
-        :param ar:
-        :type ar: x.Archive
-        :return:
-        """
         self._msg_field(ar, idx=0)
         if self.type == RctType.Null:
             return

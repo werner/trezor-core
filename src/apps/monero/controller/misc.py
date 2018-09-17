@@ -24,14 +24,6 @@ class StdObj:
 
 
 def compute_tx_key(spend_key_private, tx_prefix_hash, salt=None, rand_mult=None):
-    """
-
-    :param spend_key_private:
-    :param tx_prefix_hash:
-    :param salt:
-    :param rand_mult:
-    :return:
-    """
     from apps.monero.xmr import crypto
 
     if not salt:

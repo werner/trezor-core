@@ -339,8 +339,6 @@ class KeyV(KeyVBase):
         """
         Returns corresponding 32 byte array.
         Creates new memoryview on access.
-        :param item:
-        :return:
         """
         item = self.idxize(item)
         return self.mv[item * 32 : (item + 1) * 32]

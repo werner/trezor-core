@@ -62,12 +62,6 @@ def classify_subaddresses(tx_dests, change_addr):
 
 
 def addr_eq(a, b):
-    """
-    Address comparisson. Allocation free.
-    :param a:
-    :param b:
-    :return:
-    """
     return (
         a.spend_public_key == b.spend_public_key
         and a.view_public_key == b.view_public_key

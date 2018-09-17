@@ -103,12 +103,6 @@ class TTransactionBuilder:
             gc.collect()
 
     def assrt(self, condition, msg=None):
-        """
-        Asserts condition
-        :param condition:
-        :param msg:
-        :return:
-        """
         if condition:
             return
         raise ValueError("Assertion error%s" % (" : %s" % msg if msg else ""))
@@ -123,8 +117,6 @@ class TTransactionBuilder:
     def gen_r(self, use_r=None):
         """
         Generates a new transaction key pair.
-        :param use_r:
-        :return:
         """
         self.r = crypto.random_scalar() if use_r is None else use_r
         self.r_pub = crypto.scalarmult_base(self.r)
@@ -148,8 +140,6 @@ class TTransactionBuilder:
     def check_change(self, outputs):
         """
         Checks if the change address is among tx outputs and it is equal to our address.
-        :param outputs:
-        :return:
         """
         from apps.monero.xmr.sub.addr import addr_eq, get_change_addr_idx
 
@@ -545,9 +535,6 @@ class TTransactionBuilder:
         Precomputes subaddresses for account (major) and list of indices (minors)
         Subaddresses have to be stored in encoded form - unique representation.
         Single point can have multiple extended coordinates representation - would not match during subaddress search.
-        :param account:
-        :param indices:
-        :return:
         """
         monero.compute_subaddresses(self.creds, account, indices, self.subaddresses)
 
@@ -559,9 +546,6 @@ class TTransactionBuilder:
         If number of inputs is small, in-memory mode is used = alpha, pseudo_outs are kept in the Trezor.
         Otherwise pseudo_outs are offloaded with HMAC, alpha is offloaded encrypted under Chacha20Poly1305()
         with key derived for exactly this purpose.
-
-        :param src_entr:
-        :return:
         """
         from trezor.messages.MoneroTransactionSetInputAck import (
             MoneroTransactionSetInputAck
@@ -747,13 +731,6 @@ class TTransactionBuilder:
         Set tx.vin[i] for incremental tx prefix hash computation.
         After sorting by key images on host.
         Hashes pseudo_out to the final_message.
-
-        :param src_entr:
-        :param vini_bin: tx.vin[i]
-        :param hmac: HMAC of tx.vin[i]
-        :param pseudo_out: pseudo_out for the current entry
-        :param pseudo_out_hmac: hmac of pseudo_out
-        :return:
         """
         from trezor.messages.MoneroTransactionInputViniAck import (
             MoneroTransactionInputViniAck

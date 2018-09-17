@@ -68,14 +68,6 @@ def prove_range(
     Range proof generator.
     In order to minimize the memory consumption and CPU usage during transaction generation the returned values
     are returned encoded.
-
-    :param amount:
-    :param last_mask:
-    :param backend_impl: backend implementation, if available
-    :param decode: decodes output
-    :param byte_enc: byte encoded
-    :param rsig: buffer for rsig
-    :return:
     """
     if not backend_impl or not byte_enc or decode:
         raise ValueError("Unsupported params")
@@ -133,14 +125,6 @@ def generate_ring_signature(prefix_hash, image, pubs, sec, sec_idx, test=False):
     """
     Generates ring signature with key image.
     void crypto_ops::generate_ring_signature()
-
-    :param prefix_hash:
-    :param image:
-    :param pubs:
-    :param sec:
-    :param sec_idx:
-    :param test:
-    :return:
     """
     from trezor.utils import memcpy
 
@@ -206,14 +190,6 @@ def generate_ring_signature(prefix_hash, image, pubs, sec, sec_idx, test=False):
 
 
 def check_ring_singature(prefix_hash, image, pubs, sig):
-    """
-    Checks ring signature generated with generate_ring_signature
-    :param prefix_hash:
-    :param image:
-    :param pubs:
-    :param sig:
-    :return:
-    """
     from trezor.utils import memcpy
 
     image_unp = crypto.ge_frombytes_vartime(image)
@@ -260,15 +236,6 @@ def export_key_image(
 ):
     """
     Generates key image for the TXO + signature for the key image
-    :param creds:
-    :param subaddresses:
-    :param pkey:
-    :param tx_pub_key:
-    :param additional_tx_pub_keys:
-    :param out_idx:
-    :param test:
-    :param verify:
-    :return:
     """
     from apps.monero.xmr import monero
 

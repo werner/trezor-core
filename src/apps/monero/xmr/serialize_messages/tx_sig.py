@@ -28,11 +28,6 @@ class SignatureArray(ContainerType):
 
 
 def get_signature_size(msg):
-    """
-    Returns a signature size for the input
-    :param msg:
-    :return:
-    """
     if isinstance(msg, (TxinGen, TxinToScript, TxinToScriptHash)):
         return 0
     elif isinstance(msg, TxinToKey):

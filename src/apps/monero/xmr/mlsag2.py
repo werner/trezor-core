@@ -6,20 +6,12 @@ from apps.monero.xmr import crypto
 
 
 def key_vector(rows):
-    """
-    Empty key vector
-    :param rows:
-    :return:
-    """
     return [None] * rows
 
 
 def key_matrix(rows, cols):
     """
     first index is columns (so slightly backward from math)
-    :param rows:
-    :param cols:
-    :return:
     """
     rv = [None] * cols
     for i in range(0, cols):
@@ -30,8 +22,6 @@ def key_matrix(rows, cols):
 def scalar_gen_vector(n):
     """
     Generates vector of scalars
-    :param n:
-    :return:
     """
     return [crypto.random_scalar() for i in range(0, n)]
 
@@ -45,8 +35,6 @@ def scalar_gen_vector(n):
 def hasher_message(message):
     """
     Returns incremental hasher for MLSAG
-    :param message:
-    :return:
     """
     from apps.monero.xmr.sub.keccak_hasher import HashWrapper
 
@@ -64,13 +52,6 @@ def hash_point(hasher, point):
 def gen_mlsag_assert(pk, xx, kLRki, mscout, index, dsRows):
     """
     Conditions check for gen_mlsag_ext.
-    :param pk:
-    :param xx:
-    :param kLRki:
-    :param mscout:
-    :param index:
-    :param dsRows:
-    :return:
     """
     cols = len(pk)
     if cols <= 1:
@@ -99,16 +80,6 @@ def gen_mlsag_assert(pk, xx, kLRki, mscout, index, dsRows):
 def gen_mlsag_rows(message, rv, pk, xx, kLRki, index, dsRows, rows, cols):
     """
     MLSAG computation - the part with secret keys
-    :param message:
-    :param rv:
-    :param pk:
-    :param xx:
-    :param kLRki:
-    :param index:
-    :param dsRows:
-    :param rows:
-    :param cols:
-    :return:
     """
     Ip = key_vector(dsRows)
     rv.II = key_vector(dsRows)
@@ -152,15 +123,6 @@ def gen_mlsag_rows(message, rv, pk, xx, kLRki, index, dsRows, rows, cols):
 def gen_mlsag_ext(message, pk, xx, kLRki, mscout, index, dsRows):
     """
     Multilayered Spontaneous Anonymous Group Signatures (MLSAG signatures)
-
-    :param message:
-    :param pk: matrix of points, point form (not encoded)
-    :param xx:
-    :param kLRki:
-    :param mscout:
-    :param index:
-    :param dsRows:
-    :return:
     """
     from apps.monero.xmr.serialize_messages.tx_full import MgSig
 
@@ -222,16 +184,6 @@ def prove_rct_mg(
     This does the MG sig on the "dest" part of the given key matrix, and
     the last row is the sum of input commitments from that column - sum output commitments
     this shows that sum inputs = sum outputs
-    :param message:
-    :param pubs: matrix of CtKeys. points are encoded.
-    :param in_sk:
-    :param out_sk:
-    :param out_pk:
-    :param kLRki:
-    :param mscout:
-    :param index:
-    :param txn_fee_key:
-    :return:
     """
     cols = len(pubs)
     if cols == 0:

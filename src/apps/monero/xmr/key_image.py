@@ -3,12 +3,6 @@ from apps.monero.xmr.serialize.int_serialize import dump_uvarint_b
 
 
 def compute_hash(rr):
-    """
-    Hash over output to ki-sync
-    :param rr:
-    :type rr: TransferDetails
-    :return:
-    """
     kck = crypto.get_keccak()
     kck.update(rr.out_key)
     kck.update(rr.tx_pub_key)
@@ -20,13 +14,6 @@ def compute_hash(rr):
 
 
 def export_key_image(creds, subaddresses, td):
-    """
-    Key image export
-    :param creds:
-    :param subaddresses:
-    :param td:
-    :return:
-    """
     out_key = crypto.decodepoint(td.out_key)
     tx_pub_key = crypto.decodepoint(td.tx_pub_key)
     additional_tx_pub_keys = []

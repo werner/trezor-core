@@ -76,12 +76,6 @@ class LiteProtocol:
             gc.collect()
 
     def assrt(self, condition, msg=None):
-        """
-        Asserts condition
-        :param condition:
-        :param msg:
-        :return:
-        """
         if condition:
             return
         raise ValueError("Assertion error%s" % (" : %s" % msg if msg else ""))
@@ -619,15 +613,6 @@ class LiteProtocol:
         return SW_OK
 
     async def dispatch(self, ctx, ins, p1, p2, input):
-        """
-        Main message dispatcher
-        :param ctx:
-        :param ins:
-        :param p1:
-        :param p2:
-        :param input:
-        :return:
-        """
         self.c_p1 = p1
         self.c_p2 = p2
         self.c_msg = input
