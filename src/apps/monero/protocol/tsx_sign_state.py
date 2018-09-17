@@ -25,24 +25,16 @@ class TState:
 
     def __init__(self):
         self.s = self.START
-        self.in_mem = False
-
-    def state_save(self):
-        return self.s, self.in_mem
-
-    def state_load(self, x):
-        self.s, self.in_mem = x
 
     def init_tsx(self):
         if self.s != self.START:
             raise ValueError("Illegal state")
         self.s = self.INIT
 
-    def inp_cnt(self, in_mem):
+    def inp_cnt(self):
         if self.s != self.INIT:
             raise ValueError("Illegal state")
         self.s = self.INP_CNT
-        self.in_mem = in_mem
 
     def input(self):
         if self.s != self.INP_CNT and self.s != self.INPUT:
@@ -68,9 +60,7 @@ class TState:
         return self.s == self.INPUT_VINS
 
     def input_all_done(self):
-        if (not self.in_mem and self.s != self.INPUT_VINS) or (
-            self.in_mem and self.s != self.INPUT_PERM
-        ):
+        if self.s != self.INPUT_VINS:
             raise ValueError("Illegal state")
         self.s = self.INPUT_ALL_DONE
 

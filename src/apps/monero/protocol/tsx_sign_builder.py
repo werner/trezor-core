@@ -164,24 +164,6 @@ class TTransactionBuilder:
 
         return True
 
-    def in_memory(self):
-        """
-        Returns true if the input transaction can be processed whole in-memory
-        """
-        return False and self.input_count <= 1
-
-    def many_inputs(self):
-        """
-        Returns true if number of inputs > 10 (secret spending key offloaded)
-        """
-        return self.input_count >= 10
-
-    def many_outputs(self):
-        """
-        Returns true if number of outputs > 10 (increases number of roundtrips of the protocol)
-        """
-        return self.output_count >= 10
-
     def num_inputs(self):
         return self.input_count
 
@@ -367,7 +349,7 @@ class TTransactionBuilder:
         self.fee = tsx_data.fee
         self.account_idx = tsx_data.account
         self.multi_sig = tsx_data.is_multisig
-        self.state.inp_cnt(self.in_memory())
+        self.state.inp_cnt()
         self.check_change(tsx_data.outputs)
         self.exp_tx_prefix_hash = common.defval_empty(tsx_data.exp_tx_prefix_hash, None)
 
@@ -437,9 +419,9 @@ class TTransactionBuilder:
 
         rsig_data = MoneroTransactionRsigData(offload_type=self.rsig_offload)
         return MoneroTransactionInitAck(
-            in_memory=self.in_memory(),
-            many_inputs=self.many_inputs(),
-            many_outputs=self.many_outputs(),
+            in_memory=False,
+            many_inputs=True,
+            many_outputs=True,
             hmacs=hmacs,
             rsig_data=rsig_data,
         )
@@ -578,9 +560,6 @@ class TTransactionBuilder:
         vini_bin = misc.dump_msg(vini, preallocate=64, prefix=b"\x02")
         self._mem_trace(2, True)
 
-        if self.in_memory():
-            self.tx.vin.append(vini)
-
         # HMAC(T_in,i || vin_i)
         hmac_vini = await self.gen_hmac_vini(src_entr, vini_bin, self.inp_idx)
         self._mem_trace(3, True)
@@ -596,23 +575,16 @@ class TTransactionBuilder:
             pseudo_out = crypto.encodepoint(pseudo_out)
 
             # In full version the alpha is encrypted and passed back for storage
-            if self.in_memory():
-                self.input_alphas.append(alpha)
-                self.input_pseudo_outs.append(pseudo_out)
-            else:
-                pseudo_out_hmac = crypto.compute_hmac(
-                    self.hmac_key_txin_comm(self.inp_idx), pseudo_out
-                )
-                alpha_enc = chacha_poly.encrypt_pack(
-                    self.enc_key_txin_alpha(self.inp_idx), crypto.encodeint(alpha)
-                )
-
-        if self.many_inputs():
-            spend_enc = chacha_poly.encrypt_pack(
-                self.enc_key_spend(self.inp_idx), crypto.encodeint(xi)
+            pseudo_out_hmac = crypto.compute_hmac(
+                self.hmac_key_txin_comm(self.inp_idx), pseudo_out
             )
-        else:
-            self.input_secrets.append(xi)
+            alpha_enc = chacha_poly.encrypt_pack(
+                self.enc_key_txin_alpha(self.inp_idx), crypto.encodeint(alpha)
+            )
+
+        spend_enc = chacha_poly.encrypt_pack(
+            self.enc_key_spend(self.inp_idx), crypto.encodeint(xi)
+        )
 
         # All inputs done?
         if self.inp_idx + 1 == self.num_inputs():
@@ -637,9 +609,6 @@ class TTransactionBuilder:
         if self.inp_idx + 1 != self.num_inputs():
             raise ValueError("Input count mismatch")
 
-        if self.in_memory():
-            return self.tsx_inputs_done_inm()
-
     def tsx_inputs_done_inm(self):
         """
         In-memory post processing - tx.vin[i] sorting by key image.
@@ -660,8 +629,6 @@ class TTransactionBuilder:
 
         await self.iface.transaction_step(self.STEP_PERM)
 
-        if self.in_memory():
-            return
         self._tsx_inputs_permutation(permutation)
         return MoneroTransactionInputsPermutationAck()
 
@@ -671,36 +638,7 @@ class TTransactionBuilder:
         """
         self.state.input_permutation()
         self.source_permutation = permutation
-
-        def swapper(x, y):
-            if not self.many_inputs():
-                self.input_secrets[x], self.input_secrets[y] = (
-                    self.input_secrets[y],
-                    self.input_secrets[x],
-                )
-            if self.in_memory() and self.use_simple_rct:
-                self.input_alphas[x], self.input_alphas[y] = (
-                    self.input_alphas[y],
-                    self.input_alphas[x],
-                )
-                self.input_pseudo_outs[x], self.input_pseudo_outs[y] = (
-                    self.input_pseudo_outs[y],
-                    self.input_pseudo_outs[x],
-                )
-            if self.in_memory():
-                self.tx.vin[x], self.tx.vin[y] = self.tx.vin[y], self.tx.vin[x]
-
-        common.apply_permutation(self.source_permutation, swapper)
         self.inp_idx = -1
-
-        # Incremental hashing
-        if self.in_memory():
-            for idx in range(self.num_inputs()):
-                vini_bin = misc.dump_msg(
-                    self.tx.vin[idx], preallocate=65, prefix=b"\x02"
-                )
-                self.hash_vini_pseudo_out(vini_bin, idx)
-                self._mem_trace("i: %s" % idx if __debug__ else None, True)
 
     async def input_vini(self, src_entr, vini_bin, hmac, pseudo_out, pseudo_out_hmac):
         """
@@ -716,8 +654,6 @@ class TTransactionBuilder:
             self.STEP_VINI, self.inp_idx + 1, self.num_inputs()
         )
 
-        if self.in_memory():
-            return
         if self.inp_idx >= self.num_inputs():
             raise ValueError("Too many inputs")
 
@@ -746,15 +682,12 @@ class TTransactionBuilder:
         if not self.use_simple_rct or self.use_bulletproof:
             return
 
-        if not self.in_memory():
-            idx = self.source_permutation[inp_idx]
-            pseudo_out_hmac_comp = crypto.compute_hmac(
-                self.hmac_key_txin_comm(idx), pseudo_out
-            )
-            if not common.ct_equal(pseudo_out_hmac, pseudo_out_hmac_comp):
-                raise ValueError("HMAC invalid for pseudo outs")
-        else:
-            pseudo_out = self.input_pseudo_outs[inp_idx]
+        idx = self.source_permutation[inp_idx]
+        pseudo_out_hmac_comp = crypto.compute_hmac(
+            self.hmac_key_txin_comm(idx), pseudo_out
+        )
+        if not common.ct_equal(pseudo_out_hmac, pseudo_out_hmac_comp):
+            raise ValueError("HMAC invalid for pseudo outs")
 
         self.full_message_hasher.set_pseudo_out(pseudo_out)
 
@@ -1322,9 +1255,9 @@ class TTransactionBuilder:
         self.inp_idx += 1
         if self.inp_idx >= self.num_inputs():
             raise ValueError("Invalid ins")
-        if self.use_simple_rct and (not self.in_memory() and alpha_enc is None):
+        if self.use_simple_rct and alpha_enc is None:
             raise ValueError("Inconsistent1")
-        if self.use_simple_rct and (not self.in_memory() and pseudo_out is None):
+        if self.use_simple_rct and pseudo_out is None:
             raise ValueError("Inconsistent2")
         if self.inp_idx >= 1 and not self.use_simple_rct:
             raise ValueError("Inconsistent3")
@@ -1339,7 +1272,7 @@ class TTransactionBuilder:
         gc.collect()
         self._mem_trace(1)
 
-        if self.use_simple_rct and not self.in_memory():
+        if self.use_simple_rct:
             pseudo_out_hmac_comp = crypto.compute_hmac(
                 self.hmac_key_txin_comm(inv_idx), pseudo_out
             )
@@ -1367,14 +1300,11 @@ class TTransactionBuilder:
             pseudo_out_c = None
 
         # Spending secret
-        if self.many_inputs():
-            from apps.monero.xmr.enc import chacha_poly
+        from apps.monero.xmr.enc import chacha_poly
 
-            input_secret = crypto.decodeint(
-                chacha_poly.decrypt_pack(self.enc_key_spend(inv_idx), bytes(spend_enc))
-            )
-        else:
-            input_secret = self.input_secrets[self.inp_idx]
+        input_secret = crypto.decodeint(
+            chacha_poly.decrypt_pack(self.enc_key_spend(inv_idx), bytes(spend_enc))
+        )
 
         gc.collect()
         self._mem_trace(3)
