@@ -96,7 +96,6 @@ class TrezorInterface:
         loop.schedule(slide)
 
         await loop.sleep(200 * 1000)
-        return True
 
     async def transaction_error(self, *args, **kwargs):
         from trezor import ui

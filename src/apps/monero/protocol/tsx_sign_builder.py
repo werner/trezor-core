@@ -331,13 +331,7 @@ class TTransactionBuilder:
         self._mem_trace(1)
 
         # Ask for confirmation
-        confirmation = await self.iface.confirm_transaction(tsx_data, self.creds)
-        if not confirmation:
-            from trezor.messages import FailureType
-            from trezor.messages.Failure import Failure
-
-            return Failure(code=FailureType.ActionCancelled, message="rejected")
-
+        await self.iface.confirm_transaction(tsx_data, self.creds)
         gc.collect()
         self._mem_trace(3)
 
