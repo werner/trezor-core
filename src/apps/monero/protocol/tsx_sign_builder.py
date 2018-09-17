@@ -108,10 +108,6 @@ class TTransactionBuilder:
         raise ValueError("Assertion error%s" % (" : %s" % msg if msg else ""))
 
     def is_terminal(self):
-        """
-        Returns true if the state is terminal
-        :return:
-        """
         return self.state.is_terminal()
 
     def gen_r(self, use_r=None):
@@ -124,7 +120,6 @@ class TTransactionBuilder:
     def get_primary_change_address(self):
         """
         Computes primary change address for the current account index
-        :return:
         """
         D, C = monero.generate_sub_address_keys(
             self.creds.view_key_private,
@@ -172,50 +167,31 @@ class TTransactionBuilder:
     def in_memory(self):
         """
         Returns true if the input transaction can be processed whole in-memory
-        :return:
         """
         return False and self.input_count <= 1
 
     def many_inputs(self):
         """
         Returns true if number of inputs > 10 (secret spending key offloaded)
-        :return:
         """
         return self.input_count >= 10
 
     def many_outputs(self):
         """
         Returns true if number of outputs > 10 (increases number of roundtrips of the protocol)
-        :return:
         """
         return self.output_count >= 10
 
     def num_inputs(self):
-        """
-        Number of inputs
-        :return:
-        """
         return self.input_count
 
     def num_dests(self):
-        """
-        Number of destinations
-        :return:
-        """
         return self.output_count
 
     def get_fee(self):
-        """
-        Txn fee
-        :return:
-        """
         return self.fee if self.fee > 0 else 0
 
     def change_address(self):
-        """
-        Returns change address if change dst is set
-        :return:
-        """
         return self.output_change.addr if self.output_change else None
 
     def get_rct_type(self):
