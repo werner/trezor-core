@@ -64,26 +64,11 @@ def classify_subaddresses(tx_dests, change_addr):
 def addr_eq(a, b):
     """
     Address comparisson. Allocation free.
+    :param a:
+    :param b:
+    :return:
     """
-    return pub_eq(a.spend_public_key, b.spend_public_key) and pub_eq(
-        a.view_public_key, b.view_public_key
-    )
-
-
-def pub_eq(a, b):
-    """
-    Simple non-constant time public key compare
-    """
-    if a == b:
-        return True
-    if (a is None and b is not None) or (a is not None and b is None):
-        return False
-    if len(a) != len(b):
-        return False
-    for i in range(len(a)):
-        if a[i] != b[i]:
-            return False
-    return True
+    return a.spend_public_key == b.spend_public_key and a.view_public_key == b.view_public_key
 
 
 def get_change_addr_idx(outputs, change_dts):
