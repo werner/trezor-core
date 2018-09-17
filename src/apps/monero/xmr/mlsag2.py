@@ -107,7 +107,7 @@ def gen_mlsag_rows(message, rv, pk, xx, kLRki, index, dsRows, rows, cols):
             hash_point(hasher, aGi)
             hash_point(hasher, aHPi)
 
-        Ip[i] = crypto.precomp(rv.II[i])
+        Ip[i] = rv.II[i]
 
     for i in range(dsRows, rows):
         alpha[i] = crypto.random_scalar()

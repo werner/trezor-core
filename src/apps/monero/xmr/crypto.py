@@ -7,9 +7,7 @@
 # https://tools.ietf.org/html/draft-josefsson-eddsa-ed25519-00#section-4
 # https://github.com/monero-project/research-lab
 
-import ubinascii as binascii
-
-from trezor.crypto import hmac, monero as tcry, pbkdf2 as tpbkdf2, random
+from trezor.crypto import hmac, monero as tcry, random
 from trezor.crypto.hashlib import sha3_256
 
 NULL_KEY_ENC = b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
@@ -42,22 +40,9 @@ def keccak_2hash(inp):
     return keccak_hash(keccak_hash(inp))
 
 
-def get_hmac(key, msg=None):
-    return hmac.new(key, msg=msg, digestmod=keccak_factory)
-
-
 def compute_hmac(key, msg=None):
     h = hmac.new(key, msg=msg, digestmod=keccak_factory)
     return h.digest()
-
-
-def pbkdf2(inp, salt, length=32, count=1000, prf=None):
-    """
-    PBKDF2 with default PRF as HMAC-KECCAK-256
-    """
-    pb = tpbkdf2("hmac-sha256", inp, salt)
-    pb.update(count)
-    return pb.key()
 
 
 #
@@ -179,32 +164,20 @@ def sc_inv_eight():
 
 
 def sc_0():
-    """
-    Sets 0 to the scalar value Zmod(m)
-    """
     return tcry.init256_modm(0)
 
 
 def sc_0_into(r):
-    """
-    Sets 0 to the scalar value Zmod(m)
-    """
     return tcry.init256_modm(r, 0)
 
 
 def sc_init(x):
-    """
-    Sets x to the scalar value Zmod(m)
-    """
     if x >= (1 << 64):
         raise ValueError("Initialization works up to 64-bit only")
     return tcry.init256_modm(x)
 
 
 def sc_init_into(r, x):
-    """
-    Sets x to the scalar value Zmod(m)
-    """
     if x >= (1 << 64):
         raise ValueError("Initialization works up to 64-bit only")
     return tcry.init256_modm(r, x)
@@ -387,20 +360,6 @@ def ge_frombytes_vartime(point):
     return point
 
 
-def precomp(point):
-    """
-    Precomputation placeholder
-    """
-    return point
-
-
-def ge_dsm_precomp(point):
-    """
-    void ge_dsm_precomp(ge_dsmp r, const ge_p3 *s)
-    """
-    return point
-
-
 #
 # Monero specific
 #
@@ -543,23 +502,9 @@ def get_subaddress_secret_key(secret_key, major=0, minor=0):
     return tcry.xmr_get_subaddress_secret_key(major, minor, secret_key)
 
 
-def b16_to_scalar(bts):
-    """
-    Converts hexcoded bytearray to the scalar
-    """
-    return decodeint(binascii.unhexlify(bts))
-
-
 #
 # Repr invariant
 #
-
-
-def hmac_point(key, point):
-    """
-    HMAC single point
-    """
-    return compute_hmac(key, encodepoint(point))
 
 
 def generate_signature(data, priv):

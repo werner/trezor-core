@@ -199,7 +199,6 @@ def generate_ring_signature(prefix_hash, image, pubs, sec, sec_idx, test=False):
             crypto.ge_frombytes_vartime_check(k)
 
     image_unp = crypto.ge_frombytes_vartime(image)
-    image_pre = crypto.ge_dsm_precomp(image_unp)
 
     buff_off = len(prefix_hash)
     buff = bytearray(buff_off + 2 * 32 * len(pubs))
@@ -233,7 +232,7 @@ def generate_ring_signature(prefix_hash, image, pubs, sec, sec_idx, test=False):
 
             tmp3 = crypto.hash_to_ec(crypto.encodepoint(tmp3))
             tmp2 = crypto.ge_double_scalarmult_precomp_vartime(
-                sig[i][1], tmp3, sig[i][0], image_pre
+                sig[i][1], tmp3, sig[i][0], image_unp
             )
             crypto.encodepoint_into(mvbuff[buff_off : buff_off + 32], tmp2)
             buff_off += 32
@@ -250,7 +249,6 @@ def check_ring_singature(prefix_hash, image, pubs, sig):
     from trezor.utils import memcpy
 
     image_unp = crypto.ge_frombytes_vartime(image)
-    image_pre = crypto.ge_dsm_precomp(image_unp)
 
     buff_off = len(prefix_hash)
     buff = bytearray(buff_off + 2 * 32 * len(pubs))
@@ -269,7 +267,7 @@ def check_ring_singature(prefix_hash, image, pubs, sig):
 
         tmp3 = crypto.hash_to_ec(crypto.encodepoint(pubs[i]))
         tmp2 = crypto.ge_double_scalarmult_precomp_vartime(
-            sig[i][1], tmp3, sig[i][0], image_pre
+            sig[i][1], tmp3, sig[i][0], image_unp
         )
         crypto.encodepoint_into(mvbuff[buff_off : buff_off + 32], tmp2)
         buff_off += 32
