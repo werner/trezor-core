@@ -867,7 +867,10 @@ class TTransactionBuilder:
             return None
         from trezor.messages.MoneroTransactionRsigData import MoneroTransactionRsigData
 
-        return MoneroTransactionRsigData(rsig=rsig)
+        if isinstance(rsig, list):
+            return MoneroTransactionRsigData(rsig_parts=rsig)
+        else:
+            return MoneroTransactionRsigData(rsig=rsig)
 
     def _range_proof(self, idx, amount, rsig_data=None):
         """
@@ -929,14 +932,8 @@ class TTransactionBuilder:
             )
 
         elif not self.rsig_offload and not self.use_bulletproof:
-            rsig_buff = bytearray(32 * (64 + 64 + 64 + 1))
-            rsig_mv = memoryview(rsig_buff)
-
-            C, mask, rsig = ring_ct.prove_range(
-                amount, mask, backend_impl=True, byte_enc=True, rsig=rsig_mv
-            )
-            rsig = memoryview(rsig)
-            del (rsig_buff, rsig_mv, ring_ct)
+            C, mask, rsig = ring_ct.prove_range_chunked(amount, mask)
+            del (ring_ct)
 
             # Incremental hashing
             self.full_message_hasher.rsig_val(rsig, False, raw=True)

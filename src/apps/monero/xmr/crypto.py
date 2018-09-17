@@ -153,6 +153,10 @@ def point_double(P):
     return tcry.ge25519_double(P)
 
 
+def point_double_into(r, P):
+    return tcry.ge25519_double(r, P)
+
+
 def point_mul8(P):
     return tcry.ge25519_mul8(P)
 
