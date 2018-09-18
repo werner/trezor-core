@@ -12,15 +12,15 @@ async def sign_tx(ctx, msg):
     while True:
         if __debug__:
             log.debug(__name__, "#### F: %s, A: %s", gc.mem_free(), gc.mem_alloc())
-        res, state = await sign_tx_step(ctx, msg, state)
-        if msg.final_msg:
+        res, state, accept_msgs = await sign_tx_step(ctx, msg, state)
+        if accept_msgs is None:
             break
 
         await ctx.write(res)
         del (res, msg)
         utils.unimport_end(mods)
 
-        msg = await ctx.read((MessageType.MoneroTransactionSignRequest,))
+        msg = await ctx.read(accept_msgs)
         gc.collect()
 
     utils.unimport_end(mods)
@@ -34,42 +34,90 @@ async def sign_tx_step(ctx, msg, state):
     from apps.monero.controller import iface, wrapper
     from apps.monero.protocol.tsx_sign_builder import TTransactionBuilder
 
-    if msg.init:
-        init = msg.init
-        creds = await wrapper.monero_get_creds(ctx, init.address_n, init.network_type)
+    if msg.MESSAGE_WIRE_TYPE == MessageType.MoneroTransactionInitRequest:
+        creds = await wrapper.monero_get_creds(ctx, msg.address_n, msg.network_type)
         state = TTransactionBuilder(iface.get_iface(ctx), creds)
         del creds
 
     gc.collect()
-    res = await sign_tx_dispatch(state, msg)
+    res, accept_msgs = await sign_tx_dispatch(state, msg)
     gc.collect()
 
     if state.is_terminal():
         state = None
-    return res, state
+    return res, state, accept_msgs
 
 
 async def sign_tx_dispatch(tsx, msg):
-    if msg.init:
-        return await tsx_init(tsx, msg.init.tsx_data)
-    elif msg.set_input:
-        return await tsx_set_input(tsx, msg.set_input)
-    elif msg.input_permutation:
-        return await tsx_inputs_permutation(tsx, msg.input_permutation)
-    elif msg.input_vini:
-        return await tsx_input_vini(tsx, msg.input_vini)
-    elif msg.all_in_set:
-        return await tsx_all_in_set(tsx, msg.all_in_set)
-    elif msg.set_output:
-        return await tsx_set_output1(tsx, msg.set_output)
-    elif msg.all_out_set:
-        return await tsx_all_out1_set(tsx, msg.all_out_set)
-    elif msg.mlsag_done:
-        return await tsx_mlsag_done(tsx)
-    elif msg.sign_input:
-        return await tsx_sign_input(tsx, msg.sign_input)
-    elif msg.final_msg:
-        return await tsx_sign_final(tsx)
+    if msg.MESSAGE_WIRE_TYPE == MessageType.MoneroTransactionInitRequest:
+        return (
+            await tsx_init(tsx, msg.tsx_data),
+            (MessageType.MoneroTransactionSetInputRequest,),
+        )
+
+    elif msg.MESSAGE_WIRE_TYPE == MessageType.MoneroTransactionSetInputRequest:
+        return (
+            await tsx_set_input(tsx, msg),
+            (
+                MessageType.MoneroTransactionSetInputRequest,
+                MessageType.MoneroTransactionInputsPermutationRequest,
+            ),
+        )
+
+    elif msg.MESSAGE_WIRE_TYPE == MessageType.MoneroTransactionInputsPermutationRequest:
+        return (
+            await tsx_inputs_permutation(tsx, msg),
+            (MessageType.MoneroTransactionInputViniRequest,),
+        )
+
+    elif msg.MESSAGE_WIRE_TYPE == MessageType.MoneroTransactionInputViniRequest:
+        return (
+            await tsx_input_vini(tsx, msg),
+            (
+                MessageType.MoneroTransactionInputViniRequest,
+                MessageType.MoneroTransactionAllInputsSetRequest,
+            ),
+        )
+
+    elif msg.MESSAGE_WIRE_TYPE == MessageType.MoneroTransactionAllInputsSetRequest:
+        return (
+            await tsx_all_in_set(tsx, msg),
+            (MessageType.MoneroTransactionSetOutputRequest,),
+        )
+
+    elif msg.MESSAGE_WIRE_TYPE == MessageType.MoneroTransactionSetOutputRequest:
+        return (
+            await tsx_set_output1(tsx, msg),
+            (
+                MessageType.MoneroTransactionSetOutputRequest,
+                MessageType.MoneroTransactionAllOutSetRequest,
+            ),
+        )
+
+    elif msg.MESSAGE_WIRE_TYPE == MessageType.MoneroTransactionAllOutSetRequest:
+        return (
+            await tsx_all_out1_set(tsx, msg),
+            (MessageType.MoneroTransactionMlsagDoneRequest,),
+        )
+
+    elif msg.MESSAGE_WIRE_TYPE == MessageType.MoneroTransactionMlsagDoneRequest:
+        return (
+            await tsx_mlsag_done(tsx),
+            (MessageType.MoneroTransactionSignInputRequest,),
+        )
+
+    elif msg.MESSAGE_WIRE_TYPE == MessageType.MoneroTransactionSignInputRequest:
+        return (
+            await tsx_sign_input(tsx, msg),
+            (
+                MessageType.MoneroTransactionSignInputRequest,
+                MessageType.MoneroTransactionFinalRequest,
+            ),
+        )
+
+    elif msg.MESSAGE_WIRE_TYPE == MessageType.MoneroTransactionFinalRequest:
+        return await tsx_sign_final(tsx), None
+
     else:
         from trezor import wire
 

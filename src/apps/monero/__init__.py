@@ -16,8 +16,8 @@ STATE = Holder()
 def boot():
     wire.add(MessageType.MoneroGetAddress, __name__, "get_address")
     wire.add(MessageType.MoneroGetWatchKey, __name__, "get_watch_only")
-    wire.add(MessageType.MoneroTransactionSignRequest, __name__, "sign_tx")
-    wire.add(MessageType.MoneroKeyImageSyncRequest, __name__, "key_image_sync")
+    wire.add(MessageType.MoneroTransactionInitRequest, __name__, "sign_tx")
+    wire.add(MessageType.MoneroKeyImageExportInitRequest, __name__, "key_image_sync")
 
     if hasattr(MessageType, "MoneroLiteInitRequest"):
         wire.add(MessageType.MoneroLiteInitRequest, "lite_protocol", STATE, 1)
