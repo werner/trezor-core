@@ -36,8 +36,8 @@ class TTransactionBuilder:
         self.key_hmac = None
         self.key_enc = None
 
-        self.r = None  # txkey
-        self.r_pub = None
+        self.tx_priv = None  # txkey
+        self.tx_pub = None
         self.state = None
 
         self.multi_sig = False
@@ -114,8 +114,8 @@ class TTransactionBuilder:
         """
         Generates a new transaction key pair.
         """
-        self.r = crypto.random_scalar() if use_r is None else use_r
-        self.r_pub = crypto.scalarmult_base(self.r)
+        self.tx_priv = crypto.random_scalar() if use_r is None else use_r
+        self.tx_pub = crypto.scalarmult_base(self.tx_priv)
 
     def get_primary_change_address(self):
         """
@@ -312,21 +312,16 @@ class TTransactionBuilder:
         hmac_tsxdest = crypto.compute_hmac(hmac_key, kwriter.get_digest())
         return hmac_tsxdest
 
-    def _tprefix_update(self):
-        self.tx_prefix_hasher.keep()
-        self.tx_prefix_hasher.uvarint(self.tx.version)
-        self.tx_prefix_hasher.uvarint(self.tx.unlock_time)
-        self.tx_prefix_hasher.container_size(self.num_inputs())  # ContainerType
-        self.tx_prefix_hasher.release()
-        self._mem_trace(10, True)
-
     async def init_transaction(self, tsx_data):
         """
         Initializes a new transaction.
         """
         from apps.monero.xmr.sub.addr import classify_subaddresses
 
-        self.gen_r()
+        # Generate new TX key
+        self.tx_priv = crypto.random_scalar()
+        self.tx_pub = crypto.scalarmult_base(self.tx_priv)
+
         self.state.init_tsx()
         self._mem_trace(1)
 
@@ -345,7 +340,7 @@ class TTransactionBuilder:
         self.multi_sig = tsx_data.is_multisig
         self.state.inp_cnt()
         self.check_change(tsx_data.outputs)
-        self.exp_tx_prefix_hash = common.defval_empty(tsx_data.exp_tx_prefix_hash, None)
+        self.exp_tx_prefix_hash = tsx_data.exp_tx_prefix_hash
 
         # Rsig data
         self.rsig_type = tsx_data.rsig_data.rsig_type
@@ -359,7 +354,8 @@ class TTransactionBuilder:
             for ckey in tsx_data.use_tx_keys:
                 crypto.check_sc(crypto.decodeint(ckey))
 
-            self.gen_r(use_r=crypto.decodeint(tsx_data.use_tx_keys[0]))
+            self.tx_priv = crypto.decodeint(tsx_data.use_tx_keys[0])
+            self.tx_pub = crypto.scalarmult_base(self.tx_priv)
             self.additional_tx_private_keys = [
                 crypto.decodeint(x) for x in tsx_data.use_tx_keys[1:]
             ]
@@ -370,8 +366,9 @@ class TTransactionBuilder:
 
         # if this is a single-destination transfer to a subaddress, we set the tx pubkey to R=r*D
         if num_stdaddresses == 0 and num_subaddresses == 1:
-            self.r_pub = crypto.scalarmult(
-                crypto.decodepoint(single_dest_subaddress.spend_public_key), self.r
+            self.tx_pub = crypto.scalarmult(
+                crypto.decodepoint(single_dest_subaddress.spend_public_key),
+                self.tx_priv,
             )
 
         self.need_additional_txkeys = num_subaddresses > 0 and (
@@ -387,8 +384,12 @@ class TTransactionBuilder:
         gc.collect()
 
         # Iterative tx_prefix_hash hash computation
-        self._tprefix_update()
-        gc.collect()
+        self.tx_prefix_hasher.keep()
+        self.tx_prefix_hasher.uvarint(self.tx.version)
+        self.tx_prefix_hasher.uvarint(self.tx.unlock_time)
+        self.tx_prefix_hasher.container_size(self.num_inputs())  # ContainerType
+        self.tx_prefix_hasher.release()
+        self._mem_trace(10, True)
 
         # Final message hasher
         self.full_message_hasher.init(self.use_simple_rct)
@@ -440,7 +441,7 @@ class TTransactionBuilder:
 
             view_key_pub = crypto.decodepoint(view_key_pub_enc)
             payment_id_encr = tsx_helper.encrypt_payment_id(
-                tsx_data.payment_id, view_key_pub, self.r
+                tsx_data.payment_id, view_key_pub, self.tx_priv
             )
 
             extra_nonce = payment_id_encr
@@ -474,7 +475,7 @@ class TTransactionBuilder:
 
         writer = get_keccak_writer()
         await protobuf.dump_message(writer, tsx_data)
-        writer.write(crypto.encodeint(self.r))
+        writer.write(crypto.encodeint(self.tx_priv))
 
         self.key_master = crypto.keccak_2hash(
             writer.get_digest() + crypto.encodeint(crypto.random_scalar())
@@ -944,7 +945,7 @@ class TTransactionBuilder:
         if change_addr and addr_eq(dst_entr.addr, change_addr):
             # sending change to yourself; derivation = a*R
             derivation = crypto.generate_key_derivation(
-                self.r_pub, self.creds.view_key_private
+                self.tx_pub, self.creds.view_key_private
             )
 
         else:
@@ -952,7 +953,7 @@ class TTransactionBuilder:
             deriv_priv = (
                 additional_txkey_priv
                 if dst_entr.is_subaddress and self.need_additional_txkeys
-                else self.r
+                else self.tx_priv
             )
             derivation = crypto.generate_key_derivation(
                 crypto.decodepoint(dst_entr.addr.view_public_key), deriv_priv
@@ -1074,7 +1075,7 @@ class TTransactionBuilder:
     def all_out1_set_tx_extra(self):
         from apps.monero.xmr.sub import tsx_helper
 
-        self.tx.extra = tsx_helper.add_tx_pub_key_to_extra(self.tx.extra, self.r_pub)
+        self.tx.extra = tsx_helper.add_tx_pub_key_to_extra(self.tx.extra, self.tx_pub)
 
         # Not needed to remove - extra is clean
         # self.tx.extra = await monero.remove_field_from_tx_extra(self.tx.extra, xmrtypes.TxExtraAdditionalPubKeys)
@@ -1402,7 +1403,7 @@ class TTransactionBuilder:
             self.creds.spend_key_private, self.tx_prefix_hash
         )
 
-        key_buff = crypto.encodeint(self.r) + b"".join(
+        key_buff = crypto.encodeint(self.tx_priv) + b"".join(
             [crypto.encodeint(x) for x in self.additional_tx_private_keys]
         )
         tx_enc_keys = chacha_poly.encrypt_pack(tx_key, key_buff)

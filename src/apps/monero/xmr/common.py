@@ -37,7 +37,3 @@ def apply_permutation(permutation, swapper):
 
 def is_empty(inp):
     return inp is None or len(inp) == 0
-
-
-def defval_empty(val, default=None):
-    return val if not is_empty(val) else default
