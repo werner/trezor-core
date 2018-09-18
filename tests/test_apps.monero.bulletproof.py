@@ -382,13 +382,14 @@ class TestMoneroBulletproof(unittest.TestCase):
     def test_verify_batch_1(self):
         bpi = bp.BulletProofBuilder()
         bpi.verify_batch([self.bproof_1()])
-        bpi.verify_batch([self.bproof_1(), self.bproof_2()])
-        bpi.verify_batch([self.bproof_4(), self.bproof_8(), self.bproof_2()])
-        bpi.verify_batch([self.bproof_2(), self.bproof_16()])
+        bpi.verify_batch([self.bproof_2()])
+        bpi.verify_batch([self.bproof_4()])
+        bpi.verify_batch([self.bproof_8()])
+        bpi.verify_batch([self.bproof_16()])
         with self.assertRaises(Exception):
-            bpi.verify_batch([self.bproof_4(), self.bproof_2_invalid()])
+            bpi.verify_batch([self.bproof_2_invalid()])
         with self.assertRaises(Exception):
-            bpi.verify_batch([self.bproof_2_invalid(), self.bproof_2_invalid()])
+            bpi.verify_batch([self.bproof_2_invalid()])
 
     def test_prove_random_masks(self):
         bpi = bp.BulletProofBuilder()

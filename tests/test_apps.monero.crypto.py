@@ -90,7 +90,7 @@ class TestMoneroCrypto(unittest.TestCase):
         data = unhexlify(
             b"42f6835bf83114a1f5f6076fe79bdfa0bd67c74b88f127d54572d3910dd09201"
         )
-        res = crypto.hash_to_ec(data)
+        res = crypto.hash_to_point(data)
         res_p = crypto.encodepoint(res)
         self.assertEqual(
             res_p,
@@ -134,7 +134,7 @@ class TestMoneroCrypto(unittest.TestCase):
         H = unhexlify(
             b"8b655970153799af2aeadc9ff1add0ea6c7251d54154cfa92c173a0dd39c1f94"
         )
-        self.assertEqual(crypto.encodepoint(crypto.gen_H()), H)
+        self.assertEqual(crypto.encodepoint(crypto.xmr_H()), H)
 
     def test_sc_inversion(self):
         res = crypto.new_scalar()
@@ -167,11 +167,11 @@ class TestMoneroCrypto(unittest.TestCase):
         )
 
         w = AccountCreds.new_wallet(
-            crypto.b16_to_scalar(
-                b"4ce88c168e0f5f8d6524f712d5f8d7d83233b1e7a2a60b5aba5206cc0ea2bc08"
+            crypto.decodeint(
+                unhexlify(b"4ce88c168e0f5f8d6524f712d5f8d7d83233b1e7a2a60b5aba5206cc0ea2bc08")
             ),
-            crypto.b16_to_scalar(
-                b"f2644a3dd97d43e87887e74d1691d52baa0614206ad1b0c239ff4aa3b501750a"
+            crypto.decodeint(
+                unhexlify(b"f2644a3dd97d43e87887e74d1691d52baa0614206ad1b0c239ff4aa3b501750a")
             ),
             network_type=NetworkTypes.TESTNET,
         )
@@ -200,8 +200,8 @@ class TestMoneroCrypto(unittest.TestCase):
         )
 
     def test_get_subaddress_secret_key(self):
-        a = crypto.b16_to_scalar(
-            b"4ce88c168e0f5f8d6524f712d5f8d7d83233b1e7a2a60b5aba5206cc0ea2bc08"
+        a = crypto.decodeint(
+            unhexlify(b"4ce88c168e0f5f8d6524f712d5f8d7d83233b1e7a2a60b5aba5206cc0ea2bc08")
         )
         m = monero.get_subaddress_secret_key(secret_key=a, major=0, minor=1)
         self.assertEqual(
