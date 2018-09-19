@@ -771,15 +771,6 @@ class TTransactionBuilder:
             "OutC fail",
         )
 
-    def _check_bproof(self, batch_size, rsig, masks):
-        if len(rsig.V) < batch_size:
-            raise misc.TrezorError("Bulletproof to small")
-
-        for i in range(batch_size):
-            C = crypto.decodepoint(rsig.V[i])
-            crypto.point_mul8_into(C, C)
-            self._check_out_commitment(self.output_amounts[i], masks[i], C)
-
     def _return_rsig_data(self, rsig):
         if rsig is None:
             return None
