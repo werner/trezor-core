@@ -3,6 +3,8 @@ from micropython import const
 
 from trezor import log, utils
 
+from . import hmac_encryption_keys as keys
+
 from apps.monero.controller import misc
 from apps.monero.xmr import common, crypto, monero
 
@@ -197,121 +199,6 @@ class TTransactionBuilder:
         )
         return rv
 
-    def _build_key(self, secret, discriminator=None, index: int = None) -> bytes:
-        """
-        Creates an unique-purpose key
-        """
-        key_buff = bytearray(32 + 12 + 4)  # key + disc + index
-        offset = 32
-        utils.memcpy(key_buff, 0, secret, 0, len(secret))
-
-        if discriminator is not None:
-            utils.memcpy(key_buff, offset, discriminator, 0, len(discriminator))
-            offset += len(discriminator)
-
-        if index is not None:
-            # dump_uvarint_b_into, saving import
-            shifted = True
-            while shifted:
-                shifted = index >> 7
-                key_buff[offset] = (index & 0x7F) | (0x80 if shifted else 0x00)
-                offset += 1
-                index = shifted
-
-        return crypto.keccak_2hash(key_buff)
-
-    def hmac_key_txin(self, idx: int) -> bytes:
-        """
-        (TxSourceEntry[i] || tx.vin[i]) hmac key
-        """
-        return self._build_key(self.key_hmac, b"txin", idx)
-
-    def hmac_key_txin_comm(self, idx: int) -> bytes:
-        """
-        pseudo_outputs[i] hmac key. Pedersen commitment for inputs.
-        """
-        return self._build_key(self.key_hmac, b"txin-comm", idx)
-
-    def hmac_key_txdst(self, idx: int) -> bytes:
-        """
-        TxDestinationEntry[i] hmac key
-        """
-        return self._build_key(self.key_hmac, b"txdest", idx)
-
-    def hmac_key_txout(self, idx: int) -> bytes:
-        """
-        (TxDestinationEntry[i] || tx.vout[i]) hmac key
-        """
-        return self._build_key(self.key_hmac, b"txout", idx)
-
-    def hmac_key_txout_asig(self, idx: int) -> bytes:
-        """
-        rsig[i] hmac key. Range signature HMAC
-        """
-        return self._build_key(self.key_hmac, b"txout-asig", idx)
-
-    def enc_key_txin_alpha(self, idx: int) -> bytes:
-        """
-        Chacha20Poly1305 encryption key for alpha[i] used in Pedersen commitment in pseudo_outs[i]
-        """
-        return self._build_key(self.key_enc, b"txin-alpha", idx)
-
-    def enc_key_spend(self, idx: int) -> bytes:
-        """
-        Chacha20Poly1305 encryption key for alpha[i] used in Pedersen commitment in pseudo_outs[i]
-        """
-        return self._build_key(self.key_enc, b"txin-spend", idx)
-
-    def enc_key_cout(self, idx: int = None) -> bytes:
-        """
-        Chacha20Poly1305 encryption key for multisig C values from MLASG.
-        """
-        return self._build_key(self.key_enc, b"cout", idx)
-
-    async def gen_hmac_vini(self, src_entr, vini_bin, idx: int) -> bytes:
-        """
-        Computes hmac (TxSourceEntry[i] || tx.vin[i])
-        """
-        import protobuf
-        from apps.monero.xmr.sub.keccak_hasher import get_keccak_writer
-
-        kwriter = get_keccak_writer()
-        await protobuf.dump_message(kwriter, src_entr)
-        kwriter.write(vini_bin)
-
-        hmac_key_vini = self.hmac_key_txin(idx)
-        hmac_vini = crypto.compute_hmac(hmac_key_vini, kwriter.get_digest())
-        return hmac_vini
-
-    async def gen_hmac_vouti(self, dst_entr, tx_out_bin, idx: int) -> bytes:
-        """
-        Generates HMAC for (TxDestinationEntry[i] || tx.vout[i])
-        """
-        import protobuf
-        from apps.monero.xmr.sub.keccak_hasher import get_keccak_writer
-
-        kwriter = get_keccak_writer()
-        await protobuf.dump_message(kwriter, dst_entr)
-        kwriter.write(tx_out_bin)
-
-        hmac_key_vouti = self.hmac_key_txout(idx)
-        hmac_vouti = crypto.compute_hmac(hmac_key_vouti, kwriter.get_digest())
-        return hmac_vouti
-
-    async def gen_hmac_tsxdest(self, dst_entr, idx: int) -> bytes:
-        """
-        Generates HMAC for TxDestinationEntry[i]
-        """
-        import protobuf
-        from apps.monero.xmr.sub.keccak_hasher import get_keccak_writer
-
-        kwriter = get_keccak_writer()
-        await protobuf.dump_message(kwriter, dst_entr)
-
-        hmac_key = self.hmac_key_txdst(idx)
-        hmac_tsxdest = crypto.compute_hmac(hmac_key, kwriter.get_digest())
-        return hmac_tsxdest
-
     async def init_transaction(self, tsx_data):
         """
         Initializes a new transaction.
@@ -403,7 +290,9 @@ class TTransactionBuilder:
         # HMAC outputs - pinning
         hmacs = []
         for idx in range(self.num_dests()):
-            c_hmac = await self.gen_hmac_tsxdest(tsx_data.outputs[idx], idx)
+            c_hmac = await keys.gen_hmac_tsxdest(
+                self.key_hmac, tsx_data.outputs[idx], idx
+            )
             hmacs.append(c_hmac)
             gc.collect()
 
@@ -556,7 +445,9 @@ class TTransactionBuilder:
         self._mem_trace(2, True)
 
         # HMAC(T_in,i || vin_i)
-        hmac_vini = await self.gen_hmac_vini(src_entr, vini_bin, self.inp_idx)
+        hmac_vini = await keys.gen_hmac_vini(
+            self.key_hmac, src_entr, vini_bin, self.inp_idx
+        )
         self._mem_trace(3, True)
 
         # PseudoOuts commitment, alphas stored to state
@@ -570,14 +461,15 @@ class TTransactionBuilder:
 
             # In full version the alpha is encrypted and passed back for storage
             pseudo_out_hmac = crypto.compute_hmac(
-                self.hmac_key_txin_comm(self.inp_idx), pseudo_out
+                keys.hmac_key_txin_comm(self.key_hmac, self.inp_idx), pseudo_out
             )
             alpha_enc = chacha_poly.encrypt_pack(
-                self.enc_key_txin_alpha(self.inp_idx), crypto.encodeint(alpha)
+                keys.enc_key_txin_alpha(self.key_enc, self.inp_idx),
+                crypto.encodeint(alpha),
             )
 
         spend_enc = chacha_poly.encrypt_pack(
-            self.enc_key_spend(self.inp_idx), crypto.encodeint(xi)
+            keys.enc_key_spend(self.key_enc, self.inp_idx), crypto.encodeint(xi)
         )
 
         # All inputs done?
@@ -646,8 +538,8 @@ class TTransactionBuilder:
         self.inp_idx += 1
 
         # HMAC(T_in,i || vin_i)
-        hmac_vini = await self.gen_hmac_vini(
-            src_entr, vini_bin, self.source_permutation[self.inp_idx]
+        hmac_vini = await keys.gen_hmac_vini(
+            self.key_hmac, src_entr, vini_bin, self.source_permutation[self.inp_idx]
         )
         if not common.ct_equal(hmac_vini, hmac):
             raise ValueError("HMAC is not correct")
@@ -669,7 +561,7 @@ class TTransactionBuilder:
 
         idx = self.source_permutation[inp_idx]
         pseudo_out_hmac_comp = crypto.compute_hmac(
-            self.hmac_key_txin_comm(idx), pseudo_out
+            keys.hmac_key_txin_comm(self.key_hmac, idx), pseudo_out
         )
         if not common.ct_equal(pseudo_out_hmac, pseudo_out_hmac_comp):
             raise ValueError("HMAC invalid for pseudo outs")
@@ -964,7 +856,9 @@ class TTransactionBuilder:
         self._mem_trace(9, True)
 
         # Hmac dest_entr.
-        hmac_vouti = await self.gen_hmac_vouti(dst_entr, tx_out_bin, self.out_idx)
+        hmac_vouti = await keys.gen_hmac_vouti(
+            self.key_hmac, dst_entr, tx_out_bin, self.out_idx
+        )
         self._mem_trace(10, True)
         return tx_out_bin, hmac_vouti
 
@@ -992,7 +886,9 @@ class TTransactionBuilder:
             raise ValueError("Destination with wrong amount: %s" % dst_entr.amount)
 
         # HMAC check of the destination
-        dst_entr_hmac_computed = await self.gen_hmac_tsxdest(dst_entr, self.out_idx)
+        dst_entr_hmac_computed = await keys.gen_hmac_tsxdest(
+            self.key_hmac, dst_entr, self.out_idx
+        )
         if not common.ct_equal(dst_entr_hmac, dst_entr_hmac_computed):
             raise ValueError("HMAC invalid")
         del (dst_entr_hmac, dst_entr_hmac_computed)
@@ -1240,7 +1136,9 @@ class TTransactionBuilder:
         inv_idx = self.source_permutation[self.inp_idx]
 
         # Check HMAC of all inputs
-        hmac_vini_comp = await self.gen_hmac_vini(src_entr, vini_bin, inv_idx)
+        hmac_vini_comp = await keys.gen_hmac_vini(
+            self.key_hmac, src_entr, vini_bin, inv_idx
+        )
         if not common.ct_equal(hmac_vini_comp, hmac_vini):
             raise ValueError("HMAC is not correct")
 
@@ -1249,7 +1147,7 @@ class TTransactionBuilder:
 
         if self.use_simple_rct:
             pseudo_out_hmac_comp = crypto.compute_hmac(
-                self.hmac_key_txin_comm(inv_idx), pseudo_out
+                keys.hmac_key_txin_comm(self.key_hmac, inv_idx), pseudo_out
             )
             if not common.ct_equal(pseudo_out_hmac_comp, pseudo_out_hmac):
                 raise ValueError("HMAC is not correct")
@@ -1261,7 +1159,7 @@ class TTransactionBuilder:
 
             alpha_c = crypto.decodeint(
                 chacha_poly.decrypt_pack(
-                    self.enc_key_txin_alpha(inv_idx), bytes(alpha_enc)
+                    keys.enc_key_txin_alpha(self.key_enc, inv_idx), bytes(alpha_enc)
                 )
             )
             pseudo_out_c = crypto.decodepoint(pseudo_out)
@@ -1278,7 +1176,9 @@ class TTransactionBuilder:
         from apps.monero.xmr.enc import chacha_poly
 
         input_secret = crypto.decodeint(
-            chacha_poly.decrypt_pack(self.enc_key_spend(inv_idx), bytes(spend_enc))
+            chacha_poly.decrypt_pack(
+                keys.enc_key_spend(self.key_enc, inv_idx), bytes(spend_enc)
+            )
         )
 
         gc.collect()
@@ -1359,7 +1259,9 @@ class TTransactionBuilder:
         if self.multi_sig:
             from apps.monero.xmr.enc import chacha_poly
 
-            cout = chacha_poly.encrypt_pack(self.enc_key_cout(), crypto.encodeint(msc))
+            cout = chacha_poly.encrypt_pack(
+                keys.enc_key_cout(self.key_enc), crypto.encodeint(msc)
+            )
 
         # Final state transition
         if self.inp_idx + 1 == self.num_inputs():
@@ -1386,7 +1288,7 @@ class TTransactionBuilder:
 
         self.state.set_final()
 
-        cout_key = self.enc_key_cout() if self.multi_sig else None
+        cout_key = keys.enc_key_cout(self.key_enc) if self.multi_sig else None
 
         # Encrypted tx keys under transaction specific key, derived from txhash and spend key.
         # Deterministic transaction key, so we can recover it just from transaction and the spend key.
