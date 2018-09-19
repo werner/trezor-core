@@ -71,7 +71,7 @@ def encodepoint(pt):
 
 
 def encodepoint_into(b, pt, offset=0):
-    return tcry.ge25519_pack_into(b, pt, offset)
+    return tcry.ge25519_pack(b, pt, offset)
 
 
 def decodeint(x):
@@ -91,7 +91,7 @@ def encodeint(x):
 
 
 def encodeint_into(b, x, offset=0):
-    return tcry.pack256_modm_into(b, x, offset)
+    return tcry.pack256_modm(b, x, offset)
 
 
 def check_ed25519point(x):
@@ -115,19 +115,19 @@ def scalarmult_into(r, P, e):
 
 
 def point_add(P, Q):
-    return tcry.ge25519_add(P, Q, 0)
+    return tcry.ge25519_add(P, Q)
 
 
 def point_add_into(r, P, Q):
-    return tcry.ge25519_add(r, P, Q, 0)
+    return tcry.ge25519_add(r, P, Q)
 
 
 def point_sub(P, Q):
-    return tcry.ge25519_add(P, Q, 1)
+    return tcry.ge25519_sub(P, Q)
 
 
 def point_sub_into(r, P, Q):
-    return tcry.ge25519_add(r, P, Q, 1)
+    return tcry.ge25519_sub(r, P, Q)
 
 
 def point_eq(P, Q):
