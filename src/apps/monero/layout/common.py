@@ -3,8 +3,6 @@ from trezor.messages import ButtonRequestType
 from trezor.ui.text import Text
 from trezor.utils import chunks
 
-from apps.common.confirm import require_confirm, require_hold_to_confirm
-
 
 def paginate_lines(lines, lines_per_page=5):
     pages = []
@@ -114,48 +112,6 @@ async def naive_pagination(
             cur_step -= 1
         elif reaction == CONFIRMED:
             cur_step += 1
-
-
-async def require_confirm_watchkey(ctx):
-    content = Text("Confirm export", ui.ICON_SEND, icon_color=ui.GREEN)
-    content.normal(*["Do you really want to", "export watch-only", "credentials?"])
-    return await require_confirm(ctx, content, ButtonRequestType.SignTx)
-
-
-async def require_confirm_keyimage_sync(ctx):
-    content = Text("Confirm ki sync", ui.ICON_SEND, icon_color=ui.GREEN)
-    content.normal(*["Do you really want to", "sync key images?"])
-    return await require_confirm(ctx, content, ButtonRequestType.SignTx)
-
-
-async def require_confirm_payment_id(ctx, payment_id):
-    from ubinascii import hexlify
-    from trezor import wire
-
-    if not await naive_pagination(
-        ctx,
-        [ui.MONO] + list(chunks(hexlify((payment_id)), 16)),
-        "Payment ID",
-        ui.ICON_SEND,
-        ui.GREEN,
-    ):
-        raise wire.ActionCancelled("Cancelled")
-
-
-async def require_confirm_tx(ctx, to, value, is_change=False):
-    from trezor import wire
-
-    to_chunks = list(split_address(to))
-    text = [ui.BOLD, format_amount(value), ui.MONO] + to_chunks
-    conf_text = "Confirm send" if not is_change else "Con. change"
-    if not await naive_pagination(ctx, text, conf_text, ui.ICON_SEND, ui.GREEN, 4):
-        raise wire.ActionCancelled("Cancelled")
-
-
-async def require_confirm_fee(ctx, fee):
-    content = Text("Confirm fee", ui.ICON_SEND, icon_color=ui.GREEN)
-    content.bold(format_amount(fee))
-    await require_hold_to_confirm(ctx, content, ButtonRequestType.ConfirmOutput)
 
 
 @ui.layout

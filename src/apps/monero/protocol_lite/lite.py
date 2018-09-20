@@ -6,8 +6,8 @@ from trezor.crypto.hashlib import sha256
 
 from .consts import *
 
-from apps.monero import layout
 from apps.monero.controller import misc
+from apps.monero.layout import confirms
 from apps.monero.xmr import common, crypto, monero
 from apps.monero.xmr.enc import aescbc
 from apps.monero.xmr.serialize.int_serialize import load_uvarint_b
@@ -81,10 +81,10 @@ class LiteProtocol:
         raise ValueError("Assertion error%s" % (" : %s" % msg if msg else ""))
 
     async def init(self, ctx, msg):
-        from apps.monero.controller import wrapper
+        from apps.monero.controller import misc
 
         self.ctx = ctx
-        self.creds = await wrapper.monero_get_creds(
+        self.creds = await misc.monero_get_creds(
             self.ctx, msg.address_n or (), msg.network_type
         )
         self._state_init()
@@ -269,7 +269,7 @@ class LiteProtocol:
             self._insert(self.creds.address)
 
         elif self.c_p1 == 2:
-            await layout.require_confirm_watchkey(self.ctx)
+            await confirms.require_confirm_watchkey(self.ctx)
             self._insert(crypto.encodeint(self.a))
 
         else:
@@ -511,7 +511,7 @@ class LiteProtocol:
         if self.sig_mode == TRANSACTION_CREATE_REAL and self.c_p2 == 1:
             self._fetch_u8()
             fee = load_uvarint_b(self._fetch_view())
-            await layout.require_confirm_fee(self.ctx, fee)
+            await common.require_confirm_fee(self.ctx, fee)
 
         return SW_OK
 
@@ -619,10 +619,10 @@ class LiteProtocol:
         self.c_offset = 0
         self.r_len = 0
 
-        from apps.monero.controller import iface
+        from apps.monero.controller import confirms
 
         self.ctx = ctx
-        self.iface = iface.get_iface(ctx)
+        self.iface = confirms.get_iface(ctx)
 
         sw = 0x6F01
         try:
