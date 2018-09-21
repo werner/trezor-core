@@ -1,15 +1,14 @@
 from trezor import log
 
-from apps.monero.controller import wrapper as twrap
+from apps.monero.controller import misc
 
 
 class KeyImageSync:
-    def __init__(self, ctx=None, iface=None, creds=None):
+    def __init__(self, ctx, creds=None):
         from apps.monero.xmr import crypto
         from apps.monero.xmr.sub.keccak_hasher import HashWrapper
 
         self.ctx = ctx
-        self.iface = iface
         self.creds = creds  # type: monero.AccountCreds
 
         self.num = 0
@@ -21,13 +20,14 @@ class KeyImageSync:
         self.hasher = HashWrapper(crypto.get_keccak())
 
     async def derive_creds(self, msg):
-        self.creds = await twrap.monero_get_creds(
+        self.creds = await misc.monero_get_creds(
             self.ctx, msg.address_n or (), msg.network_type
         )
 
     async def init(self, ctx, msg):
         from apps.monero.xmr import crypto
         from apps.monero.xmr import monero
+        from apps.monero.layout import confirms
         from trezor.messages import FailureType
         from trezor.messages.Failure import Failure
         from trezor.messages.MoneroKeyImageExportInitAck import (
@@ -37,7 +37,7 @@ class KeyImageSync:
         self.ctx = ctx
         await self.derive_creds(msg)
 
-        confirmation = await self.iface.confirm_ki_sync(msg, ctx=ctx)
+        confirmation = await confirms.confirm_ki_sync(ctx, msg)
         if not confirmation:
             return Failure(code=FailureType.ActionCancelled, message="rejected")
 
@@ -96,6 +96,7 @@ class KeyImageSync:
         return MoneroKeyImageSyncStepAck(kis=resp)
 
     async def final(self, ctx, msg=None):
+        from apps.monero.layout import confirms
         from trezor.messages.MoneroKeyImageSyncFinalAck import (
             MoneroKeyImageSyncFinalAck
         )
@@ -105,12 +106,12 @@ class KeyImageSync:
             raise ValueError("Blocked")
 
         if self.c_idx + 1 != self.num:
-            await self.iface.ki_error("Invalid number of outputs", ctx=self.ctx)
+            await confirms.ki_error(self.ctx, "Invalid number of outputs")
             raise ValueError("Invalid number of outputs")
 
         final_hash = self.hasher.digest()
         if final_hash != self.hash:
-            await self.iface.ki_error("Invalid hash", ctx=self.ctx)
+            await confirms.ki_error(self.ctx, "Invalid hash")
             raise ValueError("Invalid hash")
 
         return MoneroKeyImageSyncFinalAck(enc_key=self.enc_key)

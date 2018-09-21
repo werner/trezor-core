@@ -6,6 +6,7 @@ from trezor import log, utils
 from . import hmac_encryption_keys as keys
 
 from apps.monero.controller import misc
+from apps.monero.layout import confirms
 from apps.monero.xmr import common, crypto, monero
 
 
@@ -31,8 +32,8 @@ class TTransactionBuilder:
     STEP_MLSAG = const(600)
     STEP_SIGN = const(700)
 
-    def __init__(self, iface=None, creds=None):
-        self.iface = iface
+    def __init__(self, ctx, creds=None):
+        self.ctx = ctx
         self.creds = creds
         self.key_master = None
         self.key_hmac = None
@@ -213,7 +214,7 @@ class TTransactionBuilder:
         self._mem_trace(1)
 
         # Ask for confirmation
-        await self.iface.confirm_transaction(tsx_data, self.creds)
+        await confirms.confirm_transaction(self.ctx, tsx_data, self.creds)
         gc.collect()
         self._mem_trace(3)
 
@@ -399,8 +400,8 @@ class TTransactionBuilder:
         self.state.input()
         self.inp_idx += 1
 
-        await self.iface.transaction_step(
-            self.STEP_INP, self.inp_idx, self.num_inputs()
+        await confirms.transaction_step(
+            self.ctx, self.STEP_INP, self.inp_idx, self.num_inputs()
         )
 
         if self.inp_idx >= self.num_inputs():
@@ -503,7 +504,7 @@ class TTransactionBuilder:
             MoneroTransactionInputsPermutationAck
         )
 
-        await self.iface.transaction_step(self.STEP_PERM)
+        await confirms.transaction_step(self.ctx, self.STEP_PERM)
 
         self._tsx_inputs_permutation(permutation)
         return MoneroTransactionInputsPermutationAck()
@@ -527,8 +528,8 @@ class TTransactionBuilder:
             MoneroTransactionInputViniAck
         )
 
-        await self.iface.transaction_step(
-            self.STEP_VINI, self.inp_idx + 1, self.num_inputs()
+        await confirms.transaction_step(
+            self.ctx, self.STEP_VINI, self.inp_idx + 1, self.num_inputs()
         )
 
         if self.inp_idx >= self.num_inputs():
@@ -574,7 +575,7 @@ class TTransactionBuilder:
         """
         self._mem_trace(0)
         self.state.input_all_done()
-        await self.iface.transaction_step(self.STEP_ALL_IN)
+        await confirms.transaction_step(self.ctx, self.STEP_ALL_IN)
 
         from trezor.messages.MoneroTransactionAllInputsSetAck import (
             MoneroTransactionAllInputsSetAck
@@ -870,8 +871,8 @@ class TTransactionBuilder:
         self._mem_trace(0, True)
         mods = utils.unimport_begin()
 
-        await self.iface.transaction_step(
-            self.STEP_OUT, self.out_idx + 1, self.num_dests()
+        await confirms.transaction_step(
+            self.ctx, self.STEP_OUT, self.out_idx + 1, self.num_dests()
         )
         self._mem_trace(1)
 
@@ -992,7 +993,7 @@ class TTransactionBuilder:
         """
         self._mem_trace(0)
         self.state.set_output_done()
-        await self.iface.transaction_step(self.STEP_ALL_OUT)
+        await confirms.transaction_step(self.ctx, self.STEP_ALL_OUT)
         self._mem_trace(1)
 
         if self.out_idx + 1 != self.num_dests():
@@ -1081,7 +1082,7 @@ class TTransactionBuilder:
         )
 
         self.state.set_final_message_done()
-        await self.iface.transaction_step(self.STEP_MLSAG)
+        await confirms.transaction_step(self.ctx, self.STEP_MLSAG)
 
         self.tsx_mlsag_ecdh_info()
         self.tsx_mlsag_out_pk()
@@ -1119,8 +1120,8 @@ class TTransactionBuilder:
         :return: Generated signature MGs[i]
         """
         self.state.set_signature()
-        await self.iface.transaction_step(
-            self.STEP_SIGN, self.inp_idx + 1, self.num_inputs()
+        await confirms.transaction_step(
+            self.ctx, self.STEP_SIGN, self.inp_idx + 1, self.num_inputs()
         )
 
         self.inp_idx += 1
@@ -1266,7 +1267,7 @@ class TTransactionBuilder:
         # Final state transition
         if self.inp_idx + 1 == self.num_inputs():
             self.state.set_signature_done()
-            await self.iface.transaction_signed()
+            await confirms.transaction_signed(self.ctx)
 
         gc.collect()
         self._mem_trace()
@@ -1301,7 +1302,7 @@ class TTransactionBuilder:
         )
         tx_enc_keys = chacha_poly.encrypt_pack(tx_key, key_buff)
 
-        await self.iface.transaction_finished()
+        await confirms.transaction_finished(self.ctx)
         gc.collect()
 
         return MoneroTransactionFinalAck(

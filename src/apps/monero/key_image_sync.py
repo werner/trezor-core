@@ -26,9 +26,7 @@ async def key_image_sync_step(ctx, msg, state):
     gc.collect()
 
     if msg.MESSAGE_WIRE_TYPE == MessageType.MoneroKeyImageExportInitRequest:
-        from apps.monero.controller import iface
-
-        state = key_image_sync.KeyImageSync(ctx=ctx, iface=iface.get_iface(ctx))
+        state = key_image_sync.KeyImageSync(ctx=ctx)
         return (
             await state.init(ctx, msg),
             state,
