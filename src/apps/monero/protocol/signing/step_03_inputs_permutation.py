@@ -1,9 +1,9 @@
 import gc
 
+from .tsx_sign_builder import TransactionSigningState
+
 from apps.monero.controller import misc
 from apps.monero.xmr import common, crypto, monero
-
-from .tsx_sign_builder import TransactionSigningState
 
 
 async def tsx_inputs_permutation(state: TransactionSigningState, permutation):

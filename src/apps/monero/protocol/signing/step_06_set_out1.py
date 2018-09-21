@@ -1,9 +1,9 @@
 import gc
 
+from .tsx_sign_builder import TransactionSigningState
+
 from apps.monero.controller import misc
 from apps.monero.xmr import common, crypto, monero
-
-from .tsx_sign_builder import TransactionSigningState
 
 
 async def set_out1(self, dst_entr, dst_entr_hmac, rsig_data=None):
@@ -14,9 +14,7 @@ async def set_out1(self, dst_entr, dst_entr_hmac, rsig_data=None):
     self._mem_trace(0, True)
     mods = utils.unimport_begin()
 
-    await self.iface.transaction_step(
-        self.STEP_OUT, self.out_idx + 1, self.num_dests()
-    )
+    await self.iface.transaction_step(self.STEP_OUT, self.out_idx + 1, self.num_dests())
     self._mem_trace(1)
 
     if self.state.is_input_vins() and self.inp_idx + 1 != self.num_inputs():
@@ -186,13 +184,10 @@ def _range_proof(self, idx, amount, rsig_data=None):
         self._check_out_commitment(amount, mask, C)
 
     elif self.rsig_offload and self.use_bulletproof:
-        from apps.monero.xmr.serialize_messages.tx_rsig_bulletproof import (
-            Bulletproof
-        )
+        from apps.monero.xmr.serialize_messages.tx_rsig_bulletproof import Bulletproof
 
         masks = [
-            self._get_out_mask(1 + idx - batch_size + ix)
-            for ix in range(batch_size)
+            self._get_out_mask(1 + idx - batch_size + ix) for ix in range(batch_size)
         ]
 
         bp_obj = misc.parse_msg(rsig_data.rsig, Bulletproof())
@@ -217,6 +212,7 @@ def _range_proof(self, idx, amount, rsig_data=None):
         self.output_masks = []
     return rsig, mask
 
+
 def _return_rsig_data(self, rsig):
     if rsig is None:
         return None
@@ -226,6 +222,7 @@ def _return_rsig_data(self, rsig):
         return MoneroTransactionRsigData(rsig_parts=rsig)
     else:
         return MoneroTransactionRsigData(rsig=rsig)
+
 
 def _set_out1_ecdh(self, dest_pub_key, amount, mask, amount_key):
     from apps.monero.xmr import ring_ct
@@ -253,6 +250,7 @@ def _set_out1_ecdh(self, dest_pub_key, amount, mask, amount_key):
     gc.collect()
 
     return out_pk, ecdh_info_bin
+
 
 def _set_out1_additional_keys(self, dst_entr):
     additional_txkey = None
@@ -306,9 +304,7 @@ def _check_out_commitment(self, amount, mask, C):
     self.assrt(
         crypto.point_eq(
             C,
-            crypto.point_add(
-                crypto.scalarmult_base(mask), crypto.scalarmult_h(amount)
-            ),
+            crypto.point_add(crypto.scalarmult_base(mask), crypto.scalarmult_h(amount)),
         ),
         "OutC fail",
     )

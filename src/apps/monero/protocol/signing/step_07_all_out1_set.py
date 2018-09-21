@@ -1,9 +1,9 @@
 import gc
 
+from .tsx_sign_builder import TransactionSigningState
+
 from apps.monero.controller import misc
 from apps.monero.xmr import common, crypto, monero
-
-from .tsx_sign_builder import TransactionSigningState
 
 
 async def all_out1_set(self):
@@ -61,7 +61,7 @@ async def all_out1_set(self):
 
     # Txprefix match check for multisig
     if not common.is_empty(self.exp_tx_prefix_hash) and not common.ct_equal(
-            self.exp_tx_prefix_hash, self.tx_prefix_hash
+        self.exp_tx_prefix_hash, self.tx_prefix_hash
     ):
         self.state.set_fail()
         raise misc.TrezorTxPrefixHashNotMatchingError("Tx prefix invalid")

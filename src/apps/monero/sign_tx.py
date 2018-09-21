@@ -48,16 +48,20 @@ async def sign_tx_step(ctx, msg, state):
     return res, state, accept_msgs
 
 
-async def sign_tx_dispatch(tsx, msg):
+async def sign_tx_dispatch(state, msg):
     if msg.MESSAGE_WIRE_TYPE == MessageType.MoneroTransactionInitRequest:
+        from apps.monero.protocol.signing import step_01_init_transaction
+
         return (
-            await tsx_init(tsx, msg.tsx_data),
+            await step_01_init_transaction.init_transaction(state, msg.tsx_data),
             (MessageType.MoneroTransactionSetInputRequest,),
         )
 
     elif msg.MESSAGE_WIRE_TYPE == MessageType.MoneroTransactionSetInputRequest:
+        from apps.monero.protocol.signing import step_02_set_input
+
         return (
-            await tsx_set_input(tsx, msg),
+            await step_02_set_input.set_input(state, msg.src_entr),
             (
                 MessageType.MoneroTransactionSetInputRequest,
                 MessageType.MoneroTransactionInputsPermutationRequest,
@@ -66,13 +70,13 @@ async def sign_tx_dispatch(tsx, msg):
 
     elif msg.MESSAGE_WIRE_TYPE == MessageType.MoneroTransactionInputsPermutationRequest:
         return (
-            await tsx_inputs_permutation(tsx, msg),
+            await tsx_inputs_permutation(state, msg),
             (MessageType.MoneroTransactionInputViniRequest,),
         )
 
     elif msg.MESSAGE_WIRE_TYPE == MessageType.MoneroTransactionInputViniRequest:
         return (
-            await tsx_input_vini(tsx, msg),
+            await tsx_input_vini(state, msg),
             (
                 MessageType.MoneroTransactionInputViniRequest,
                 MessageType.MoneroTransactionAllInputsSetRequest,
@@ -81,13 +85,13 @@ async def sign_tx_dispatch(tsx, msg):
 
     elif msg.MESSAGE_WIRE_TYPE == MessageType.MoneroTransactionAllInputsSetRequest:
         return (
-            await tsx_all_in_set(tsx, msg),
+            await tsx_all_in_set(state, msg),
             (MessageType.MoneroTransactionSetOutputRequest,),
         )
 
     elif msg.MESSAGE_WIRE_TYPE == MessageType.MoneroTransactionSetOutputRequest:
         return (
-            await tsx_set_output1(tsx, msg),
+            await tsx_set_output1(state, msg),
             (
                 MessageType.MoneroTransactionSetOutputRequest,
                 MessageType.MoneroTransactionAllOutSetRequest,
@@ -96,19 +100,19 @@ async def sign_tx_dispatch(tsx, msg):
 
     elif msg.MESSAGE_WIRE_TYPE == MessageType.MoneroTransactionAllOutSetRequest:
         return (
-            await tsx_all_out1_set(tsx, msg),
+            await tsx_all_out1_set(state, msg),
             (MessageType.MoneroTransactionMlsagDoneRequest,),
         )
 
     elif msg.MESSAGE_WIRE_TYPE == MessageType.MoneroTransactionMlsagDoneRequest:
         return (
-            await tsx_mlsag_done(tsx),
+            await tsx_mlsag_done(state),
             (MessageType.MoneroTransactionSignInputRequest,),
         )
 
     elif msg.MESSAGE_WIRE_TYPE == MessageType.MoneroTransactionSignInputRequest:
         return (
-            await tsx_sign_input(tsx, msg),
+            await tsx_sign_input(state, msg),
             (
                 MessageType.MoneroTransactionSignInputRequest,
                 MessageType.MoneroTransactionFinalRequest,
@@ -116,28 +120,12 @@ async def sign_tx_dispatch(tsx, msg):
         )
 
     elif msg.MESSAGE_WIRE_TYPE == MessageType.MoneroTransactionFinalRequest:
-        return await tsx_sign_final(tsx), None
+        return await tsx_sign_final(state), None
 
     else:
         from trezor import wire
 
         raise wire.DataError("Unknown message")
-
-
-async def tsx_init(tsx, tsx_data):
-    return await tsx.init_transaction(tsx_data)
-
-
-async def tsx_set_input(tsx, msg):
-    """
-    Sets UTXO one by one.
-    Computes spending secret key, key image. tx.vin[i] + HMAC, Pedersen commitment on amount.
-
-    If number of inputs is small, in-memory mode is used = alpha, pseudo_outs are kept in the Trezor.
-    Otherwise pseudo_outs are offloaded with HMAC, alpha is offloaded encrypted under AES-GCM() with
-    key derived for exactly this purpose.
-    """
-    return await tsx.set_input(msg.src_entr)
 
 
 async def tsx_inputs_permutation(tsx, msg):

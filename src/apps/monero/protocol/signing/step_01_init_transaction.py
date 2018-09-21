@@ -1,9 +1,9 @@
 import gc
 
 from apps.monero.controller import misc
+from apps.monero.layout import confirms
+from apps.monero.protocol.tsx_sign_builder import TransactionSigningState
 from apps.monero.xmr import common, crypto, monero
-
-from .tsx_sign_builder import TransactionSigningState
 
 
 async def init_transaction(state: TransactionSigningState, tsx_data):
@@ -12,12 +12,14 @@ async def init_transaction(state: TransactionSigningState, tsx_data):
     """
     from apps.monero.xmr.sub.addr import classify_subaddresses
 
-    gen_r(state)
+    state.tx_priv = crypto.random_scalar()
+    state.tx_pub = crypto.scalarmult_base(state.tx_priv)
+
     state.state.init_tsx()
     state._mem_trace(1)
 
     # Ask for confirmation
-    await state.iface.confirm_transaction(tsx_data, state.creds)
+    await confirms.confirm_transaction(tsx_data, state.creds)
     gc.collect()
     state._mem_trace(3)
 
@@ -31,7 +33,7 @@ async def init_transaction(state: TransactionSigningState, tsx_data):
     state.multi_sig = tsx_data.is_multisig
     state.state.inp_cnt()
     check_change(state, tsx_data.outputs)
-    state.exp_tx_prefix_hash = common.defval_empty(tsx_data.exp_tx_prefix_hash, None)
+    state.exp_tx_prefix_hash = tsx_data.exp_tx_prefix_hash
 
     # Rsig data
     state.rsig_type = tsx_data.rsig_data.rsig_type
@@ -45,7 +47,8 @@ async def init_transaction(state: TransactionSigningState, tsx_data):
         for ckey in tsx_data.use_tx_keys:
             crypto.check_sc(crypto.decodeint(ckey))
 
-        state.gen_r(use_r=crypto.decodeint(tsx_data.use_tx_keys[0]))
+        state.tx_priv = crypto.decodeint(tsx_data.use_tx_keys[0])
+        state.tx_pub = crypto.scalarmult_base(state.tx_priv)
         state.additional_tx_private_keys = [
             crypto.decodeint(x) for x in tsx_data.use_tx_keys[1:]
         ]
@@ -56,8 +59,8 @@ async def init_transaction(state: TransactionSigningState, tsx_data):
 
     # if this is a single-destination transfer to a subaddress, we set the tx pubkey to R=r*D
     if num_stdaddresses == 0 and num_subaddresses == 1:
-        state.r_pub = crypto.scalarmult(
-            crypto.decodepoint(single_dest_subaddress.spend_public_key), state.r
+        state.tx_pub = crypto.scalarmult(
+            crypto.decodepoint(single_dest_subaddress.spend_public_key), state.tx_priv
         )
 
     state.need_additional_txkeys = num_subaddresses > 0 and (
@@ -73,8 +76,12 @@ async def init_transaction(state: TransactionSigningState, tsx_data):
     gc.collect()
 
     # Iterative tx_prefix_hash hash computation
-    _tprefix_update()
-    gc.collect()
+    state.tx_prefix_hasher.keep()
+    state.tx_prefix_hasher.uvarint(state.tx.version)
+    state.tx_prefix_hasher.uvarint(state.tx.unlock_time)
+    state.tx_prefix_hasher.container_size(state.num_inputs())  # ContainerType
+    state.tx_prefix_hasher.release()
+    state._mem_trace(10, True)
 
     # Final message hasher
     state.full_message_hasher.init(state.use_simple_rct)
@@ -107,27 +114,15 @@ async def init_transaction(state: TransactionSigningState, tsx_data):
     )
 
 
-def gen_r(state, use_r=None):
-    """
-    Generates a new transaction key pair.
-    """
-    state.r = crypto.random_scalar() if use_r is None else use_r
-    state.r_pub = crypto.scalarmult_base(state.r)
-
-
 def get_primary_change_address(state: TransactionSigningState):
     """
     Computes primary change address for the current account index
     """
     D, C = monero.generate_sub_address_keys(
-        state.creds.view_key_private,
-        state.creds.spend_key_public,
-        state.account_idx,
-        0,
+        state.creds.view_key_private, state.creds.spend_key_public, state.account_idx, 0
     )
     return misc.StdObj(
-        view_public_key=crypto.encodepoint(C),
-        spend_public_key=crypto.encodepoint(D),
+        view_public_key=crypto.encodepoint(C), spend_public_key=crypto.encodepoint(D)
     )
 
 
@@ -172,6 +167,7 @@ def process_payment_id(state: TransactionSigningState, tsx_data):
         return
 
     from apps.monero.xmr.sub import tsx_helper
+    from trezor import utils
 
     if len(tsx_data.payment_id) == 8:
         view_key_pub_enc = tsx_helper.get_destination_view_key_pub(
@@ -184,7 +180,7 @@ def process_payment_id(state: TransactionSigningState, tsx_data):
 
         view_key_pub = crypto.decodepoint(view_key_pub_enc)
         payment_id_encr = tsx_helper.encrypt_payment_id(
-            tsx_data.payment_id, view_key_pub, self.r
+            tsx_data.payment_id, view_key_pub, state.tx_priv
         )
 
         extra_nonce = payment_id_encr
@@ -224,8 +220,8 @@ async def compute_sec_keys(state: TransactionSigningState, tsx_data):
     state.key_master = crypto.keccak_2hash(
         writer.get_digest() + crypto.encodeint(crypto.random_scalar())
     )
-    state.key_hmac = crypto.keccak_2hash(b"hmac" + self.key_master)
-    state.key_enc = crypto.keccak_2hash(b"enc" + self.key_master)
+    state.key_hmac = crypto.keccak_2hash(b"hmac" + state.key_master)
+    state.key_enc = crypto.keccak_2hash(b"enc" + state.key_master)
 
 
 def precompute_subaddr(state, account, indices):
@@ -235,12 +231,3 @@ def precompute_subaddr(state, account, indices):
     Single point can have multiple extended coordinates representation - would not match during subaddress search.
     """
     monero.compute_subaddresses(state.creds, account, indices, state.subaddresses)
-
-
-def _tprefix_update(state):
-    state.tx_prefix_hasher.keep()
-    state.tx_prefix_hasher.uvarint(state.tx.version)
-    state.tx_prefix_hasher.uvarint(state.tx.unlock_time)
-    state.tx_prefix_hasher.container_size(state.num_inputs())  # ContainerType
-    state.tx_prefix_hasher.release()
-    state._mem_trace(10, True)

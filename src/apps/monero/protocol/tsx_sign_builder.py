@@ -14,7 +14,7 @@ class TprefixStub:
             setattr(self, kw, kwargs[kw])
 
 
-class TTransactionBuilder:
+class TransactionSigningState:
     """
     Transaction builder
     """

@@ -1,9 +1,9 @@
 import gc
 
+from .tsx_sign_builder import TransactionSigningState
+
 from apps.monero.controller import misc
 from apps.monero.xmr import common, crypto, monero
-
-from .tsx_sign_builder import TransactionSigningState
 
 
 async def input_vini(self, src_entr, vini_bin, hmac, pseudo_out, pseudo_out_hmac):
@@ -50,9 +50,7 @@ def hash_vini_pseudo_out(
         return
 
     idx = self.source_permutation[inp_idx]
-    pseudo_out_hmac_comp = crypto.compute_hmac(
-        self.hmac_key_txin_comm(idx), pseudo_out
-    )
+    pseudo_out_hmac_comp = crypto.compute_hmac(self.hmac_key_txin_comm(idx), pseudo_out)
     if not common.ct_equal(pseudo_out_hmac, pseudo_out_hmac_comp):
         raise ValueError("HMAC invalid for pseudo outs")
 

@@ -1,20 +1,20 @@
 import gc
 
+from .tsx_sign_builder import TransactionSigningState
+
 from apps.monero.controller import misc
 from apps.monero.xmr import common, crypto, monero
 
-from .tsx_sign_builder import TransactionSigningState
-
 
 async def sign_input(
-        self,
-        src_entr,
-        vini_bin,
-        hmac_vini,
-        pseudo_out,
-        pseudo_out_hmac,
-        alpha_enc,
-        spend_enc,
+    self,
+    src_entr,
+    vini_bin,
+    hmac_vini,
+    pseudo_out,
+    pseudo_out_hmac,
+    alpha_enc,
+    spend_enc,
 ):
     """
     Generates a signature for one input.
@@ -68,9 +68,7 @@ async def sign_input(
         from apps.monero.xmr.enc import chacha_poly
 
         alpha_c = crypto.decodeint(
-            chacha_poly.decrypt_pack(
-                self.enc_key_txin_alpha(inv_idx), bytes(alpha_enc)
-            )
+            chacha_poly.decrypt_pack(self.enc_key_txin_alpha(inv_idx), bytes(alpha_enc))
         )
         pseudo_out_c = crypto.decodepoint(pseudo_out)
 

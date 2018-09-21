@@ -1,10 +1,34 @@
-import gc
+"""
+Sets UTXO one by one.
+Computes spending secret key, key image. tx.vin[i] + HMAC, Pedersen commitment on amount.
+
+If number of inputs is small, in-memory mode is used = alpha, pseudo_outs are kept in the Trezor.
+Otherwise pseudo_outs are offloaded with HMAC, alpha is offloaded encrypted under AES-GCM() with
+key derived for exactly this purpose.
+"""
+
+from .tsx_sign_builder import TransactionSigningState
 
 from apps.monero.controller import misc
 from apps.monero.xmr import common, crypto, monero
 
-from .tsx_sign_builder import TransactionSigningState
 
+# works with:
+# - inp_idx
+# - input_count
+# - creds,
+# - subaddresses,
+# - (_mem_trace)
+# - key_hmac
+# - sumpouts_alphas
+# - use_simple_rct
+# -
+# -
+
+
+# all works with:
+# - ctx (layout)
+# - state (to
 
 async def set_input(state: TransactionSigningState, src_entr):
     """
@@ -21,6 +45,7 @@ async def set_input(state: TransactionSigningState, src_entr):
     from apps.monero.xmr.enc import chacha_poly
     from apps.monero.xmr.sub import tsx_helper
     from apps.monero.xmr.serialize_messages.tx_prefix import TxinToKey
+    from apps.monero.protocol import hmac_encryption_keys
 
     state.state.input()
     state.inp_idx += 1
@@ -71,7 +96,9 @@ async def set_input(state: TransactionSigningState, src_entr):
     state._mem_trace(2, True)
 
     # HMAC(T_in,i || vin_i)
-    hmac_vini = await state.gen_hmac_vini(src_entr, vini_bin, state.inp_idx)
+    hmac_vini = await hmac_encryption_keys.gen_hmac_vini(
+        state.key_hmac, src_entr, vini_bin, state.inp_idx
+    )
     state._mem_trace(3, True)
 
     # PseudoOuts commitment, alphas stored to state
